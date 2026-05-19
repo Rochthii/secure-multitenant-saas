@@ -60,9 +60,11 @@
 
 ---
 
-## Đề Cương Đồ Án
+## Đề Cương Đồ Án & Đánh Giá An Ninh
 
-→ Xem `docs/17_GRADUATION_THESIS_PROPOSAL.md`
+- **Đề cương Đồ án:** `docs/17_GRADUATION_THESIS_PROPOSAL.md`
+- **Bản phân tích Ánh xạ:** `docs/18_PROPOSAL_MAPPING_ANALYSIS.md`
+- **Đánh giá An ninh & Khoảng trống Kiến trúc:** `docs/19_SECURITY_AUDIT_FEEDBACK.md`
 
 ---
 

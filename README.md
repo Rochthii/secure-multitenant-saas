@@ -466,6 +466,7 @@ Checklist đầy đủ: `docs/09_RELEASE_HANDOFF_CHECKLIST.md`.
 ### 17.1 Tài liệu Đồ án Tốt nghiệp (PTIT)
 - `docs/17_GRADUATION_THESIS_PROPOSAL.md` (Đề cương Đồ án Tốt nghiệp)
 - `docs/18_PROPOSAL_MAPPING_ANALYSIS.md` (Bản phân tích đối chiếu mã nguồn thực tế)
+- `docs/19_SECURITY_AUDIT_FEEDBACK.md` (Đánh giá an ninh & Khoảng trống kiến trúc)
 
 ### 17.2 Cấu trúc Tài liệu theo 4 Trụ cột ĐATN
 - **Trụ 1: Kiến trúc Multi-tenant & Cô lập Dữ liệu**
