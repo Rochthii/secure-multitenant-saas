@@ -140,47 +140,47 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Tiêu chuẩn an toàn thông tin đám mây ISO/IEC 27017
 
 ### Chương 3: Phân tích & Thiết kế
-- Kiến trúc tổng thể hệ thống (System Architecture) theo triết lý Zero Trust
-- Thiết kế mô hình dữ liệu Multi-tenant (Shared Schema)
-- Thiết kế mô hình bảo mật hình phễu Defense-in-depth
-- Thiết kế cơ chế Smart Router (Dynamic Subdomain Routing) và phân vùng Intranet Lockdown bảo vệ tài nguyên
-- Thiết kế RLS Policy Engine & Data Isolation tối ưu hiệu năng (Nhúng Custom Claims vào JWT để triệt tiêu độ trễ JOIN query)
-- Thiết kế RBAC + ABAC Authorization Model (Delegated Admin & Chống leo thang đặc quyền - Preventing Permission Escalation)
-- Thiết kế Chiến lược Caching an toàn (Tenant-aware Cache Keys) và Điều tiết tải (Rate Limiting, Connection Pooling) chống Noisy Neighbor
-- Thiết kế Audit Log System bất biến & SOC Dashboard tích hợp AI phát hiện bất thường (sử dụng thuật toán Isolation Forest hoặc mô hình phân loại anomaly từ logs) kết hợp cơ chế phản ứng tự động (Active Webhook Alerts)
+- Kiến trúc tổng thể hệ thống (System Architecture) theo triết lý Zero Trust **[HOÀN THÀNH]**
+- Thiết kế mô hình dữ liệu Multi-tenant (Shared Schema) **[HOÀN THÀNH]**
+- Thiết kế mô hình bảo mật hình phễu Defense-in-depth **[HOÀN THÀNH]**
+- Thiết kế cơ chế Smart Router (Dynamic Subdomain Routing) và phân vùng Intranet Lockdown bảo vệ tài nguyên **[HOÀN THÀNH]**
+- Thiết kế RLS Policy Engine & Data Isolation tối ưu hiệu năng (Nhúng Custom Claims vào JWT để triệt tiêu độ trễ JOIN query) **[CHƯA TỐI ƯU - Hiện tại các hàm RLS vẫn JOIN/SELECT trực tiếp bảng user_roles từ DB thay vì đọc JWT Claims]**
+- Thiết kế RBAC + ABAC Authorization Model (Delegated Admin & Chống leo thang đặc quyền - Preventing Permission Escalation) **[HOÀN THÀNH]**
+- Thiết kế Chiến lược Caching an toàn (Tenant-aware Cache Keys) và Điều tiết tải (Rate Limiting, Connection Pooling) chống Noisy Neighbor **[HOÀN THÀNH]**
+- Thiết kế Audit Log System bất biến & SOC Dashboard tích hợp AI phát hiện bất thường (sử dụng thuật toán Isolation Forest hoặc mô hình phân loại anomaly từ logs) kết hợp cơ chế phản ứng tự động (Active Webhook Alerts) **[CHƯA HOÀN THÀNH - SOC mới chỉ dừng ở mức kiểm tra Rule-based cứng, chưa tích hợp Isolation Forest/AI phân tích anomaly]**
 
 ### Chương 4: Triển khai
-- Triển khai "Intranet Lockdown" & Smart Router Access Control tuân thủ Zero Trust
-- Triển khai Phân quyền ủy thác (Delegated Admin) từ Tập đoàn xuống Chi nhánh
-- Triển khai hệ thống RLS Policies tối ưu hóa trên PostgreSQL
-- Triển khai các hàm kiểm tra thuộc tính ABAC (time-based, IP-based, operation-type)
-- Triển khai Multi-tenant Caching System (unstable_cache, tags-based revalidation) bảo mật chống rò rỉ chéo
-- Triển khai Rate Limiting trên Mutation API và Connection Pooling (Supavisor)
-- Triển khai Audit Trail System bất biến (Triggers chặn DELETE/UPDATE ghi đè)
-- Triển khai SOC Dashboard kết hợp mô hình Anomaly Detection (sử dụng thuật toán Isolation Forest hoặc API gọi mô hình AI ngoài để phân tích hành vi bất thường) và cảnh báo chủ động (Active Webhook Alerts)
-- Triển khai DevSecOps Pipeline (cron backup, release checklist)
-- Thiết lập quy trình Tenant Offboarding (Hard Wipe data) theo chuẩn ISO 27017 và xử lý phân mảnh CSDL
+- Triển khai "Intranet Lockdown" & Smart Router Access Control tuân thủ Zero Trust **[HOÀN THÀNH]**
+- Triển khai Phân quyền ủy thác (Delegated Admin) từ Tập đoàn xuống Chi nhánh **[HOÀN THÀNH]**
+- Triển khai hệ thống RLS Policies tối ưu hóa trên PostgreSQL **[HOÀN THÀNH]**
+- Triển khai các hàm kiểm tra thuộc tính ABAC (time-based, IP-based, operation-type) **[HOÀN THÀNH]**
+- Triển khai Multi-tenant Caching System (unstable_cache, tags-based revalidation) bảo mật chống rò rỉ chéo **[HOÀN THÀNH]**
+- Triển khai Rate Limiting trên Mutation API và Connection Pooling (Supavisor) **[HOÀN THÀNH]**
+- Triển khai Audit Trail System bất biến (Triggers chặn DELETE/UPDATE ghi đè) **[HOÀN THÀNH]**
+- Triển khai SOC Dashboard kết hợp mô hình Anomaly Detection (sử dụng thuật toán Isolation Forest hoặc API gọi mô hình AI ngoài để phân tích hành vi bất thường) và cảnh báo chủ động (Active Webhook Alerts) **[CHƯA HOÀN THÀNH - Phần Anomaly Detection hiện tại là thống kê cứng, chưa tích hợp AI/Isolation Forest thực tế]**
+- Triển khai DevSecOps Pipeline (cron backup, release checklist) **[HOÀN THÀNH]**
+- Thiết lập quy trình Tenant Offboarding (Hard Wipe data) theo chuẩn ISO 27017 và xử lý phân mảnh CSDL **[HOÀN THÀNH]**
 
 ### Chương 5: Đánh giá & Thực nghiệm
-- **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ.
-- Đánh giá RLS Coverage Score (Tỷ lệ phần trăm các bảng dữ liệu được bảo vệ thành công bằng RLS).
-- Kiểm chứng tính toàn vẹn của Audit Log (Audit Log integrity check & non-repudiation verification).
-- **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):**
+- **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ. **[HOÀN THÀNH - Báo cáo lý thuyết]**
+- Đánh giá RLS Coverage Score (Tỷ lệ phần trăm các bảng dữ liệu được bảo vệ thành công bằng RLS). **[HOÀN THÀNH - Đã tích hợp RPC kiểm tra tự động]**
+- Kiểm chứng tính toàn vẹn của Audit Log (Audit Log integrity check & non-repudiation verification). **[HOÀN THÀNH]**
+- **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):** **[CHƯA THỰC HIỆN - GAP]**
   - Định nghĩa Baseline so sánh: Phương pháp lọc dữ liệu ở tầng ứng dụng (Application-layer Filtering) vs. Lọc dữ liệu ở tầng cơ sở dữ liệu (Database-level RLS).
   - Chỉ số đo lường (Metrics): Độ trễ trung vị (P50), độ trễ phân vị cao (P95, P99 Latency), và thông lượng xử lý (Throughput - requests/sec) khi tải trọng đồng thời tăng từ 100 đến 10,000 active sessions.
-- **Thực nghiệm Cache Leakage Testing có số liệu:** Mô phỏng truy cập chéo giữa các tenant sử dụng cache chung và đo tỷ lệ rò rỉ thông tin (Cache Pollution / Cache Side-Channel Leakage rate) trong các điều kiện bất đối xứng dữ liệu.
-- Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt.
+- **Thực nghiệm Cache Leakage Testing có số liệu:** Mô phỏng truy cập chéo giữa các tenant sử dụng cache chung và đo tỷ lệ rò rỉ thông tin (Cache Pollution / Cache Side-Channel Leakage rate) trong các điều kiện bất đối xứng dữ liệu. **[CHƯA THỰC HIỆN - GAP]**
+- Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt. **[HOÀN THÀNH]**
 
 ### Chương 6: Kết luận & Hướng phát triển
-- Tổng kết kết quả đạt được
+- Tổng kết kết quả đạt được **[HOÀN THÀNH]**
 - **Hạn chế:** 
-  - Điểm mù trong khôi phục dữ liệu (Disaster Recovery) cục bộ cho từng Tenant trong mô hình Shared DB (rủi ro rollback chéo). Đề xuất giải pháp "Soft Delete" kết hợp Audit Log.
-  - Lỗ hổng "Người gác đền cũng có thể là kẻ trộm" (Audit Log Tampering): Rủi ro quản trị viên cấp cao (Super Admin) tự ý xóa dấu vết vì Audit Log đang được lưu trên cùng một CSDL vật lý với ứng dụng.
+  - Điểm mù trong khôi phục dữ liệu (Disaster Recovery) cục bộ cho từng Tenant trong mô hình Shared DB (rủi ro rollback chéo). Đề xuất giải pháp "Soft Delete" kết hợp Audit Log. **[CẦN PHÁT TRIỂN THÊM]**
+  - Lỗ hổng "Người gác đền cũng có thể là kẻ trộm" (Audit Log Tampering): Rủi ro quản trị viên cấp cao (Super Admin) tự ý xóa dấu vết vì Audit Log đang được lưu trên cùng một CSDL vật lý với ứng dụng. **[CẦN PHÁT TRIỂN THÊM]**
 - **Hướng phát triển:** 
-  - Đề xuất Chiến lược kiến trúc lai (Hybrid Strategy): Cung cấp Shared DB cho gói Standard và tự động cấp phát CSDL riêng (Isolated DB) cho tệp khách hàng Enterprise có yêu cầu HIPAA/Tài chính.
-  - Giải pháp WORM Storage: Tích hợp cơ chế Forwarding Audit Log ra hệ thống SIEM lưu trữ độc lập (như Splunk, AWS S3) để đảm bảo tính bất biến tuyệt đối.
-  - Tích hợp thêm AI vào hệ thống SIEM/SOC để dự đoán hành vi tấn công.
-  - Triển khai Penetration Testing, đạt chứng nhận SOC 2, Zero Trust Architecture.
+  - Đề xuất Chiến lược kiến trúc lai (Hybrid Strategy): Cung cấp Shared DB cho gói Standard và tự động cấp phát CSDL riêng (Isolated DB) cho tệp khách hàng Enterprise có yêu cầu HIPAA/Tài chính. **[ĐỊNH HƯỚNG TƯƠNG LAI]**
+  - Giải pháp WORM Storage: Tích hợp cơ chế Forwarding Audit Log ra hệ thống SIEM lưu trữ độc lập (như Splunk, AWS S3) để đảm bảo tính bất biến tuyệt đối. **[ĐỊNH HƯỚNG TƯƠNG LAI]**
+  - Tích hợp thêm AI vào hệ thống SIEM/SOC để dự đoán hành vi tấn công. **[ĐỊNH HƯỚNG TƯƠNG LAI]**
+  - Triển khai Penetration Testing, đạt chứng nhận SOC 2, Zero Trust Architecture. **[ĐỊNH HƯỚNG TƯƠNG LAI]**
 
 ---
 
