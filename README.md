@@ -463,24 +463,41 @@ Checklist đầy đủ: `docs/09_RELEASE_HANDOFF_CHECKLIST.md`.
 
 - `docs/_index.md`
 
-Tài liệu Đồ án Tốt nghiệp (PTIT):
+### 17.1 Tài liệu Đồ án Tốt nghiệp (PTIT)
+- `docs/17_GRADUATION_THESIS_PROPOSAL.md` (Đề cương Đồ án Tốt nghiệp)
+- `docs/18_PROPOSAL_MAPPING_ANALYSIS.md` (Bản phân tích đối chiếu mã nguồn thực tế)
 
-- `docs/17_GRADUATION_THESIS_PROPOSAL.md` (Đề cương Đồ án)
-- `docs/18_PROPOSAL_MAPPING_ANALYSIS.md` (Bản phân tích đối chiếu code thực tế)
+### 17.2 Cấu trúc Tài liệu theo 4 Trụ cột ĐATN
+- **Trụ 1: Kiến trúc Multi-tenant & Cô lập Dữ liệu**
+  - `docs/ARCHITECTURE.md`: Kiến trúc tổng thể hệ thống (System Architecture)
+  - `docs/07_DATABASE_MIGRATIONS_RLS.md`: Playbook DB: Shared Schema, Migration Strategy, RLS Model
+  - `docs/01_OPERATIONS_HANDBOOK.md`: Vận hành hệ thống production: Deploy, Monitoring, Runtime
+- **Trụ 2: Mô hình Bảo mật (RBAC → ABAC + RLS)**
+  - `docs/03_SECURITY_PERMISSIONS.md`: Defense-in-depth: 4 lớp bảo mật, RBAC + ABAC, Guard patterns
+  - `docs/10_ENV_VARIABLES_REFERENCE.md`: Biến môi trường & quản lý bí mật (Secret Management)
+  - Migration SQL: `supabase/migrations/20260516100000_abac_time_ip_policies.sql` (ABAC: Time-based Access + Audit DELETE Trigger)
+- **Trụ 3: Hệ thống Audit Log & Giám sát SOC**
+  - `docs/05_ADMIN_FEATURES.md`: Module admin: SOC Dashboard, Audit Logs, Cross-cutting concerns
+  - `docs/06_API_ACTIONS_CATALOG.md`: Catalog API/Server Actions + audit trail
+  - `lib/audit/security-stats.ts` & `app/admin/security-center/page.tsx`: SOC Query Engine & SOC Dashboard UI
+- **Trụ 4: Quản trị Rủi ro & Tuân thủ ISO 27017**
+  - `docs/08_INCIDENT_RESPONSE_RUNBOOK.md`: Runbook ứng cứu sự cố + ISO 27017 §8-10
+  - `docs/11_SEV1_SCENARIOS_TEMPLATES.md`: Kịch bản SEV-1 + Cross-tenant Breach Playbook
+  - `docs/09_RELEASE_HANDOFF_CHECKLIST.md`: Checklist DevSecOps: Pre-release, Deploy, Handoff
+  - `docs/02_CRON_BACKUP_RUNBOOK.md`: DR/Backup: Lịch cron, Restore, Data Retention
 
-Canonical v2:
+### 17.3 Tài liệu Nghiên cứu Mở rộng (Nghiên cứu khoa học NCKH)
+Tài liệu về nghiên cứu AI RAG và GraphRAG (Theravada Buddhist Texts) phục vụ nghiên cứu khoa học song song:
+- `docs/ai-rag/NCKH_GRAPHRAG_RESEARCH_GUIDE.md`: Hướng dẫn chi tiết nghiên cứu GraphRAG cho văn bản kinh điển Theravada.
+- `docs/ai-rag/WHITE_PAPER_AGENTIC_GRAPHRAG_BUDDHISM.md`: Bạch thư nghiên cứu về Agentic GraphRAG.
+- `docs/ai-rag/TECHNICAL_ARCHITECTURE.md` & `docs/ai-rag/INGESTION_GUIDE.md`: Hướng dẫn nạp liệu & thiết kế kỹ thuật RAG pipeline.
 
-- `docs/01_OPERATIONS_HANDBOOK.md`
-- `docs/02_CRON_BACKUP_RUNBOOK.md`
-- `docs/03_SECURITY_PERMISSIONS.md`
-- `docs/04_PUBLIC_FEATURES.md`
-- `docs/05_ADMIN_FEATURES.md`
-- `docs/06_API_ACTIONS_CATALOG.md`
-- `docs/07_DATABASE_MIGRATIONS_RLS.md`
-- `docs/08_INCIDENT_RESPONSE_RUNBOOK.md`
-- `docs/09_RELEASE_HANDOFF_CHECKLIST.md`
-- `docs/10_ENV_VARIABLES_REFERENCE.md`
-- `docs/11_SEV1_SCENARIOS_TEMPLATES.md`
+### 17.4 Tài liệu Legacy & Setup cũ (Tham khảo lịch sử)
+- `docs/MASTER_TECHNICAL_DOCUMENTATION.md`: Tổng hợp tài liệu kỹ thuật v1.
+- `docs/DATABASE_COMPLETE.md`: Mô tả schema dữ liệu tổng quan.
+- `docs/DATABASE_SETUP_GUIDE.md`: Hướng dẫn cài đặt PostgreSQL cục bộ & Supabase.
+- `docs/ADMIN_SETUP.md`: Hướng dẫn phân quyền Super Admin cho dự án.
+- `docs/API_DOCS.md`: Hướng dẫn tích hợp và tham chiếu API.
 
 Legacy docs vẫn được giữ để đối chiếu lịch sử, nhưng không phải nguồn chuẩn khi mâu thuẫn với canonical set.
 
