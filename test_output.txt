@@ -1,0 +1,16 @@
+﻿
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mE:/MULTITENANT_TEMPLES[39m
+
+ [31m❯[39m __tests__/lib/ai-rag-hook.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 29[2mms[22m[39m
+[31m     [31m×[31m nên được khởi tạo với mảng tin nhắn trống[39m[32m 18[2mms[22m[39m
+[31m     [31m×[31m nên khôi phục tin nhắn từ LocalStorage nếu có[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m nên xử lý luồng streaming thành công từ Edge Function[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m nên hiển thị lỗi cụ thể khi gặp lỗi 401 (Hết phiên)[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m nên hiển thị lỗi bảo trì khi gặp lỗi 500[39m[32m 2[2mms[22m[39m
+[31m     [31m×[31m nên xử lý khi người dùng ngắt thế hệ (Stop Generation)[39m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[90m (6)[39m
+[2m   Start at [22m 21:38:55
+[2m   Duration [22m 984ms[2m (transform 81ms, setup 332ms, import 50ms, tests 29ms, environment 394ms)[22m
+

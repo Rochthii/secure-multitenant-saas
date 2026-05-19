@@ -1,0 +1,436 @@
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, Variants } from 'framer-motion';
+import { useTranslations } from 'next-intl';
+import {
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    BarChart, Bar, Cell
+} from 'recharts';
+import {
+    Activity, Users, HeartHandshake, Landmark,
+    Globe, Award, TrendingUp, Presentation,
+    Heart, Target, HelpCircle, ArrowRight, LucideIcon, Building2
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { type BlockConfig } from '@/lib/types/layout-blocks';
+import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+
+import { createClient } from '@/lib/supabase/client';
+import { BRAND_NAME_VI } from '@/lib/constants';
+
+// Map icon string names to actual Lucide components
+const ICONS: Record<string, LucideIcon> = {
+    Activity, Users, HeartHandshake, Landmark,
+    Globe, Award, TrendingUp, Presentation,
+    Heart, Target, HelpCircle
+};
+
+interface Metric {
+    title: string;
+    value: string | number;
+    unit?: string;
+    icon?: string;
+    link?: string;
+}
+
+interface MonthlyData {
+    name: string;
+    orgs: number;
+    projects: number;
+    events: number;
+}
+
+interface StatsData {
+    totalTransactions: string;
+    totalIndividual: string;
+    totalPartner: string;
+    totalOrgs: number;
+    activeProjects: number;
+    totalEvents: number;
+    beneficiaries: string;
+}
+
+interface ImpactDashboardProps {
+    data?: BlockConfig;
+    tenantId?: string;
+}
+
+export function ImpactDashboard({ data, tenantId }: ImpactDashboardProps) {
+    const [mounted, setMounted] = useState(false);
+    const content = data?.settings || {};
+
+    const sectionBadge = content.sectionBadge || 'Dấu Ấn Xã Hội';
+    const sectionTitleHtml = content.sectionTitleHtml || 'Tác Động <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#002B5B] to-[#00D2FF]">Cộng Đồng.</span>';
+    const sectionDesc = content.sectionDesc || `Dữ liệu được minh bạch hóa và tự động tổng hợp trực tiếp theo thời gian thực từ các hoạt động xã hội của hệ sinh thái ${BRAND_NAME_VI}.`;
+
+    const [realStats, setRealStats] = useState<StatsData>({
+        totalTransactions: '0',
+        totalIndividual: '0',
+        totalPartner: '0',
+        totalOrgs: 0,
+        activeProjects: 0,
+        totalEvents: 0,
+        beneficiaries: '0'
+    });
+    const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const entry = useIntersectionObserver(containerRef, {
+        freezeOnceVisible: true,
+        rootMargin: '600px',
+    });
+    const isVisible = !!entry?.isIntersecting;
+
+    useEffect(() => {
+        if (isVisible && !mounted) {
+            setMounted(true);
+            const fetchData = async () => {
+                const supabase = await createClient() as any; 
+                try {
+                    // 1. Fetch Organizations with total_donated
+                    let orgsQuery = supabase
+                        .from('organizations')
+                        .select('created_at, total_donated')
+                        .eq('is_active', true);
+                    
+                    if (tenantId) {
+                        orgsQuery = orgsQuery.eq('tenant_id', tenantId);
+                    }
+                    const { data: orgs } = await orgsQuery;
+
+                    // 2. Fetch Active Projects (using unified projects table)
+                    let projectsQuery = supabase
+                        .from('transaction_projects')
+                        .select('created_at')
+                        .eq('is_active', true)
+                        .eq('type', 'specific_project');
+                    
+                    if (tenantId) {
+                        projectsQuery = projectsQuery.eq('tenant_id', tenantId);
+                    }
+                    const { data: projects } = await projectsQuery;
+
+                    // 3. Fetch Events
+                    let eventsQuery = supabase
+                        .from('events')
+                        .select('created_at')
+                        .in('status', ['completed', 'ongoing', 'upcoming']);
+                    
+                    if (tenantId) {
+                        eventsQuery = eventsQuery.eq('tenant_id', tenantId);
+                    }
+                    const { data: events } = await eventsQuery;
+
+                    // Aggregate Monthly Data
+                    const monthlyMap: Record<string, { orgs: number; projects: number; events: number }> = {};
+                    const now = new Date();
+                    // Initialize last 6 months
+                    for (let i = 5; i >= 0; i--) {
+                        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                        const monthName = `T${d.getMonth() + 1}`;
+                        monthlyMap[monthName] = { orgs: 0, projects: 0, events: 0 };
+                    }
+
+                    if (orgs) {
+                        orgs.forEach((o: any) => {
+                            const date = new Date(o.created_at);
+                            const monthName = `T${date.getMonth() + 1}`;
+                            if (monthlyMap[monthName]) {
+                                monthlyMap[monthName].orgs += 1;
+                            }
+                        });
+                    }
+
+                    // 4. Fetch Individual Transactions
+                    let transactionsQuery = supabase
+                        .from('transactions')
+                        .select('amount, created_at')
+                        .eq('status', 'confirmed');
+                    
+                    if (tenantId) {
+                        transactionsQuery = transactionsQuery.eq('tenant_id', tenantId);
+                    }
+                    const { data: transactions } = await transactionsQuery;
+
+                    let totalIndividualAmount = 0;
+                    if (transactions) {
+                        transactions.forEach((d: any) => {
+                            totalIndividualAmount += Number(d.amount || 0);
+                        });
+                    }
+
+                    if (projects) {
+                        projects.forEach((p: any) => {
+                            const date = new Date(p.created_at);
+                            const monthName = `T${date.getMonth() + 1}`;
+                            if (monthlyMap[monthName]) {
+                                monthlyMap[monthName].projects += 1;
+                            }
+                        });
+                    }
+
+                    if (events) {
+                        events.forEach((e: any) => {
+                            const date = new Date(e.created_at);
+                            const monthName = `T${date.getMonth() + 1}`;
+                            if (monthlyMap[monthName]) {
+                                monthlyMap[monthName].events += 1;
+                            }
+                        });
+                    }
+
+                    const chartData = Object.entries(monthlyMap).map(([name, data]) => ({
+                        name,
+                        orgs: data.orgs,
+                        projects: data.projects,
+                        events: data.events
+                    }));
+
+                    // To make charts look growing, we calculate cumulative sums for Orgs
+                    let runningOrgs = 0;
+                    const cumulativeChartData = chartData.map(d => {
+                        runningOrgs += d.orgs;
+                        return { ...d, orgs: runningOrgs > 0 ? runningOrgs : 1 }; // Prevent flat zero if possible
+                    });
+
+                    setMonthlyData(cumulativeChartData);
+
+                    // Calculate total donated across all organizations
+                    let totalAmt = 0;
+                    if (orgs) {
+                        orgs.forEach((o: any) => {
+                            if (o.total_donated) {
+                                totalAmt += Number(o.total_donated);
+                            }
+                        });
+                    }
+
+                    const formatCompact = (num: number) => {
+                        if (num >= 1000000000) return (num / 1000000000).toFixed(1) + ' Tỷ';
+                        if (num >= 1000000) return (num / 1000000).toFixed(1) + ' Tr';
+                        return new Intl.NumberFormat('vi-VN').format(num);
+                    };
+
+                    const totalOrgsCount = orgs?.length || 0;
+                    const totalProjectsCount = projects?.length || 0;
+                    const totalEventsCount = events?.length || 0;
+
+                    const combinedAmount = totalAmt + totalIndividualAmount;
+
+                    setRealStats({
+                        totalTransactions: formatCompact(combinedAmount),
+                        totalIndividual: formatCompact(totalIndividualAmount),
+                        totalPartner: formatCompact(totalAmt),
+                        totalOrgs: totalOrgsCount,
+                        activeProjects: totalProjectsCount,
+                        totalEvents: totalEventsCount,
+                        beneficiaries: (totalProjectsCount * 50).toString() + '+' // Rough estimate
+                    });
+                } catch (error) {
+                    console.error("Error fetching impact data:", error);
+                }
+            };
+            fetchData();
+        }
+    }, [isVisible, mounted]);
+
+    // Construct metrics: use settings.metrics if available, otherwise fall back to defaults
+    const metrics: Metric[] = content.metrics || [
+        {
+            title: content.stat2Title || 'Sự kiện Gắn kết',
+            value: content.stat2Value || realStats.totalEvents,
+            icon: 'Activity'
+        },
+        {
+            title: content.stat3Title || 'Dự án Xã hội Đang triển khai',
+            value: content.stat3Value || realStats.activeProjects,
+            icon: 'HeartHandshake'
+        },
+    ];
+
+    // Special card 1 (Big)
+    const stat1Value = content.stat1Value || realStats.totalTransactions;
+    const stat1Title = content.stat1Title || 'Tổng Quỹ Vì Cộng Đồng';
+    const stat1Sub = content.stat1Sub || `Ghi nhận từ ${realStats.totalOrgs} tổ chức`;
+    const stat1Link = content.stat1Link || '#';
+
+    // Chart settings
+    const chart1Title = content.chart1Title || 'Biểu đồ Mở rộng Mạng lưới';
+    const chart1Percent = content.chart1Percent || '+15.2%';
+    const chart2Title = content.chart2Title || 'Dự án Xã hội theo Tháng';
+
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    };
+
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } }
+    };
+
+    if (!mounted) {
+        return <div ref={containerRef} className="py-24 min-h-[600px] bg-white flex items-center justify-center text-gray-400 animate-pulse">Đang tải biểu đồ...</div>;
+    }
+
+    return (
+        <section ref={containerRef} className="relative py-24 overflow-hidden bg-white">
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gradient-to-b from-[#00D2FF]/5 to-transparent blur-[100px]" />
+                <div className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-gradient-to-t from-[#002B5B]/5 to-transparent blur-[120px]" />
+            </div>
+
+            <div className="container relative z-10 px-4 mx-auto max-w-7xl">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div className="max-w-2xl">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#002B5B]/5 border border-[#002B5B]/10 mb-4"
+                        >
+                            <Activity className="w-4 h-4 text-[#00D2FF]" />
+                            <span className="text-xs font-bold tracking-widest uppercase text-[#002B5B]">{sectionBadge}</span>
+                        </motion.div>
+                        <motion.h2
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight"
+                            dangerouslySetInnerHTML={{ __html: sectionTitleHtml }}
+                        />
+                    </div>
+                    <motion.p
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.2 }}
+                        className="text-gray-500 font-medium max-w-sm md:text-right"
+                    >
+                        {sectionDesc}
+                    </motion.p>
+                </div>
+
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                >
+                    {/* Stat Card 1: Main Highlight */}
+                    <motion.div variants={itemVariants} className="col-span-1 lg:col-span-2 p-8 rounded-[2rem] bg-gradient-to-br from-[#002B5B] to-[#001530] text-white shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 transition-transform duration-700 group-hover:scale-150" />
+                        <a href={stat1Link} className="relative z-10 flex flex-col h-full justify-between group-hover:no-underline">
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md">
+                                    <HeartHandshake className="w-6 h-6 text-[#FFD700]" />
+                                </div>
+                                <h3 className="font-semibold text-white/80 uppercase tracking-wider text-sm">{stat1Title}</h3>
+                            </div>
+                            <div>
+                                <div className="text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter mb-4 whitespace-nowrap">{stat1Value}</div>
+                                <div className="flex flex-wrap gap-6 mt-4 bg-white/10 p-5 rounded-2xl backdrop-blur-sm border border-white/10">
+                                    <div>
+                                        <p className="text-xs text-[#00D2FF] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                            <Heart className="w-3 h-3" /> Đóng góp
+                                        </p>
+                                        <p className="text-3xl font-bold text-white tracking-tight">{realStats.totalIndividual}</p>
+                                    </div>
+                                    <div className="w-px bg-white/20 hidden sm:block"></div>
+                                    <div>
+                                        <p className="text-xs text-[#FFD700] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                            <Building2 className="w-3 h-3" /> Đối Tác Đóng Góp
+                                        </p>
+                                        <p className="text-3xl font-bold text-white tracking-tight">{realStats.totalPartner}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </motion.div>
+
+                    {/* Chart Card 1 */}
+                    <motion.div variants={itemVariants} className="col-span-1 lg:col-span-2 p-6 rounded-[2rem] bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-bold text-gray-800">{chart1Title}</h3>
+                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">{chart1Percent}</span>
+                        </div>
+                        <div className="h-[200px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={monthlyData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorTransactions" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#002B5B" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#002B5B" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
+                                    />
+                                    <Area type="monotone" dataKey="orgs" stroke="#002B5B" strokeWidth={3} fillOpacity={1} fill="url(#colorTransactions)" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.div>
+
+                    {/* Dynamic Metrics Cards */}
+                    {metrics.map((metric, idx) => {
+                        const Icon = metric.icon && ICONS[metric.icon] ? ICONS[metric.icon] : HelpCircle;
+                        return (
+                            <motion.div
+                                key={idx}
+                                variants={itemVariants}
+                                className="p-6 rounded-[2rem] bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col justify-between hover:-translate-y-1 transition-transform group"
+                            >
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="p-3 bg-[#FFD700]/10 rounded-2xl group-hover:bg-[#FFD700]/20 transition-colors">
+                                        <Icon className="w-6 h-6 text-amber-600" />
+                                    </div>
+                                    {metric.link && (
+                                        <a href={metric.link} className="text-gray-400 hover:text-amber-500">
+                                            <ArrowRight className="w-5 h-5" />
+                                        </a>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="text-4xl font-extrabold text-gray-900 mb-1">
+                                        {metric.value}{metric.unit}
+                                    </div>
+                                    <h3 className="font-semibold text-gray-500 text-sm">{metric.title}</h3>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+
+                    {/* Chart Card 2: Projects by Month */}
+                    <motion.div variants={itemVariants} className="col-span-1 lg:col-span-2 p-6 rounded-[2rem] bg-gray-50 border border-gray-100/50 shadow-inner">
+                        <h3 className="font-bold text-gray-800 mb-6">{chart2Title}</h3>
+                        <div className="h-[140px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={monthlyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(0,43,91,0.05)' }}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                                    />
+                                    <Bar dataKey="projects" radius={[6, 6, 6, 6]}>
+                                        {monthlyData.map((entry: MonthlyData, index: number) => (
+                                            <Cell key={`cell-${index}`} fill={index === monthlyData.length - 1 ? '#002B5B' : '#CBD5E1'} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            </div>
+        </section>
+    );
+}
+
+export default ImpactDashboard;

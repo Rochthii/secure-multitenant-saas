@@ -1,0 +1,108 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (IMPORTANT: NEVER REMOVE THIS)
+.env*
+.env.local
+.env.production
+.env.development
+*.env
+
+# Supabase sensitive
+supabase/.temp/
+supabase/migrations_ai_backup/
+service-role-key.txt
+anon-key.txt
+supabase-keys.txt
+
+# testing
+/coverage
+**/*.test.*
+**/*.spec.*
+**/__tests__/
+**/tests/
+vitest.config.*
+playwright.config.*
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# OpenNext build output
+.open-next
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+build-log.txt
+build_log*.txt
+build_error*.log
+
+# Temp/Resolved files
+*.resolved
+*.tmp
+tmp/
+artifacts/
+_archive/
+scratch/
+
+# Dumps & SQL (Usually ignored for repo cleanliness)
+*.sql
+*.html
+!supabase/migrations/*.sql
+
+# Scripts & Local utilities
+/check-*.js
+/fix_*.*
+/fix-*.js
+/tmp_*.js
+/tmp_*.mjs
+/migrate-*.ps1
+/scan_rls.ts
+/inspect-cat.js
+/rename_migrations.js
+/catch-react-error.js
+/get-rpc.mjs
+/inspect-cache-table.mjs
+/update-rpc.mjs
+/auto-fix-rpc.js
+scripts/seed-*.ts
+scripts/ingest_*.*
+scripts/mass_ingest_*.mjs
+scripts/test_*.mjs
+

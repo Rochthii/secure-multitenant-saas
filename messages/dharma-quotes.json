@@ -1,0 +1,62 @@
+[
+    {
+        "id": 1,
+        "quote_vi": "Ý dẫn đầu các pháp, ý làm chủ, ý tạo. Nếu với ý ô nhiễm, nói lên hay hành động, khổ não bước theo sau, như xe, chân vật kéo.",
+        "quote_km": "មនោបុព្វង្គមា ធម្មា មនោសេដ្ឋា មនោបយា; មនសា ចេ បទុដ្ឋេន ភាសតិ វា ករោតិ វា; តតោ នំ ទុក្ខមន្វេតិ ចក្កំវ វហតោ បទំ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Song Yếu"
+    },
+    {
+        "id": 2,
+        "quote_vi": "Ý dẫn đầu các pháp, ý làm chủ, ý tạo. Nếu với ý thanh tịnh, nói lên hay hành động, an lạc bước theo sau, như bóng, không rời hình.",
+        "quote_km": "មនោបុព្វង្គមា ធម្មា មនោសេដ្ឋា មនោបយា; មនសា ចេ បសន្នេន ភាសតិ វា ករោតិ វា; តតោ នំ សុខមន្វេតិ ឆាយាវ អនុបាយិនី។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Song Yếu"
+    },
+    {
+        "id": 3,
+        "quote_vi": "Hận thù diệt hận thù, đời này không có được. Từ bi diệt hận thù, là định luật ngàn thu.",
+        "quote_km": "ន ហិ វេរេន វេរានិ សម្មន្តីធ កុទាចនំ; អវេរេន ច សម្មន្តិ ឯស ធម្មោ សនន្តនោ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Song Yếu"
+    },
+    {
+        "id": 4,
+        "quote_vi": "Người ngu nghĩ là ngọt, khi ác chưa chín muồi; ác nghiệp chín muồi rồi, người ngu chịu khổ đau.",
+        "quote_km": "មធុវា មញ្ញតី ពាលោ យាវ បាបំ ន បច្ចតិ; យទា ច បច្ចតី បាបំ អថ ពាលោ ទុក្ខំ និគច្ឆតិ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Ngu"
+    },
+    {
+        "id": 5,
+        "quote_vi": "Không làm mọi điều ác, thành tựu các hạnh lành, tâm ý giữ trong sạch, chính lời chư Phật dạy.",
+        "quote_km": "សព្វបាបស្ស អករណំ កុសលស្សូបសម្បទា; សចិត្តបរិយោទបនំ ឯតំ ពុទ្ធាន សាសនំ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Phật Đà"
+    },
+    {
+        "id": 6,
+        "quote_vi": "Hãy gấp làm điều lành, ngăn tâm làm điều ác. Ai chậm làm việc lành, ý ưa thích việc ác.",
+        "quote_km": "អភិត្តរេថ កល្យាណេ បាបា ចិត្តំ និវារយេ; ទន្ធំ ហិ ករោតោ បុញ្ញំ បាបស្មឹ រមតី មនោ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Ác"
+    },
+    {
+        "id": 7,
+        "quote_vi": "Dầu tại bãi chiến trường, thắng ngàn ngàn quân địch, tự thắng mình tốt hơn, thật chiến thắng tối thượng.",
+        "quote_km": "យោ សហស្សំ សហស្សេន សង្គាមេ មានុសេ ជិនេ; ឯកញ្ច ជេយ្យមត្តានំ ស វេ សង្គាមជុត្តមោ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Ngàn"
+    },
+    {
+        "id": 8,
+        "quote_vi": "Ít người giữa nhân loại, được sang bờ bên kia. Cả lũ người còn lại, chạy dọc theo bờ này.",
+        "quote_km": "អប្បកា តេ មនុស្សេសុ យេ ជនា បារគាមិនោ; អថាយំ ឥតរា បជា តីរមេវានុធាវតិ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Người Hiền"
+    },
+    {
+        "id": 9,
+        "quote_vi": "Như đá tảng kiên cố, không gió nào lay chuyển. Cũng vậy, giữa khen chê, người trí không dao động.",
+        "quote_km": "សេលោ យថា ឯកឃនោ វាតេន ន សមិរតិ; ឯវំ និន្ទា បសំសាសុ ន សមិញ្ជន្តិ បណ្ឌិតា។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Người Hiền"
+    },
+    {
+        "id": 10,
+        "quote_vi": "Dễ thay làm điều ác, làm những việc hại mình. Còn những việc lợi người, thật rất khó làm thay.",
+        "quote_km": "សុកុរានិ អសាធូនិ អត្តនោ អហិតានិ ច; យំ វេ ហិតញ្ច សាធុញ្ច តំ វេ បរមទុក្ករំ។",
+        "source": "Kinh Pháp Cú (Dhammapada) - Phẩm Tự Ngã"
+    }
+]

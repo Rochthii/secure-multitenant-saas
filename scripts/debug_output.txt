@@ -1,0 +1,3 @@
+Line 669: '               // FIX: Log both Gemini + Groq errors - do not overwrite geminiRe'
+Line 671: '               const groqErrClone = groqRes.clone();\n'
+Line 674: '                   const errBody = await groqErrClone.text();\n'
