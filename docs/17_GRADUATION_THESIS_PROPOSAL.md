@@ -15,7 +15,7 @@
 
 ## Danh mục chữ viết tắt
 
-| Viết tắt | Ý nghĩa |
+| Viết tắt / Thuật ngữ | Ý nghĩa |
 |---|---|
 | **SaaS** | Software-as-a-Service (Phần mềm dưới dạng dịch vụ) |
 | **RLS** | Row-Level Security (Bảo mật mức dòng) |
@@ -27,6 +27,9 @@
 | **TTL** | Time To Live (Thời gian sống của cache) |
 | **CRUD** | Create, Read, Update, Delete |
 | **API** | Application Programming Interface |
+| **Smart Router** | Bộ định tuyến thông minh (Định tuyến yêu cầu dựa trên Tenant Domain/Subdomain) |
+| **Intranet Lockdown** | Cơ chế khóa mạng nội bộ (Chỉ cho phép truy cập tài nguyên Tenant từ IP/mạng nội bộ được chỉ định) |
+| **Zero Trust** | Kiến trúc an ninh mạng "Không bao giờ tin tưởng, luôn luôn xác thực" |
 
 ---
 
@@ -65,7 +68,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 ### 2.3 Đóng góp khoa học & thực tiễn
 
 - **Về lý thuyết:** Hệ thống hóa cách tiếp cận bảo mật "Defense-in-depth" cho kiến trúc Multi-tenant, chuyển dịch trọng tâm thực thi từ tầng ứng dụng xuống tầng dữ liệu (Data-centric Security).
-- **Về thực tiễn:** Cung cấp một bộ khung (framework) SaaS an toàn có khả năng tùy biến cao, giúp các tổ chức tôn giáo hoặc doanh nghiệp vừa và nhỏ dễ dàng triển khai nền tảng quản trị an toàn với chi phí hạ tầng thấp nhưng bảo mật mức doanh nghiệp.
+- **Về thực tiễn:** Cung cấp một bộ khung (framework) SaaS an toàn có khả năng tùy biến cao, giúp các doanh nghiệp vừa và nhỏ hoặc các tổ chức phi lợi nhuận (ví dụ: các tổ chức xã hội, tự viện) dễ dàng triển khai nền tảng quản trị an toàn với chi phí hạ tầng thấp nhưng đảm bảo mức độ bảo mật tương đương cấp doanh nghiệp lớn (Enterprise security tier).
 
 ---
 
@@ -128,42 +131,45 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Phương pháp nghiên cứu
 
 ### Chương 2: Cơ sở lý thuyết
-- Multi-tenant Architecture: 3 mô hình
-- PostgreSQL Row-Level Security (RLS)
-- RBAC vs. ABAC: Mô hình kiểm soát truy cập
-- Audit Log và Non-repudiation
-- ISO/IEC 27017: Cloud Security Controls
+- Multi-tenant Architecture: 3 mô hình cô lập dữ liệu
+- PostgreSQL Row-Level Security (RLS) và tác động hiệu năng cơ sở dữ liệu
+- RBAC vs. ABAC: Mô hình phân quyền lai dựa trên vai trò và ngữ cảnh thuộc tính
+- Audit Log, tính bất biến (Immutability) và khả năng chống chối bỏ (Non-repudiation)
+- Định nghĩa cơ chế Smart Router và kiến trúc Intranet Lockdown phân vùng tài nguyên Tenant
+- Nguyên lý thiết kế an toàn Zero Trust Architecture (ZTA) cho hệ thống SaaS
+- Tiêu chuẩn an toàn thông tin đám mây ISO/IEC 27017
 
 ### Chương 3: Phân tích & Thiết kế
-- Kiến trúc tổng thể hệ thống (System Architecture)
+- Kiến trúc tổng thể hệ thống (System Architecture) theo triết lý Zero Trust
 - Thiết kế mô hình dữ liệu Multi-tenant (Shared Schema)
-- Thiết kế Defense-in-depth Security Model
-- Cấu trúc "Tường lửa nội bộ" (Intranet Lockdown) & Smart Router
+- Thiết kế mô hình bảo mật hình phễu Defense-in-depth
+- Thiết kế cơ chế Smart Router (Dynamic Subdomain Routing) và phân vùng Intranet Lockdown bảo vệ tài nguyên
 - Thiết kế RLS Policy Engine & Data Isolation tối ưu hiệu năng (Nhúng Custom Claims vào JWT để triệt tiêu độ trễ JOIN query)
 - Thiết kế RBAC + ABAC Authorization Model (Delegated Admin & Chống leo thang đặc quyền - Preventing Permission Escalation)
 - Thiết kế Chiến lược Caching an toàn (Tenant-aware Cache Keys) và Điều tiết tải (Rate Limiting, Connection Pooling) chống Noisy Neighbor
-- Thiết kế Audit Log System & SOC Dashboard (Automated Incident Response)
+- Thiết kế Audit Log System bất biến & SOC Dashboard tích hợp AI phát hiện bất thường (sử dụng thuật toán Isolation Forest hoặc mô hình phân loại anomaly từ logs) kết hợp cơ chế phản ứng tự động (Active Webhook Alerts)
 
 ### Chương 4: Triển khai
-- Triển khai "Intranet Lockdown" & Smart Router Access Control
+- Triển khai "Intranet Lockdown" & Smart Router Access Control tuân thủ Zero Trust
 - Triển khai Phân quyền ủy thác (Delegated Admin) từ Tập đoàn xuống Chi nhánh
-- Triển khai RLS Policies (PostgreSQL)
-- Triển khai ABAC Functions (time-based, operation-type)
-- Triển khai Multi-tenant Caching System (unstable_cache, tags-based revalidation)
+- Triển khai hệ thống RLS Policies tối ưu hóa trên PostgreSQL
+- Triển khai các hàm kiểm tra thuộc tính ABAC (time-based, IP-based, operation-type)
+- Triển khai Multi-tenant Caching System (unstable_cache, tags-based revalidation) bảo mật chống rò rỉ chéo
 - Triển khai Rate Limiting trên Mutation API và Connection Pooling (Supavisor)
-- Triển khai Audit Trail System (triggers, immutable log)
-- Triển khai SOC Dashboard và Cảnh báo chủ động (Active Webhook Alerts)
+- Triển khai Audit Trail System bất biến (Triggers chặn DELETE/UPDATE ghi đè)
+- Triển khai SOC Dashboard kết hợp mô hình Anomaly Detection (sử dụng thuật toán Isolation Forest hoặc API gọi mô hình AI ngoài để phân tích hành vi bất thường) và cảnh báo chủ động (Active Webhook Alerts)
 - Triển khai DevSecOps Pipeline (cron backup, release checklist)
 - Thiết lập quy trình Tenant Offboarding (Hard Wipe data) theo chuẩn ISO 27017 và xử lý phân mảnh CSDL
 
 ### Chương 5: Đánh giá & Thực nghiệm
-- Kiểm chứng tenant isolation (cross-tenant test)
-- Đánh giá RLS Coverage Score
-- Kiểm chứng Audit Log integrity
-- Kiểm chứng tính cô lập của Cache (Cache Leakage Testing giữa các tenant)
-- Ánh xạ ISO 27017 Compliance Matrix
-- **Đánh giá ảnh hưởng hiệu năng (Performance Benchmarking):** So sánh độ trễ query khi có và không có RLS để đánh giá tính khả thi trong môi trường production.
-- So sánh với giải pháp application-level filtering
+- **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ.
+- Đánh giá RLS Coverage Score (Tỷ lệ phần trăm các bảng dữ liệu được bảo vệ thành công bằng RLS).
+- Kiểm chứng tính toàn vẹn của Audit Log (Audit Log integrity check & non-repudiation verification).
+- **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):**
+  - Định nghĩa Baseline so sánh: Phương pháp lọc dữ liệu ở tầng ứng dụng (Application-layer Filtering) vs. Lọc dữ liệu ở tầng cơ sở dữ liệu (Database-level RLS).
+  - Chỉ số đo lường (Metrics): Độ trễ trung vị (P50), độ trễ phân vị cao (P95, P99 Latency), và thông lượng xử lý (Throughput - requests/sec) khi tải trọng đồng thời tăng từ 100 đến 10,000 active sessions.
+- **Thực nghiệm Cache Leakage Testing có số liệu:** Mô phỏng truy cập chéo giữa các tenant sử dụng cache chung và đo tỷ lệ rò rỉ thông tin (Cache Pollution / Cache Side-Channel Leakage rate) trong các điều kiện bất đối xứng dữ liệu.
+- Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt.
 
 ### Chương 6: Kết luận & Hướng phát triển
 - Tổng kết kết quả đạt được
@@ -191,7 +197,31 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 ---
 
-## 7. Tài liệu tham khảo (Dự kiến)
+## 7. Định hướng chiến lược & Lộ trình thực hiện (2 năm)
+
+### 7.1 Định hướng chiến lược phát triển
+Đề tài được xây dựng theo định hướng **Nghiên cứu ứng dụng kết hợp Đo lường kiểm chứng kỹ thuật**, tận dụng lợi thế chuyên sâu về Kỹ thuật phần mềm (Software Engineering) và An toàn thông tin (ATTT) để tạo ra sản phẩm thực thi chất lượng cao và có đóng góp khoa học rõ ràng:
+- **Sản phẩm thực thi chạy được:** Làm minh chứng kỹ thuật cụ thể cho các luận điểm an toàn dữ liệu.
+- **Đánh giá kiểm chứng có số liệu:** Thực hiện benchmark hiệu năng cụ thể và lập bảng đối chiếu compliance (ISO 27017) để khẳng định tính khoa học của đề án.
+- **Tập trung cao độ:** Không sa đà vào tối ưu giao diện UI/UX phức tạp hay các tính năng nghiệp vụ thừa, ưu tiên bảo mật cốt lõi và tính cô lập hệ thống.
+
+> [!IMPORTANT]
+> **Nhiệm vụ cần làm rõ sớm với Giảng viên hướng dẫn:**
+> 1. Xác nhận đề tài được đánh giá theo thiên hướng nghiên cứu ứng dụng (chú trọng thực nghiệm và giải pháp) hay nghiên cứu khoa học thuần túy (chú trọng lý thuyết và mô hình toán học) để điều chỉnh văn phong báo cáo phù hợp.
+> 2. Xác nhận yêu cầu về demo trực tiếp (live demo) trong buổi bảo vệ hay chỉ cần quay video minh chứng kết quả thực nghiệm.
+
+### 7.2 Lộ trình thực hiện 2 năm gợi ý
+
+| Giai đoạn | Thời gian | Nội dung công việc | Kết quả kỳ vọng |
+| :--- | :--- | :--- | :--- |
+| **Giai đoạn 1** | Hiện tại - Hết năm 2 | - Nghiên cứu sâu về cơ chế hoạt động PostgreSQL RLS.<br>- Đọc hiểu các tiêu chuẩn an toàn đám mây ISO/IEC 27017.<br>- Làm quen hạ tầng Backend-as-a-Service (Supabase). | Nắm vững kiến thức nền tảng và chuẩn bị môi trường Lab thử nghiệm. |
+| **Giai đoạn 2** | Năm học thứ 3 | - Thiết kế kiến trúc tổng thể, mô hình RLS Policy Engine.<br>- Viết các chương đầu (Chương 1, 2, 3) của báo cáo đồ án.<br>- Xây dựng prototype (phiên bản thử nghiệm) của hệ thống. | Hoàn thành bộ khung tài liệu và mã nguồn prototype chạy được cơ bản. |
+| **Giai đoạn 3** | Đầu năm thứ 4 | - Hoàn thiện toàn bộ các tính năng của hệ thống (SOC Dashboard, AI-powered Audit Log).<br>- Chạy benchmark hiệu năng (performance), vẽ biểu đồ latency/throughput.<br>- Hoàn thiện dự thảo báo cáo đồ án. | Hệ thống hoàn thiện, có dữ liệu benchmark trực quan để đưa vào báo cáo. |
+| **Giai đoạn 4** | Cuối năm thứ 4 | - Tối ưu hóa, kiểm thử bảo mật diện rộng.<br>- Chỉnh sửa báo cáo theo ý kiến Hội đồng và chuẩn bị bảo vệ đồ án tốt nghiệp. | Slide thuyết trình, demo hoàn chỉnh và báo cáo đồ án tốt nghiệp xuất sắc. |
+
+---
+
+## 8. Tài liệu tham khảo (Dự kiến)
 
 1. Microsoft Azure Architecture Center, "Multi-tenant SaaS Architecture Patterns", 2024.
 2. PostgreSQL Documentation, "Row Security Policies", PostgreSQL 16.
@@ -200,3 +230,14 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 5. Supabase Documentation, "Row Level Security", 2024.
 6. R. Sandhu, "Attribute-Based Access Control Models: A Review", IEEE Computer Society, 2018.
 7. OWASP, "Top 10 - A01:2021-Broken Access Control", 2021.
+8. Jin, X., Krishnan, R., and Sandhu, R., "A Unified Attribute-Based Access Control Model Covering User, Object, and Environment Attributes", ACM Transactions on Information and System Security (TISSEC), 2012.
+9. Al-Kahtani, M. S., and Sandhu, R., "Rule-Based Role-Based Access Control", ACM Workshop on Role-Based Access Control, 2002.
+10. Shostack, A., "Threat Modeling: Designing for Security", John Wiley & Sons, 2014.
+11. Saltzer, J. H., and Schroeder, M. D., "The Protection of Information in Computer Systems", Proceedings of the IEEE, 1975.
+12. NIST Special Publication 800-207, "Zero Trust Architecture", National Institute of Standards and Technology, 2020.
+13. Kuhn, D. R., Coyne, E. J., and Weil, T. R., "Adding Attributes to Role-Based Access Control", IEEE Computer, 2010.
+14. W. Stallings, "Effective Cybersecurity: A Guide to Active Defense and Security Principles", Addison-Wesley Professional, 2018.
+15. IEEE Standard 802.1Q, "Standard for Local and Metropolitan Area Networks—Bridges and Bridged Networks" (Intranet network isolation concepts).
+16. Hu, V. C., Kuhn, D. R., and Ferraiolo, D. F., "Attribute-Based Access Control for Cloud Infrastructure", IEEE Cloud Computing, 2015.
+17. PostGIS Association, "Spatial Indexing and R-Tree Performance in Multi-tenant GIS Applications", IEEE Software, 2023.
+
