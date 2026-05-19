@@ -138,6 +138,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Định nghĩa cơ chế Smart Router và kiến trúc Intranet Lockdown phân vùng tài nguyên Tenant
 - Nguyên lý thiết kế an toàn Zero Trust Architecture (ZTA) cho hệ thống SaaS
 - Tiêu chuẩn an toàn thông tin đám mây ISO/IEC 27017
+- Phân tích phát hiện bất thường (Anomaly Detection) trong nhật ký hệ thống: Nguyên lý thuật toán Isolation Forest
 
 ### Chương 3: Phân tích & Thiết kế
 - Kiến trúc tổng thể hệ thống (System Architecture) theo triết lý Zero Trust **[HOÀN THÀNH]**
@@ -168,6 +169,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):** **[CHƯA THỰC HIỆN - GAP]**
   - Định nghĩa Baseline so sánh: Phương pháp lọc dữ liệu ở tầng ứng dụng (Application-layer Filtering) vs. Lọc dữ liệu ở tầng cơ sở dữ liệu (Database-level RLS).
   - Chỉ số đo lường (Metrics): Độ trễ trung vị (P50), độ trễ phân vị cao (P95, P99 Latency), và thông lượng xử lý (Throughput - requests/sec) khi tải trọng đồng thời tăng từ 100 đến 10,000 active sessions.
+  - Công cụ thực nghiệm (Tooling): Sử dụng k6 hoặc pgbench để tạo tải đồng thời (load testing) đo latency và throughput trên dataset 1M rows với 3–5 tenants.
 - **Thực nghiệm Cache Leakage Testing có số liệu:** Mô phỏng truy cập chéo giữa các tenant sử dụng cache chung và đo tỷ lệ rò rỉ thông tin (Cache Pollution / Cache Side-Channel Leakage rate) trong các điều kiện bất đối xứng dữ liệu. **[CHƯA THỰC HIỆN - GAP]**
 - Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt. **[HOÀN THÀNH]**
 
@@ -184,7 +186,10 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 ---
 
-## 6. Kế hoạch thực hiện
+## 6. Kế hoạch thực hiện (Chi tiết Học kỳ cuối thực hiện đồ án)
+
+> [!NOTE]
+> Kế hoạch 18 tuần dưới đây thể hiện tiến độ chi tiết của học kỳ cuối cùng đăng ký thực hiện đồ án tốt nghiệp chính thức. Lộ trình chuẩn bị, nghiên cứu nền tảng và phát triển hệ thống tổng thể 2 năm được mô tả chi tiết tại Mục 7.2.
 
 | Giai đoạn | Nội dung | Thời gian |
 |---|---|---|
@@ -239,5 +244,4 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 14. W. Stallings, "Effective Cybersecurity: A Guide to Active Defense and Security Principles", Addison-Wesley Professional, 2018.
 15. IEEE Standard 802.1Q, "Standard for Local and Metropolitan Area Networks—Bridges and Bridged Networks" (Intranet network isolation concepts).
 16. Hu, V. C., Kuhn, D. R., and Ferraiolo, D. F., "Attribute-Based Access Control for Cloud Infrastructure", IEEE Cloud Computing, 2015.
-17. PostGIS Association, "Spatial Indexing and R-Tree Performance in Multi-tenant GIS Applications", IEEE Software, 2023.
 
