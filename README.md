@@ -1,6 +1,19 @@
-# 🚀Multi-tenant Platform
+# 🚀 Secure Multi-tenant SaaS Platform (Sacred Spaces / Non-profit Architecture)
 
-> Nền tảng website + CMS đa tenant cho chi nhánh/tổ chức cộng đồng, xây dựng trên Next.js App Router + Supabase (Postgres + RLS), tối ưu cho vận hành production với cache tag-based và runbook đầy đủ.
+> **Mã nguồn thực nghiệm Đồ án Tốt nghiệp khóa học 2026**
+> - **Đề tài:** Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tảng đa khách hàng (Secure Multi-tenant SaaS): Áp dụng Row-Level Security và Audit Log trong quản trị rủi ro thông tin.
+> - **Học viện:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)
+> - **Học viên:** Chăm Rốch Thi
+
+Nền tảng website + CMS đa tenant (tiền thuê) cho các chi nhánh/tự viện/tổ chức phi lợi nhuận, được xây dựng trên nền tảng Next.js App Router + Supabase (Postgres RLS), bảo mật sâu đa lớp (Zero Trust) và đi kèm công cụ quản lý vận hành chuẩn hóa.
+
+---
+
+## 🎓 Tài liệu Đồ án Tốt nghiệp (PTIT)
+
+Các tài liệu chính phục vụ cho báo cáo đồ án tốt nghiệp được lưu trữ trực tiếp trong mã nguồn:
+*   📄 **[Đề cương Đồ án Tốt nghiệp (Proposal)](file:///e:/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md)**: Chi tiết cấu trúc các chương, mục tiêu nghiên cứu, đóng góp khoa học, và kế hoạch thực hiện 2 năm.
+*   📄 **[Bản Phân tích Ánh xạ Đề cương & Kiến trúc Thực tế](file:///e:/PTIT_THESIS_SAAS/docs/18_PROPOSAL_MAPPING_ANALYSIS.md)**: Bảng đối chiếu 1-1 chứng minh sự tương hợp giữa các khái niệm lý thuyết (Smart Router, Intranet Lockdown, ABAC, Immutable Audit Logs...) với các file code/migration SQL thực tế trong project.
 
 ---
 
@@ -449,6 +462,11 @@ Checklist đầy đủ: `docs/09_RELEASE_HANDOFF_CHECKLIST.md`.
 Điểm vào chính thức:
 
 - `docs/_index.md`
+
+Tài liệu Đồ án Tốt nghiệp (PTIT):
+
+- `docs/17_GRADUATION_THESIS_PROPOSAL.md` (Đề cương Đồ án)
+- `docs/18_PROPOSAL_MAPPING_ANALYSIS.md` (Bản phân tích đối chiếu code thực tế)
 
 Canonical v2:
 
