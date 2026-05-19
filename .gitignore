@@ -80,6 +80,10 @@ tmp/
 artifacts/
 _archive/
 scratch/
+test_output.txt
+tmp_gemini_out.txt
+scripts/gemini_output.txt
+supabase/migrations_backup
 
 # Dumps & SQL (Usually ignored for repo cleanliness)
 *.sql
