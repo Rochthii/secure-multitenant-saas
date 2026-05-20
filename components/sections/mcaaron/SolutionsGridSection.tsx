@@ -147,8 +147,8 @@ export function SolutionsGridSection({ data }: Props) {
                             animate={isVisible ? { opacity: 1, y: 0 } : {}}
                             transition={{ duration: 0.5, delay: 0.15 + idx * 0.08 }}
                         >
-                                <Link
-                                href={`/giai-phap/${sol.slug}`}
+                            <Link
+                                href={idx === 0 ? '/gioi-thieu' : '/lien-he'}
                                 className="group block relative rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 h-full bg-white border border-slate-200 shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)]"
                             >
                                 {/* Hover glow */}
@@ -199,7 +199,7 @@ export function SolutionsGridSection({ data }: Props) {
                     className="text-center"
                 >
                     <Link
-                        href="/giai-phap"
+                        href="/lien-he"
                         className="group inline-flex items-center gap-4 px-10 py-5 font-black rounded-full transition-all hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,210,255,0.4)] text-[16px] relative overflow-hidden"
                         style={{ background: '#00D2FF', color: '#030812' }}
                     >

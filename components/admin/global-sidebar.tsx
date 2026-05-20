@@ -94,21 +94,21 @@ const groupedMenuItems: MenuGroup[] = [
         ]
     },
     {
-        groupTitle: 'Chi nhánh & Đối tác',
+        groupTitle: 'Workspaces & Đối tác',
         items: [
             {
                 href: '/admin/tenants',
-                label: 'Quản lý Chi nhánh (Tenant)',
+                label: 'Quản lý Workspace',
                 icon: Building2,
                 resource: 'tenants',
-                desc: 'Chi nhánh, Công ty & Tổ chức',
+                desc: 'Tổ chức, Doanh nghiệp & NGO',
             },
             {
                 href: '/admin/organizations',
-                label: 'Quản lý Đối tác',
+                label: 'Mạng lưới Đối tác',
                 icon: Building2,
                 resource: 'tenants',
-                desc: 'DN Xã hội & Đối tác',
+                desc: 'Hậu thuẫn & Liên minh',
             },
         ]
     },
@@ -226,7 +226,7 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
             {/* Header */}
             <div className="p-5 border-b border-slate-700 bg-slate-950">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-purple-600 shadow-purple-600/20">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-amber-600 shadow-amber-600/20">
                         <Shield className="w-5 h-5 text-white" />
                     </div>
                     <div>
@@ -234,8 +234,8 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
                         <p className="text-[10px] text-slate-400 font-bold tracking-wider uppercase">Quản trị Tổng</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-900/50 rounded-lg border border-purple-700/50">
-                    <span className="text-xs font-medium text-purple-300">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-900/50 rounded-lg border border-amber-700/50">
+                    <span className="text-xs font-medium text-amber-300">
                         {roleLabel[role] ?? role}
                     </span>
                 </div>
@@ -249,16 +249,16 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
                         className="flex items-center gap-2 w-full px-3 py-2 bg-amber-900/40 hover:bg-amber-800/60 rounded-xl text-amber-300 hover:text-amber-200 font-medium text-xs transition-all border border-amber-700/30 group"
                     >
                         <ArrowLeft className="w-3.5 h-3.5 shrink-0 group-hover:-translate-x-0.5 transition-transform" />
-                        <span className="truncate">↩ Về chi nhánh: {lastTenant.name}</span>
+                        <span className="truncate">↩ Workspace: {lastTenant.name}</span>
                     </Link>
                 )}
                 <Link
                     href="/admin/select-tenant"
-                    className="flex items-center justify-between w-full px-4 py-3 bg-amber-500 hover:bg-amber-400 rounded-xl text-slate-900 font-bold text-xs transition-all shadow-md group"
+                    className="flex items-center justify-between w-full px-4 py-3 bg-amber-600 hover:bg-amber-500 rounded-xl text-white font-bold text-xs transition-all shadow-md shadow-amber-900/40 border border-amber-500/20 group"
                 >
                     <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        <span>CHỌN ĐƠN VỊ QUẢN TRỊ</span>
+                        <span>CHỌN WORKSPACE</span>
                     </div>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
@@ -317,10 +317,10 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
                                                                     href={sub.href}
                                                                     className={cn(
                                                                         'px-3 py-2 text-xs font-medium rounded-lg transition-all flex items-center gap-2',
-                                                                        isSubActive ? 'bg-purple-500/10 text-purple-400' : 'text-slate-500 hover:text-white hover:bg-slate-800/50'
+                                                                        isSubActive ? 'bg-amber-500/10 text-amber-400' : 'text-slate-500 hover:text-white hover:bg-slate-800/50'
                                                                     )}
                                                                 >
-                                                                    <div className={cn("w-1 h-1 rounded-full", isSubActive ? "bg-purple-400" : "bg-slate-700")} />
+                                                                    <div className={cn("w-1 h-1 rounded-full", isSubActive ? "bg-amber-400" : "bg-slate-700")} />
                                                                     <span className="truncate">{sub.label}</span>
                                                                 </Link>
                                                             );
@@ -350,7 +350,7 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
                                                     <p className="text-sm font-medium truncate">{item.label}</p>
                                                     <p className="text-[10px] text-slate-500 truncate">{item.desc}</p>
                                                 </div>
-                                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />}
+                                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
                                             </Link>
                                         </li>
                                     );
@@ -368,7 +368,7 @@ export function GlobalSidebar({ role = 'admin', email, permissions = {}, tenantT
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-all text-xs"
                 >
                     <Building2 className="h-4 w-4" />
-                    <span>Danh sách Chi nhánh</span>
+                    <span>Danh sách Workspace</span>
                 </Link>
                 {lastTenant?.domain && (
                     <a

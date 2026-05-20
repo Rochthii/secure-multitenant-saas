@@ -18,13 +18,11 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
     if (!tenant) return { title: 'Trang chủ' };
 
     const settings = await getSiteSettings(tenant.id);
-    const siteName = settings['site_name_vi'] || tenant.name || 'Chi nhánh Khmer';
-    const isCompany = tenant.tenant_type !== 'tenant';
+    const siteName = settings['site_name_vi'] || tenant.name || 'Workspace Doanh nghiệp';
+    const isCompany = true;
     const tenantBaseUrl = getTenantBaseUrl(domain);
 
-    const description = isCompany
-        ? settings['site_description_vi'] || `${siteName} — Hệ thống quản trị nội bộ công nghệ phụng sự cộng đồng`
-        : settings['site_description_vi'] || `${siteName} — Trang thông tin chính thức và các hoạt động Phật sự`;
+    const description = settings['site_description_vi'] || `${siteName} — Hệ thống quản trị nội bộ công nghệ phụng sự doanh nghiệp`;
 
     const ogImage = settings['site_og_image'] || tenant.logo_url || `${tenantBaseUrl}/default-og-image.jpg`;
 
@@ -66,8 +64,8 @@ export default async function HomePage({ params }: { params: Promise<{ domain: s
     const isHomeContext = true;
 
     const tenantId = tenant!.id;
-    const isCompany = tenant!.tenant_type !== 'tenant';
-    const layoutStyle = tenant!.layout_style || 'traditional';
+    const isCompany = true;
+    const layoutStyle = tenant!.layout_style || 'saas_violet';
 
     // Nếu là chế độ AI Portal riêng biệt
     if (layoutStyle === 'ai_portal') {

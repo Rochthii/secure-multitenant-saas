@@ -332,7 +332,7 @@ function TalkFormModal({
                             type="text"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
-                            placeholder="Tiêu đề bài pháp thoại"
+                            placeholder={isCompany ? "Tiêu đề video đào tạo / tài liệu SOP" : "Tiêu đề bài pháp thoại"}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/50 focus:border-indigo-600"
                             required
                         />
@@ -576,9 +576,11 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-playfair font-bold text-gray-900">Quản lý Pháp Thoại</h1>
+                    <h1 className="text-2xl font-playfair font-bold text-gray-900">
+                        {isCompany ? 'Quản lý Video SOP & Đào tạo' : 'Quản lý Pháp Thoại'}
+                    </h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        {talks.filter(t => t.is_featured).length} bài nổi bật · {talks.filter(t => t.is_active).length} đang hiển thị
+                        {talks.filter(t => t.is_featured).length} {isCompany ? 'nội dung nổi bật' : 'bài nổi bật'} · {talks.filter(t => t.is_active).length} đang hiển thị
                     </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
@@ -598,16 +600,20 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
 
             {/* Info banner */}
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                <strong>💡 Hướng dẫn:</strong> Dán link YouTube → nhấn "Lấy thông tin" → hệ thống tự điền tiêu đề và ảnh thumbnail.
+                <strong>💡 Hướng dẫn:</strong> Dán link YouTube → nhấn "Lấy thông tin" → hệ thống tự điền tiêu đề và ảnh đại diện.
                 Bật <strong>Nổi bật</strong> để hiện trên trang chủ (tối đa 3 bài đầu tiên theo thứ tự).
             </div>
 
             {/* Talks list */}
             {talks.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                    <div className="text-4xl mb-3">🎧</div>
-                    <p className="text-gray-500 font-medium">Chưa có bài pháp thoại nào</p>
-                    <p className="text-sm text-gray-400 mt-1">Nhấn "Thêm Pháp Thoại" để bắt đầu</p>
+                    <div className="text-4xl mb-3">📚</div>
+                    <p className="text-gray-500 font-medium">
+                        {isCompany ? 'Chưa có tài liệu/video đào tạo nào' : 'Chưa có bài pháp thoại nào'}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                        {isCompany ? 'Nhấn "Thêm tài liệu đào tạo" để bắt đầu' : 'Nhấn "Thêm Pháp Thoại" để bắt đầu'}
+                    </p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -669,14 +675,15 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                             </span>
                                         </div>
                                     </div>
-
                                     {talk.description_vi && (
                                         <p className="text-sm text-gray-500 mt-1 line-clamp-1">{talk.description_vi}</p>
                                     )}
 
                                     <div className="flex items-center gap-4 mt-2">
                                         {talk.speaker_name_vi && (
-                                            <span className="text-xs text-gray-400">🙏 {talk.speaker_name_vi}</span>
+                                            <span className="text-xs text-gray-400">
+                                                {isCompany ? '👤 ' : '🙏 '}{talk.speaker_name_vi}
+                                            </span>
                                         )}
                                         {talk.topic_vi && (
                                             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{talk.topic_vi}</span>

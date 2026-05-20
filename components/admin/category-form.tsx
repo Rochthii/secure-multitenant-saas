@@ -33,7 +33,7 @@ interface CategoryFormProps {
 
 const MODULES = [
     { value: 'news', label: 'Tin tức' },
-    { value: 'dharma', label: 'Pháp thoại / Video' },
+    { value: 'dharma', label: 'Tài liệu / Video Quy Trình SOP' },
     { value: 'documents', label: 'Tài liệu số' },
     { value: 'events', label: 'Sự kiện' },
     { value: 'media', label: 'Thư viện Media (Album)' }
@@ -194,7 +194,7 @@ export function CategoryForm({ category, allCategories, tenants, contextTenantId
                             onChange={(val) => form.setValue('image_url', val, { shouldDirty: true })}
                             label="Hình ảnh banner/thumbnail cho danh mục"
                         />
-                        <p className="text-xs text-gray-500 italic">* Dùng cho giao diện Overview Cards (Phật sự, Hoằng pháp...)</p>
+                        <p className="text-xs text-gray-500 italic">* Dùng cho giao diện Overview Cards (Sự kiện, Truyền thông, Dự án...)</p>
                     </div>
 
                     {/* Module & Parent */}
@@ -281,7 +281,7 @@ export function CategoryForm({ category, allCategories, tenants, contextTenantId
                                 <Input
                                     id="name_vi"
                                     {...form.register('name_vi', { required: true })}
-                                    placeholder="Ví dụ: Phật Sự & Hoằng Pháp"
+                                    placeholder="Ví dụ: Sự kiện & Hội thảo"
                                     onChange={(e) => {
                                         form.setValue('name_vi', e.target.value, { shouldDirty: true });
                                         if (!isEdit && !isManualSlug) {

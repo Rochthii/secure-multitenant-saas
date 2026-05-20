@@ -19,12 +19,9 @@ export const DEFAULT_LAYOUT_BLOCKS: BlockConfig[] = [
 ];
 
 export const DEFAULT_COMPANY_BLOCKS: BlockConfig[] = [
-    { id: 'company-hero', type: 'mcaaron_hero', visible: true },
-    { id: 'company-statistics', type: 'mcaaron_statistics', visible: true },
-    { id: 'company-intro', type: 'mcaaron_intro', visible: true },
-    { id: 'company-services', type: 'mcaaron_services', visible: true },
-    { id: 'company-transparency', type: 'mcaaron_transparency', visible: true },
-    { id: 'company-cta', type: 'mcaaron_cta', visible: true },
-    { id: 'company-news', type: 'mcaaron_news', visible: true },
-    { id: 'company-network', type: 'mcaaron_network', visible: true },
+    { id: 'ent-hero', type: 'enterprise_hero', visible: true },
+    { id: 'ent-stats', type: 'enterprise_stats', visible: true },
+    { id: 'ent-features', type: 'enterprise_features', visible: true },
+    { id: 'ent-news', type: 'enterprise_news', visible: true },
+    { id: 'ent-cta', type: 'enterprise_cta', visible: true },
 ];

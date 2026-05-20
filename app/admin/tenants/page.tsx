@@ -4,19 +4,16 @@ import { requirePermission } from '@/lib/permissions';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Plus, Building2, Globe, Pencil, LayoutTemplate } from 'lucide-react';
+import { Plus, Building2, Globe, Pencil, Layers, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const LAYOUT_LABELS: Record<string, string> = {
-    traditional: '🏛️ Truyền Thống',
-    modern: '🌕 Ánh Trăng Rằm',
-    minimal: '📄 Vedanā',
-    lotus: '🌺 Champa Neak',
-    angkor: '🏯 Prasat Khmer',
-    zen: '🪷 Anapanasati',
-    sunrise: '🌅 Bình Minh Mekong',
-    festival: '🔔 Bon Khmer',
-    ai_portal: '🤖 Dharma Chat AI',
+    // Chỉ giữ lại các layout chuẩn doanh nghiệp
+    saas_violet: '⚡ Violet Premium SaaS',
+    corp_navy: '🛡️ Corporate Navy Premium',
+    charity_green: '🌱 Social Green Sustainable',
+    creative_amber: '☀️ Creative Amber Studio',
+    minimal_white: '❄️ Clean Minimalist Elite',
 };
 
 
@@ -26,83 +23,81 @@ export default async function TenantsPage() {
     const { tenants, error } = await getTenants();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 text-slate-300">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold">Quản lý Chi nhánh</h1>
-                    <p className="text-gray-500 mt-1">
-                        Danh sách các ngôi chi nhánh sử dụng hệ thống ({tenants.length} chi nhánh)
+                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <Building2 className="w-8 h-8 text-amber-400" />
+                        Quản lý Workspace & Đơn vị thành viên
+                    </h1>
+                    <p className="text-slate-400 mt-1 text-sm">
+                        Danh sách các doanh nghiệp, đối tác và đơn vị thành viên sử dụng hệ thống ({tenants.length} đơn vị)
                     </p>
                 </div>
-                <div className="flex gap-2 font-sans">
-                    <Link href="/admin/tenants/new?mode=app-only">
-                        <Button variant="outline" className="gap-2 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 hover:text-amber-800 shadow-sm">
-                            <Plus className="w-4 h-4" />
-                            Khởi tạo Chi nhánh lên App
-                        </Button>
-                    </Link>
+                <div className="flex flex-wrap gap-2 font-sans">
                     <Link href="/admin/tenants/new">
-                        <Button className="gap-2 shadow-sm">
+                        <Button className="gap-2 bg-amber-600 hover:bg-amber-500 text-white font-bold shadow-md shadow-amber-900/10">
                             <Plus className="w-4 h-4" />
-                            Thêm Chi nhánh Mới (Web + App)
+                            Khởi tạo Workspace mới
                         </Button>
                     </Link>
                 </div>
             </div>
 
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                    Lỗi tải dữ liệu: {error}
+                <div className="bg-red-950/30 border border-red-500/30 text-red-200 px-4 py-3 rounded-xl flex items-center gap-3">
+                    <ShieldAlert className="w-5 h-5 text-red-400 shrink-0" />
+                    <span>Lỗi tải dữ liệu: {error}</span>
                 </div>
             )}
 
             {/* Tenant List */}
             {tenants.length === 0 ? (
-                <Card>
-                    <CardContent className="py-16 text-center text-gray-400">
-                        <Building2 className="w-12 h-12 mx-auto mb-4 opacity-40" />
-                        <p>Chưa có chi nhánh nào trong hệ thống.</p>
+                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl">
+                    <CardContent className="py-16 text-center text-slate-500">
+                        <Building2 className="w-12 h-12 mx-auto mb-4 opacity-30 text-amber-400" />
+                        <p className="text-slate-400">Chưa có Workspace nào trong hệ thống.</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4">
                     {tenants.map(tenant => (
-                        <Card key={tenant.id} className="hover:shadow-md transition-shadow">
+                        <Card key={tenant.id} className="border-white/[0.08] bg-slate-900/60 backdrop-blur-xl hover:bg-slate-900/80 transition-all duration-200">
                             <CardContent className="p-5">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
                                         {/* Avatar màu sắc theo theme */}
                                         <div
-                                            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm"
-                                            style={{ backgroundColor: tenant.theme_colors?.primary || '#F59E0B' }}
+                                            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0 border border-white/10"
+                                            style={{ backgroundColor: tenant.theme_colors?.primary || '#8B5CF6' }}
                                         >
                                             {tenant.name.charAt(0)}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="font-semibold text-lg">{tenant.name}</h3>
-                                                <Badge variant="outline" className="text-xs">
-                                                    {LAYOUT_LABELS[tenant.layout_style || 'traditional'] || tenant.layout_style}
+                                                <h3 className="font-semibold text-base text-white">{tenant.name}</h3>
+                                                <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 text-slate-300 font-bold py-0.5 px-2 uppercase tracking-wide">
+                                                    {LAYOUT_LABELS[tenant.layout_style || 'saas_violet'] || '⚡ Violet Premium SaaS'}
                                                 </Badge>
                                             </div>
-                                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
+                                            <div className="flex items-center gap-4 mt-1.5 text-xs text-slate-400">
                                                 <span className="flex items-center gap-1">
-                                                    <Globe className="w-3.5 h-3.5" />
+                                                    <Globe className="w-3.5 h-3.5 text-slate-500" />
                                                     {tenant.domain}
                                                 </span>
                                                 {tenant.subdomain && (
-                                                    <span className="text-xs text-gray-400">
-                                                        subdomain: {tenant.subdomain}
+                                                    <span className="text-slate-500">
+                                                        subdomain: <strong className="text-slate-400">{tenant.subdomain}</strong>
                                                     </span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                    <Link href={`/admin/tenants/${tenant.id}`}>
-                                        <Button variant="outline" size="sm" className="gap-1.5">
-                                            <Pencil className="w-3.5 h-3.5" />
-                                            Chỉnh sửa
+                                    <Link href={`/admin/tenants/${tenant.id}`} className="sm:self-center">
+                                        <Button variant="outline" size="sm" className="w-full sm:w-auto gap-1.5 border-white/10 text-slate-300 hover:bg-white/5 hover:text-white bg-slate-950/20">
+                                            <Pencil className="w-3.5 h-3.5 text-amber-400" />
+                                            Chỉnh sửa cấu hình
                                         </Button>
                                     </Link>
                                 </div>

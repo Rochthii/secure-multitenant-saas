@@ -13,14 +13,10 @@ const STOP_WORDS_VI = new Set([
  * Default brand keywords for tenant-type tenants.
  * These are generic — for tenant-specific keywords, use getTenantBrandKeywords().
  */
-const DEFAULT_TEMPLE_KEYWORDS = [
-    'Phật giáo Nam tông', 'Theravada Buddhism',
-    'Chi nhánh Khmer', 'Văn hóa Khmer', 'Lễ hội Khmer',
-];
-
 const DEFAULT_COMPANY_KEYWORDS = [
-    'Doanh nghiệp xã hội', 'Social Enterprise',
-    'Công nghệ cộng đồng', 'Minh bạch giao dịch',
+    'Quản trị doanh nghiệp', 'Enterprise Portal',
+    'Chuyển đổi số', 'SOP Quy trình nội bộ',
+    'Minh bạch thông tin', 'Quản lý tri thức',
 ];
 
 /**
@@ -33,7 +29,6 @@ export function getTenantBrandKeywords(
     tenantType?: string | null,
     extraKeywords?: string[]
 ): string[] {
-    const base = tenantType === 'company' ? DEFAULT_COMPANY_KEYWORDS : DEFAULT_TEMPLE_KEYWORDS;
     const result: string[] = [];
 
     // Add tenant name as the first keyword (most important for brand)
@@ -41,8 +36,8 @@ export function getTenantBrandKeywords(
         result.push(tenantName);
     }
 
-    // Add base keywords for the tenant type
-    result.push(...base);
+    // Add base keywords
+    result.push(...DEFAULT_COMPANY_KEYWORDS);
 
     // Append any custom keywords (e.g., from site_settings.seo_keywords)
     if (extraKeywords?.length) {
@@ -107,11 +102,20 @@ export function generateTags(title: string, categoryName: string = ''): string[]
 
     if (categoryName) tags.add(categoryName);
 
-    // Extract specific concepts (simple heuristic)
-    if (title.toLowerCase().includes('lễ') || title.toLowerCase().includes('hội')) tags.add('Lễ hội Khmer');
-    if (title.toLowerCase().includes('xây') || title.toLowerCase().includes('đúc')) tags.add('Kiến trúc Chi nhánh');
-    if (title.toLowerCase().includes('cúng') || title.toLowerCase().includes('dâng')) tags.add('Nghi lễ Phật giáo');
-    if (title.toLowerCase().includes('pháp') || title.toLowerCase().includes('thuyết')) tags.add('Pháp thoại');
+    // Extract specific corporate concepts (simple heuristic)
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('quy trình') || lowerTitle.includes('hướng dẫn') || lowerTitle.includes('sop')) {
+        tags.add('Quy trình & SOP');
+    }
+    if (lowerTitle.includes('báo cáo') || lowerTitle.includes('tài chính') || lowerTitle.includes('chỉ số')) {
+        tags.add('Báo cáo & Chỉ số');
+    }
+    if (lowerTitle.includes('nhân sự') || lowerTitle.includes('tuyển dụng') || lowerTitle.includes('đào tạo')) {
+        tags.add('Nhân sự & Đào tạo');
+    }
+    if (lowerTitle.includes('dự án') || lowerTitle.includes('triển khai') || lowerTitle.includes('kế hoạch')) {
+        tags.add('Dự án & Sáng kiến');
+    }
 
     return Array.from(tags);
 }

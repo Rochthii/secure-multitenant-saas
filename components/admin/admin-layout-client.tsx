@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { GlobalSidebar } from '@/components/admin/global-sidebar';
 import { BusinessSidebar } from '@/components/admin/business-sidebar';
+import { EnterpriseSidebar } from '@/components/admin/enterprise-sidebar';
 
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useParams } from 'next/navigation';
@@ -59,7 +60,7 @@ export function AdminLayoutClient({
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* Sidebar — ẩn hoàn toàn khi collapsed */}
             <div
                 className={`
@@ -68,10 +69,11 @@ export function AdminLayoutClient({
                 `}
             >
                 {isTenantContext ? (
-                    tenantType !== 'tenant' ? (
-                        <BusinessSidebar
+                    tenantType === 'company' || tenantType === 'ngo' ? (
+                        <EnterpriseSidebar
                             role={role}
                             tenantName={sidebarTenantName}
+                            themeColor={sidebarThemeColor}
                             email={email}
                             canSwitchTenant={canSwitchTenant ?? false}
                             permissions={permissions}
@@ -97,7 +99,7 @@ export function AdminLayoutClient({
             </div>
 
             {/* Main content */}
-            <main className="flex-1 h-screen overflow-y-auto relative">
+            <main className="flex-1 h-screen overflow-y-auto relative bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
                 {/* Visual Context Indicator */}
                 <div className={cn(
                     "h-1.5 w-full fixed top-0 left-0 z-[60] transition-colors duration-500",

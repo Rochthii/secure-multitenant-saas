@@ -84,7 +84,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
             name: formData.get('name') as string,
             domain: formData.get('domain') as string,
             subdomain: (formData.get('subdomain') as string) || null,
-            layout_style: (formData.get('layout_style') as string) || 'traditional',
+            layout_style: (formData.get('layout_style') as string) || 'saas_violet',
             logo_url: (formData.get('logo_url') as string) || null,
             tenant_type: (formData.get('tenant_type') as string) || 'tenant',
             has_web_frontend: formData.get('has_web_frontend') === 'true',
@@ -127,7 +127,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
 
         if (error) {
             if (error.code === '23505') return { success: false, error: 'Tên miền (domain) này đã tồn tại trên hệ thống.' };
-            return { success: false, error: 'Lỗi tạo chi nhánh: ' + error.message };
+            return { success: false, error: 'Lỗi tạo Workspace: ' + error.message };
         }
 
         // --- CONTENT SYNC: MCAARON -> NEW TENANT ---
@@ -159,7 +159,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
         revalidatePath('/admin/users');
         return { success: true };
     } catch (err: any) {
-        return { success: false, error: err.message || 'Lỗi server khi tạo chi nhánh' };
+        return { success: false, error: err.message || 'Lỗi server khi tạo Workspace' };
     }
 }
 
@@ -182,7 +182,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
             name: formData.get('name') as string,
             domain: formData.get('domain') as string,
             subdomain: (formData.get('subdomain') as string) || null,
-            layout_style: (formData.get('layout_style') as string) || 'traditional',
+            layout_style: (formData.get('layout_style') as string) || 'saas_violet',
             logo_url: (formData.get('logo_url') as string) || null,
             tenant_type: (formData.get('tenant_type') as string) || 'tenant',
             has_web_frontend: formData.get('has_web_frontend') === 'true',
@@ -264,7 +264,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         revalidatePath('/admin/users');
         return { success: true };
     } catch (err: any) {
-        return { success: false, error: err.message || 'Lỗi server khi cập nhật chi nhánh' };
+        return { success: false, error: err.message || 'Lỗi server khi cập nhật Workspace' };
     }
 }
 
@@ -348,7 +348,7 @@ export async function updateTenantDomain(tenantId: string, domain: string): Prom
         .neq('id', tenantId);
 
     if (existing && existing.length > 0) {
-        return { success: false, error: 'Tên miền này đã được sử dụng bởi một chi nhánh khác trên hệ thống.' };
+        return { success: false, error: 'Tên miền này đã được sử dụng bởi một Workspace khác trên hệ thống.' };
     }
 
     const ctx = await getUserContext();

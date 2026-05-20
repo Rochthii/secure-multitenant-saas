@@ -31,7 +31,7 @@ const NAV_ITEMS: NavItem[] = [
     {
         key: 'about',
         label: 'Giới thiệu',
-        description: 'Giới thiệu về chi nhánh, lịch sử, nội quy',
+        description: 'Giới thiệu về doanh nghiệp, lịch sử phát triển, ban điều hành',
         icon: <Info className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/pages`,
         manageLabel: 'Quản lý Trang tĩnh'
@@ -39,31 +39,31 @@ const NAV_ITEMS: NavItem[] = [
     {
         key: 'news',
         label: 'Tin tức',
-        description: 'Tin tức & bài viết của chi nhánh',
+        description: 'Tin tức truyền thông & Sự kiện nổi bật của doanh nghiệp',
         icon: <Newspaper className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/categories`,
         manageLabel: 'Quản lý Phân hệ News'
     },
     {
         key: 'dharma',
-        label: 'Pháp thoại',
-        description: 'Video & audio pháp thoại',
+        label: 'Đào tạo & Video SOP',
+        description: 'Video hướng dẫn nghiệp vụ, quy trình đào tạo và SOP',
         icon: <BookOpen className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/categories`,
-        manageLabel: 'Quản lý Phân hệ Dharma'
+        manageLabel: 'Quản lý Video & Đào tạo'
     },
     {
         key: 'documents',
         label: 'Tài liệu số',
-        description: 'Kho tài liệu, kinh điển số hóa',
+        description: 'Kho văn bản quy chế, chính sách doanh nghiệp số hóa',
         icon: <FileText className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/categories`,
-        manageLabel: 'Quản lý Phân hệ Documents'
+        manageLabel: 'Quản lý Tài liệu số'
     },
     {
         key: 'transaction',
-        label: 'Thanh toán',
-        description: 'Các hạng mục thanh toán, thanh toán',
+        label: 'Dự án',
+        description: 'Các dự án đóng góp xã hội & Sáng kiến ESG',
         icon: <Heart className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/projects`,
         manageLabel: 'Quản lý Hạng mục Dự án'
@@ -71,7 +71,7 @@ const NAV_ITEMS: NavItem[] = [
     {
         key: 'contact',
         label: 'Liên hệ',
-        description: 'Thông tin liên lạc và bản đồ',
+        description: 'Thông tin liên lạc văn phòng và bản đồ',
         icon: <Phone className="h-4 w-4" />,
         manageHref: (tenantId) => `/admin/t/${tenantId}/settings/information`,
         manageLabel: 'Cập nhật thông tin Liên hệ'
@@ -118,7 +118,7 @@ export function NavVisibilitySettings({ tenantId, initialNavVisibility = {} }: N
             <div className="text-sm text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
                 <span className="text-amber-600 font-medium">💡</span>
                 <span>
-                    Cấu hình này kiểm soát các mục <strong>hiển thị trên thanh menu chính</strong> (Header) của trang web chi nhánh.
+                    Cấu hình này kiểm soát các mục <strong>hiển thị trên thanh menu chính</strong> (Header) của trang web doanh nghiệp.
                     Tắt một mục sẽ ẩn nó hoàn toàn khỏi điều hướng, không ảnh hưởng đến nội dung trang chủ.
                 </span>
             </div>

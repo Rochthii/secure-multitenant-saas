@@ -13,16 +13,16 @@ export default async function NewTenantPage({ searchParams }: { searchParams: Pr
     const role = await getUserRole();
 
     return (
-        <div className="space-y-6 max-w-2xl">
-            <div className="flex items-center gap-4">
+        <div className="space-y-6 max-w-2xl text-slate-300">
+            <div className="flex items-center gap-4 pb-2">
                 <Link href="/admin/tenants">
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" className="border-white/10 text-slate-300 hover:bg-white/5 hover:text-white bg-slate-900/40">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold">Thêm Chi nhánh Mới</h1>
-                    <p className="text-gray-500 mt-1">Đăng ký một ngôi chi nhánh mới vào hệ thống</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Khởi tạo Workspace mới</h1>
+                    <p className="text-slate-400 mt-1 text-sm">Đăng ký doanh nghiệp hoặc đơn vị thành viên mới vào hệ thống</p>
                 </div>
             </div>
 

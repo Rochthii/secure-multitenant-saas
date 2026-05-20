@@ -39,40 +39,51 @@ export default async function ContactPage({ params }: { params: Promise<{ domain
     const tenantConfig = await getTenantConfig(domain);
     const settings = await getSiteSettings(tenantConfig?.id || '55555555-5555-5555-5555-555555555555');
 
+    const isCompany = ['company', 'ngo'].includes(tenantConfig?.tenant_type || '');
+
     // Mapping variables with defaults
     const address = settings['address'] || 'Quận 3, TP. Hồ Chí Minh';
     const rawPhone = settings['contact_phone'] || settings['site_phone'] || '(028) 1234 5678';
     const phoneDisplay = rawPhone;
     const phoneLink = rawPhone.replace(/\s+/g, '');
     const email = settings['contact_email'] || settings['site_email'] || 'contact@example.com';
-    const openingHours = settings['opening_hours'] || 'Hằng ngày: 5:00 - 18:00';
+    const openingHours = settings['opening_hours'] || (isCompany ? 'Thứ 2 - Thứ 6: 09:00 - 18:00' : 'Hằng ngày: 5:00 - 18:00');
 
     // Ưu tiên: map_embed_url (iframe embed) > tự tạo từ địa chỉ
     const mapEmbedUrl = settings['map_embed_url'] ||
         `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
     return (
-        <section className="min-h-screen bg-[#FAF7F2]/60 py-12 md:py-20 relative overflow-hidden">
+        <section className={`min-h-screen py-12 md:py-20 relative overflow-hidden ${isCompany ? 'bg-slate-50' : 'bg-[#FAF7F2]/60'}`}>
             {/* Decorative background pattern - consistent with home sections */}
-            <div className="absolute inset-0 bg-[url('/patterns/khmer-pattern-light.png')] opacity-5 pointer-events-none" />
+            {!isCompany && (
+                <div className="absolute inset-0 bg-[url('/patterns/khmer-pattern-light.png')] opacity-5 pointer-events-none" />
+            )}
             
             <div className="container mx-auto px-4 relative z-10">
-                <KhmerHeading level={1} withDivider className="text-center">
-                    Liên hệ
-                </KhmerHeading>
+                {isCompany ? (
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">Liên hệ với chúng tôi</h1>
+                        <div className="w-16 h-1 bg-indigo-500 mx-auto rounded-full" />
+                    </div>
+                ) : (
+                    <KhmerHeading level={1} withDivider className="text-center">
+                        Liên hệ
+                    </KhmerHeading>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mt-8">
                     {/* Contact Info (Server Rendered) */}
                     <div>
-                        <Card className="p-6 h-full border-transparent shadow-none bg-transparent">
-                            <h2 className="text-2xl font-semibold mb-6 font-playfair text-gold-darker uppercase tracking-wide">
+                        <Card className={`p-6 h-full border-transparent shadow-none bg-transparent`}>
+                            <h2 className={`text-2xl font-semibold mb-6 uppercase tracking-wide ${isCompany ? 'text-slate-900' : 'font-playfair text-gold-darker'}`}>
                                 Thông tin liên hệ
                             </h2>
 
                             <div className="space-y-6">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gold-primary/10 flex items-center justify-center shrink-0">
-                                        <MapPin className="h-5 w-5 text-gold-primary" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isCompany ? 'bg-indigo-50 text-indigo-600' : 'bg-gold-primary/10 text-gold-primary'}`}>
+                                        <MapPin className="h-5 w-5" />
                                     </div>
                                     <div className="mt-1 flex-1">
                                         <p className="font-semibold text-gray-900 leading-none mb-1">Địa chỉ</p>
@@ -83,7 +94,7 @@ export default async function ContactPage({ params }: { params: Promise<{ domain
                                             href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-gold-primary hover:text-gold-dark text-sm font-medium flex items-center gap-1 transition-colors"
+                                            className={`text-sm font-medium flex items-center gap-1 transition-colors ${isCompany ? 'text-indigo-600 hover:text-indigo-700' : 'text-gold-primary hover:text-gold-dark'}`}
                                         >
                                             <span>📍</span>
                                             <span>Click để xem bản đồ & chỉ đường</span>
@@ -92,28 +103,28 @@ export default async function ContactPage({ params }: { params: Promise<{ domain
                                 </div>
 
                                 <a href={`tel:${phoneLink}`} className="flex items-start gap-4 group transition-colors">
-                                    <div className="w-10 h-10 rounded-full bg-gold-primary/10 flex items-center justify-center shrink-0 group-hover:bg-gold-primary/20 transition-colors">
-                                        <Phone className="h-5 w-5 text-gold-primary" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${isCompany ? 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100' : 'bg-gold-primary/10 text-gold-primary group-hover:bg-gold-primary/20'}`}>
+                                        <Phone className="h-5 w-5" />
                                     </div>
                                     <div className="mt-1">
-                                        <p className="font-semibold text-gray-900 leading-none mb-1 group-hover:text-gold-primary transition-colors">Điện thoại</p>
+                                        <p className={`font-semibold text-gray-900 leading-none mb-1 transition-colors ${isCompany ? 'group-hover:text-indigo-600' : 'group-hover:text-gold-primary'}`}>Điện thoại</p>
                                         <p className="text-gray-600 text-sm">{phoneDisplay}</p>
                                     </div>
                                 </a>
 
                                 <a href={`mailto:${email}`} className="flex items-start gap-4 group transition-colors">
-                                    <div className="w-10 h-10 rounded-full bg-gold-primary/10 flex items-center justify-center shrink-0 group-hover:bg-gold-primary/20 transition-colors">
-                                        <Mail className="h-5 w-5 text-gold-primary" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${isCompany ? 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100' : 'bg-gold-primary/10 text-gold-primary group-hover:bg-gold-primary/20'}`}>
+                                        <Mail className="h-5 w-5" />
                                     </div>
                                     <div className="mt-1">
-                                        <p className="font-semibold text-gray-900 leading-none mb-1 group-hover:text-gold-primary transition-colors">Email</p>
+                                        <p className={`font-semibold text-gray-900 leading-none mb-1 transition-colors ${isCompany ? 'group-hover:text-indigo-600' : 'group-hover:text-gold-primary'}`}>Email</p>
                                         <p className="text-gray-600 text-sm break-all">{email}</p>
                                     </div>
                                 </a>
 
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gold-primary/10 flex items-center justify-center shrink-0">
-                                        <Clock className="h-5 w-5 text-gold-primary" />
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isCompany ? 'bg-indigo-50 text-indigo-600' : 'bg-gold-primary/10 text-gold-primary'}`}>
+                                        <Clock className="h-5 w-5" />
                                     </div>
                                     <div className="mt-1">
                                         <p className="font-semibold text-gray-900 leading-none mb-1">Giờ mở cửa</p>

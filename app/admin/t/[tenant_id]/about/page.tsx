@@ -26,8 +26,8 @@ export default async function AboutSectionsPage({ params }: { params: Promise<{ 
         <div>
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold text-gray-900">Quản lý Trang Giới thiệu</h1>
-                    <p className="text-gray-500 mt-1">Cấu hình cây nội dung Giới thiệu (cha/con vô hạn)</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Hồ sơ Năng lực & Giới thiệu</h1>
+                    <p className="text-gray-500 mt-1">Quản lý cây nội dung trang Giới thiệu (cấu trúc cha/con, sắp xếp thứ tự)</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <Link href={publicUrl} target="_blank">
@@ -42,13 +42,13 @@ export default async function AboutSectionsPage({ params }: { params: Promise<{ 
                         const { initializeDefaultSections } = await import('@/app/actions/admin/about-sections');
                         await initializeDefaultSections(tenant_id);
                     }}>
-                        <Button variant="outline" title="Bổ sung các mục còn thiếu theo cấu trúc chuẩn và làm mới Header ngay lập tức" className="shadow-sm border-blue-300 text-blue-700 hover:bg-blue-50 gap-1.5">
+                        <Button variant="outline" title="Bổ sung các mục còn thiếu theo cấu trúc chuẩn doanh nghiệp và làm mới Header ngay lập tức" className="shadow-sm border-violet-300 text-violet-700 hover:bg-violet-50 gap-1.5">
                             <FolderTree className="h-4 w-4" />
-                            {sections.length === 0 ? 'Khởi tạo dữ liệu mẫu' : 'Đồng bộ & làm mới Header'}
+                            {sections.length === 0 ? 'Khởi tạo mục mẫu' : 'Đồng bộ & làm mới Header'}
                         </Button>
                     </form>
                     <Link href={`/admin/t/${tenant_id}/about/new`}>
-                        <Button className="bg-gold-primary hover:bg-gold-dark shadow-md text-white">
+                        <Button className="bg-violet-600 hover:bg-violet-700 shadow-md text-white">
                             <Plus className="h-4 w-4 mr-2" />
                             Tạo thẻ mới
                         </Button>

@@ -63,7 +63,7 @@ export default async function DynamicPageBuilder({
     const architectureKey = settings?.['about_architecture_key'] || 'di-san-nghe-thuat/kien-truc-dieu-khac';
 
     const tenantConfig = await getTenantConfig(tenantId);
-    const isCompany = tenantConfig?.tenant_type !== 'tenant';
+    const isCompany = true;
 
     // Phase 2: fetch song song phần còn lại
     const [
@@ -113,23 +113,23 @@ export default async function DynamicPageBuilder({
 
     // ─── 3. SEO JSON-LD (luôn inject) ─────────────────────────────────────────
     const organizationSchema = generateOrganizationSchema({
-        name: settings?.['site_name_vi'] || 'Chi nhánh Phật giáo Nam tông',
-        alternateName: settings?.['site_name_en'] || 'Khmer Buddhist Tenant',
+        name: settings?.['site_name_vi'] || 'Cổng thông tin Doanh nghiệp',
+        alternateName: settings?.['site_name_en'] || 'Enterprise Workspace Portal',
         url: baseUrl,
         logo: `${baseUrl}/logo.png`,
-        description: settings?.['site_description_vi'] || 'Ngôi chi nhánh Phật giáo Nam tông Khmer',
+        description: settings?.['site_description_vi'] || 'Hệ thống quản lý tri thức, quy trình SOP và vận hành doanh nghiệp',
         address: {
             '@type': 'PostalAddress',
             streetAddress: settings?.['address'] || '',
-            addressLocality: 'Quận 3',
+            addressLocality: 'Quận 1',
             addressRegion: 'TP. Hồ Chí Minh',
             addressCountry: 'VN',
         },
         contactPoint: {
             '@type': 'ContactPoint',
-            telephone: settings?.['contact_phone'] || '0938 787 165',
+            telephone: settings?.['contact_phone'] || '0900 000 000',
             contactType: 'Customer Service',
-            email: settings?.['contact_email'] || 'contact@chantarangsay.org',
+            email: settings?.['contact_email'] || 'contact@enterprise.com',
         },
     });
     const placeSchema = generatePlaceSchema();

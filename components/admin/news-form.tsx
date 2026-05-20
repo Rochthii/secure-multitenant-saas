@@ -830,7 +830,7 @@ export function NewsForm({ news, categories, currentUserRole, tenants = [], cont
                                     name="keywords"
                                     value={seoMeta.keywords}
                                     onChange={e => setSeoMeta(s => ({ ...s, keywords: e.target.value }))}
-                                    placeholder="chi nhánh, phật giáo, ..."
+                                    placeholder="tổ chức, công nghệ, sự kiện..."
                                     className="w-full mt-1 rounded border border-gray-300 px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-purple-400"
                                 />
                             </div>

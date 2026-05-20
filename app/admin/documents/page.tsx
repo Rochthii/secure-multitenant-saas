@@ -6,10 +6,10 @@ import { getUserContext } from '@/lib/permissions';
 import { redirect } from 'next/navigation';
 
 export const metadata = {
-    title: 'Quản lý Pháp Thoại Hệ Thống | Admin',
+    title: 'Quản lý Tài liệu & SOP Hệ thống | Admin',
 };
 
-export default async function GlobalPhapAmAdminPage() {
+export default async function GlobalDocumentsAdminPage() {
     const ctx = await getUserContext();
     if (!ctx || !['super_admin', 'company_editor', 'admin'].includes(ctx.role)) {
         redirect('/admin/select-tenant');
@@ -20,11 +20,11 @@ export default async function GlobalPhapAmAdminPage() {
 
     const currentUserRole = ctx.role;
 
-    // Fetch tenants for broadcast selection and labeling
+    // Fetch tenants for broadcast selection and labeling (lấy danh sách các công ty/workspace thành viên)
     const { data: tenantsData } = await (supabase as any)
         .from('tenants')
         .select('id, name, domain')
-        .eq('tenant_type', 'tenant')
+        .eq('tenant_type', 'company')
         .order('name');
     const tenants = tenantsData || [];
 
@@ -46,7 +46,13 @@ export default async function GlobalPhapAmAdminPage() {
     });
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-800 dark:text-zinc-150">Học Liệu & Quy Trình SOP Hệ Thống</h1>
+                    <p className="text-xs text-slate-500 dark:text-zinc-450 mt-1">Danh sách tập trung toàn bộ tài liệu hướng dẫn và video SOP trên toàn hệ thống.</p>
+                </div>
+            </div>
             <DharmaTalksClient
                 initialTalks={talks as any}
                 categories={categories || []}

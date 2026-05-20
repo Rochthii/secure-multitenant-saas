@@ -836,7 +836,7 @@ export function LayoutDesignerClient({
 
     const visibleCount = blocks.filter(b => b.visible).length;
 
-    const isCompany = tenantType !== 'tenant';
+    const isCompany = true;
 
 
     // ─── Block scope filter (company vs temple) ────────────────────────────────
@@ -877,7 +877,7 @@ export function LayoutDesignerClient({
     };
 
     // Presets filtered by tenant type
-    const COMPANY_PRESET_IDS = new Set(['mcaaron', 'stitch', 'modern', 'minimal', 'ink']);
+    const COMPANY_PRESET_IDS = new Set(['mcaaron', 'corporate', 'stitch', 'modern', 'minimal', 'ink']);
     const TEMPLE_PRESET_IDS = new Set(['traditional', 'zen', 'lotus', 'angkor', 'sunrise', 'festival', 'theravada', 'ink']);
     const filteredPresets = LAYOUT_PRESETS.filter(p =>
         isCompany ? COMPANY_PRESET_IDS.has(p.id) : TEMPLE_PRESET_IDS.has(p.id)
@@ -912,7 +912,7 @@ export function LayoutDesignerClient({
         TRIPLE_GEM: '💎 2. Cốt Lõi',
         QUOTE_BANNER: '💬 3. Trích Dẫn',
         NEWS: '📰 Tin Tức',
-        DHARMA: '🎓 E-Learning',
+        DHARMA: '🎓 SOP & Tài Liệu',
         EVENTS: '📅 Sự Kiện',
         SOCIAL: '📱 Mạng Xã Hội',
         LEGACY: '⚠️ Legacy'

@@ -8,31 +8,12 @@ import { TenantLogo } from '@/components/layout/tenant-logo';
 import { Building2, Shield, Mail, Phone, MapPin, ArrowRight } from 'lucide-react';
 
 const FOOTER_LINKS = {
-    solutions: {
-        title: 'Giải pháp',
-        items: [
-            { label: 'Chuyển đổi số Tổ chức', href: '/giai-phap/chuyen-doi-so' },
-            { label: 'Truyền thông Cộng đồng', href: '/giai-phap/truyen-thong' },
-            { label: 'Văn hóa & Bảo tồn', href: '/giai-phap/van-hoa' },
-            { label: 'Sự kiện Xã hội', href: '/giai-phap/su-kien' },
-        ],
-    },
     company: {
         title: 'Doanh nghiệp',
         items: [
             { label: 'Giới thiệu chung', href: '/gioi-thieu' },
-            { label: 'DNXH là gì?', href: '/gioi-thieu/doanh-nghiep-xa-hoi' },
-            { label: 'Cơ cấu đội ngũ', href: '/gioi-thieu/doi-ngu' },
+            { label: 'Tin tức & Thông cáo', href: '/tin-tuc' },
             { label: 'Liên hệ hợp tác', href: '/lien-he' },
-        ],
-    },
-    impact: {
-        title: 'Tác động xã hội',
-        items: [
-            { label: 'Cổng thông tin Minh bạch', href: '/minh-bach' },
-            { label: 'Dự án đang triển khai', href: '/du-an' },
-            { label: 'Tin tức & Tri thức', href: '/tin-tuc' },
-            { label: 'Cam kết Cộng đồng', href: '/minh-bach#timeline' },
         ],
     },
     legal: {
@@ -40,7 +21,6 @@ const FOOTER_LINKS = {
         items: [
             { label: 'Điều khoản sử dụng', href: '#' },
             { label: 'Chính sách bảo mật', href: '#' },
-            { label: 'Báo cáo Tuân thủ', href: '#' },
             { label: 'Quy chế hoạt động', href: '#' },
         ],
     },
@@ -59,7 +39,7 @@ export function CorporateFooter({ settings = {} }: { settings?: Record<string, s
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
                 {/* Upper grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 pb-12 border-b border-slate-800">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 pb-12 border-b border-slate-800">
                     
                     {/* Brand column */}
                     <div className="lg:col-span-2 space-y-6">

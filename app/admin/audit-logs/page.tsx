@@ -53,19 +53,19 @@ export default async function AuditLogsPage({
     return (
         <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             {/* Premium Header */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 shadow-2xl">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -mr-64 -mt-64 mix-blend-screen pointer-events-none" />
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 dark:bg-slate-950/80 border border-slate-800 shadow-2xl">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl -mr-64 -mt-64 mix-blend-screen pointer-events-none" />
                 
                 <div className="relative z-10 p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+                        <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-500/30 text-amber-400">
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight">Hệ thống Giám sát Audit Trail</h1>
+                            <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent tracking-tight">Hệ thống Giám sát Audit Trail</h1>
                             <p className="text-slate-400 mt-1.5 text-sm flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                Bảo vệ thời gian thực — ISO 27017 §CLD.12.4.1 — Tổng: <strong className="text-white">{count}</strong> bản ghi
+                                Bảo vệ thời gian thực — ISO 27017 §CLD.12.4.1 — Tổng: <strong className="text-amber-400 font-black">{count}</strong> bản ghi
                             </p>
                         </div>
                     </div>
@@ -80,9 +80,9 @@ export default async function AuditLogsPage({
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
-                <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-lg rounded-2xl">
+                <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 shadow-lg rounded-2xl">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <CardTitle className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
                             Số bản ghi tìm thấy
                         </CardTitle>
                     </CardHeader>
@@ -90,40 +90,40 @@ export default async function AuditLogsPage({
                         <div className="text-3xl font-black text-slate-900 dark:text-white">{count}</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-lg rounded-2xl">
+                <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 shadow-lg rounded-2xl">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <CardTitle className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
                             Trang hiện tại
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-black text-indigo-600 dark:text-indigo-400">
+                        <div className="text-3xl font-black text-amber-600 dark:text-amber-400">
                             {page} / {totalPages || 1}
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-900/50 shadow-lg relative overflow-hidden rounded-2xl">
+                <Card className="bg-white/80 dark:bg-slate-900/60 border border-emerald-200 dark:border-emerald-950/40 shadow-lg relative overflow-hidden backdrop-blur-xl rounded-2xl">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 blur-xl"></div>
                     <CardHeader className="pb-2 relative z-10">
-                        <CardTitle className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">
+                        <CardTitle className="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-wider">
                             Hành động CREATE (An toàn)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                        <div className="text-3xl font-black text-emerald-600 dark:text-emerald-450">
                             {logs.filter(l => l.action === 'create').length}
                         </div>
                     </CardContent>
                 </Card>
-                <Card className="bg-white dark:bg-slate-900 border-rose-200 dark:border-rose-900/50 shadow-lg relative overflow-hidden rounded-2xl">
+                <Card className="bg-white/80 dark:bg-slate-900/60 border border-rose-200 dark:border-rose-950/40 shadow-lg relative overflow-hidden backdrop-blur-xl rounded-2xl">
                     <div className="absolute top-0 right-0 w-16 h-16 bg-rose-500/10 blur-xl"></div>
                     <CardHeader className="pb-2 relative z-10">
-                        <CardTitle className="text-xs font-bold text-rose-600 dark:text-rose-500 uppercase tracking-wider">
+                        <CardTitle className="text-[10px] font-bold text-rose-600 dark:text-rose-500 uppercase tracking-wider">
                             Hành động DELETE (Rủi ro)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="relative z-10">
-                        <div className="text-3xl font-black text-rose-600 dark:text-rose-400">
+                        <div className="text-3xl font-black text-rose-600 dark:text-rose-450">
                             {logs.filter(l => l.action === 'delete').length}
                         </div>
                     </CardContent>
@@ -131,7 +131,7 @@ export default async function AuditLogsPage({
             </div>
 
             {/* Logs Table */}
-            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 shadow-xl rounded-2xl">
+            <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 overflow-hidden relative z-10 shadow-xl rounded-2xl">
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
@@ -174,14 +174,14 @@ export default async function AuditLogsPage({
                                                 {log.user_email === 'guest@anonymous' ? (
                                                     <Badge variant="outline" className="font-mono text-[10px] border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800">GUEST</Badge>
                                                 ) : (
-                                                    <span className="text-indigo-600 dark:text-indigo-300 font-mono">{log.user_email || 'System'}</span>
+                                                    <span className="text-amber-600 dark:text-amber-400 font-mono">{log.user_email || 'System'}</span>
                                                 )}
                                             </td>
                                             <td className="px-5 py-4">
                                                 <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
                                                     log.action === 'delete' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.1)]' :
                                                     log.action === 'create' ? 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' :
-                                                    log.action === 'update' ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30' :
+                                                    log.action === 'update' ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30' :
                                                     'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                                                 }`}>
                                                     {log.action}
@@ -196,7 +196,7 @@ export default async function AuditLogsPage({
                                             </td>
                                             <td className="px-5 py-4 text-xs text-slate-500 dark:text-slate-400">
                                                 <div className="space-y-1">
-                                                    <div className="font-mono text-indigo-600/70 dark:text-indigo-400/70">IP: {log.ip_address || '-'}</div>
+                                                    <div className="font-mono text-amber-600/70 dark:text-amber-400/70">IP: {log.ip_address || '-'}</div>
                                                     <div className="truncate max-w-[120px] text-[10px] text-slate-400 dark:text-slate-500" title={log.user_agent}>
                                                         {log.user_agent || '-'}
                                                     </div>
@@ -225,7 +225,7 @@ export default async function AuditLogsPage({
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg relative z-10">
+                <div className="flex items-center justify-between bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl px-5 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg relative z-10">
                     <div className="text-sm text-slate-500 dark:text-slate-400 font-mono">
                         Hiển thị từ <span className="font-bold text-slate-900 dark:text-white">{(page - 1) * limit + 1}</span> đến{' '}
                         <span className="font-bold text-slate-900 dark:text-white">{Math.min(page * limit, count)}</span> trong tổng số{' '}
@@ -241,7 +241,7 @@ export default async function AuditLogsPage({
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
-                        <div className="flex items-center px-4 text-sm font-bold text-indigo-600 dark:text-indigo-400 font-mono">
+                        <div className="flex items-center px-4 text-sm font-bold text-amber-600 dark:text-amber-400 font-mono">
                             TRANG {page} / {totalPages}
                         </div>
                         <Link

@@ -232,7 +232,7 @@ export function CorporateHeader({
                         </div>
 
                         {/* Interactive User Auth State Menu */}
-                        <UserMenu />
+                        <UserMenu isCompany={true} />
 
                         {/* Mobile Menu Toggle Button */}
                         <button

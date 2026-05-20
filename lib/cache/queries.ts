@@ -1048,23 +1048,6 @@ export const getCachedAboutSections = async (tenantId: string): Promise<AboutSec
                 .order('display_order', { ascending: true });
 
             const sections = (data ?? []) as unknown as AboutSectionRow[];
-
-            // Inject "Nội quy tự viện" as a static link if it doesn't exist in DB
-            if (!sections.find(s => s.key === 'noi-quy-tu-vien')) {
-                sections.push({
-                    id: 'static-noi-quy',
-                    key: 'noi-quy-tu-vien',
-                    title_vi: 'Nội Quy Tự Viện',
-                    title_en: 'Monastery Rules',
-                    title_km: 'បទបញ្ជា',
-                    content_vi: '', content_en: '', content_km: '',
-                    summary_vi: 'Những hướng dẫn trang phục và ứng xử khi bước vào không gian thiêng liêng cửa thiền.',
-                    image_url: 'https://chuaadida.com/upload/tintuc/du-lich-tam-linh-chua-chantarangsay-1-1634547437-564343.jpg',
-                    display_order: 99,
-                    is_active: true,
-                } as any);
-            }
-
             return sections;
         },
         ['about-sections-v4', tenantId || 'all'],

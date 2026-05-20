@@ -17,6 +17,12 @@ import { NetworkSection } from '@/components/sections/mcaaron/NetworkSection';
 import { TransparencyTimeline } from '@/components/sections/mcaaron/TransparencyTimeline';
 import { SolutionsGridSection } from '@/components/sections/mcaaron/SolutionsGridSection';
 
+import { EnterpriseHero } from '@/components/sections/enterprise/EnterpriseHero';
+import { EnterpriseFeatures } from '@/components/sections/enterprise/EnterpriseFeatures';
+import { EnterpriseStats } from '@/components/sections/enterprise/EnterpriseStats';
+import { EnterpriseNews } from '@/components/sections/enterprise/EnterpriseNews';
+import { EnterpriseCTA } from '@/components/sections/enterprise/EnterpriseCTA';
+
 export const MODERN_REGISTRY: Record<string, any> = {
     // MODERN
     'modern_hero': { name: 'Hero Glassmorphism Tối', description: 'Hero carousel nền tối với hiệu ứng kính mờ cao cấp', category: 'hero', group: 'HERO', icon: '🎬', component: HeroCarouselWrapper, requiredData: ['heroSlides'] },
@@ -31,6 +37,13 @@ export const MODERN_REGISTRY: Record<string, any> = {
     'minimal_dharma': { name: 'Danh Sách Đào Tạo Tối Giản', description: 'Danh sách khóa học dạng text sạch sẽ', category: 'dharma', group: 'DHARMA', icon: '🎓', component: MinimalDharmaList, requiredData: ['dharmaTalks'] },
     'minimal_events': { name: 'Lịch Sự Kiện Tối Giản', description: 'List dọc thanh lịch chỉ với đường line mảnh', category: 'events', group: 'EVENTS', icon: '📅', component: MinimalEventCalendar, requiredData: ['locale', 'upcomingEvents'] },
     'minimal_cta': { name: 'CTA Tối Giản', description: 'Nút đơn giản, thông điệp rõ ràng', category: 'quotes', group: 'QUOTE_BANNER', icon: '🎯', component: MinimalCTA },
+
+    // ENTERPRISE B2B SAAS
+    'enterprise_hero': { name: 'Hero Doanh Nghiệp SaaS', description: 'Hero section tập trung giá trị chuyển đổi số', category: 'hero', group: 'HERO', icon: '🎬', component: EnterpriseHero },
+    'enterprise_features': { name: 'Giải Pháp & Tính Năng', description: 'Bento Grid giới thiệu tính năng B2B', category: 'about', group: 'INTRO', icon: '💡', component: EnterpriseFeatures },
+    'enterprise_stats': { name: 'Chỉ Số Năng Lực', description: 'Thống kê minh bạch, ISO 27001, Uptime', category: 'transparency', group: 'INTRO', icon: '📊', component: EnterpriseStats },
+    'enterprise_news': { name: 'Bảng Tin Tổ Chức', description: 'Tin tức, cập nhật sản phẩm doanh nghiệp', category: 'news', group: 'NEWS', icon: '📰', component: EnterpriseNews },
+    'enterprise_cta': { name: 'Call To Action B2B', description: 'Banner chốt sale và liên hệ tư vấn', category: 'quotes', group: 'QUOTE_BANNER', icon: '🎯', component: EnterpriseCTA },
 
     // MCAARON — Enterprise Corporate
     'mcaaron_hero': { name: 'Hero Doanh Nghiệp Premium', description: 'Hero Neo-Glassmorphic nền tối — ấn tượng đầu tiên của tổ chức', category: 'hero', group: 'HERO', icon: '🎬', component: McAaronHero },

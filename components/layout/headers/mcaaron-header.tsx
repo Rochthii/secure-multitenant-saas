@@ -248,9 +248,8 @@ export function McAaronHeader({ settings = {}, categoriesTree, aboutSectionsTree
                             </DropdownMenu>
                         </div>
 
-                        {/* User menu — desktop */}
                         <div className="hidden lg:flex items-center pl-1">
-                            <UserMenu />
+                            <UserMenu isCompany={true} />
                         </div>
 
                         {/* Mobile toggle */}
@@ -410,7 +409,7 @@ export function McAaronHeader({ settings = {}, categoriesTree, aboutSectionsTree
                                     ))}
                                 </div>
                                 <div className="flex justify-center bg-white/5 py-3 rounded-2xl border border-white/8">
-                                    <UserMenu />
+                                    <UserMenu isCompany={true} />
                                 </div>
                             </div>
                         </motion.div>

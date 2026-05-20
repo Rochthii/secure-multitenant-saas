@@ -4,9 +4,8 @@ import Image from 'next/image';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, Link } from '@/i18n/routing';
 import { useLocale } from 'next-intl';
-import { Newspaper, Calendar, Folder, Tag, FileText, Search, X, Mic, History, Filter, ChevronRight } from 'lucide-react';
+import { Newspaper, Calendar, Folder, Tag, FileText, Search, X, Mic, History, Filter, ChevronRight, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DharmaWheelIcon } from '@/components/ui/khmer-icons';
 import type { SearchResult } from '@/lib/search';
 
 const RECENT_SEARCHES_KEY = 'chantarangsay_recent_searches';
@@ -74,7 +73,7 @@ function ResultItem({
                         {result.type === 'news' ? <Newspaper className="w-6 h-6" /> :
                             result.type === 'event' ? <Calendar className="w-6 h-6" /> :
                                 result.type === 'category' ? <Folder className="w-6 h-6" /> :
-                                    result.type === 'dharma_talk' ? <DharmaWheelIcon className="w-6 h-6" /> :
+                                    result.type === 'dharma_talk' ? <GraduationCap className="w-6 h-6" /> :
                                         result.type === 'tag' ? <Tag className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
                     </span>
                 )}
@@ -240,7 +239,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     const tabs = [
         { id: 'all', label: 'Tất cả' },
         { id: 'news', label: 'Tin tức' },
-        { id: 'dharma_talk', label: 'Pháp thoại' },
+        { id: 'dharma_talk', label: 'Tài liệu & SOP' },
         { id: 'media', label: 'Thư viện' },
         { id: 'event', label: 'Sự kiện' },
     ];
@@ -407,7 +406,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                                                     <Tag className="w-4 h-4" /> Xu hướng
                                                 </div>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {['Kinh Pháp Cú', 'Lễ Kattina', 'Pháp thoại', 'An cư kiết hạ', 'Khmer', 'Sóc Trăng'].map(s => (
+                                                    {['Quy trình SOP', 'Chính sách nhân sự', 'Đào tạo nội bộ', 'Báo cáo tài chính', 'ESG & Sáng kiến', 'Chuyển đổi số'].map(s => (
                                                         <button
                                                             key={s}
                                                             onClick={() => { setQuery(s); doSearch(s); }}

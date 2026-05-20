@@ -9,7 +9,7 @@ export default async function PhapAmAdminPage({ params }: { params: Promise<{ te
     const { tenant_id } = await params;
     const talks = await getDharmaTalksAdmin(tenant_id);
     const { tenant } = await getTenant(tenant_id);
-    const isCompany = tenant?.tenant_type !== 'tenant';
+    const isCompany = true;
     
     const supabase = await createClient();
 

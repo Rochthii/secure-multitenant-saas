@@ -216,10 +216,10 @@ export type CategoryInput = z.infer<typeof CategorySchema>;
 
 // ─── TENANTS ─────────────────────────────────────────────────────────────────
 export const TenantSchema = z.object({
-    name: z.string().min(1, 'Tên chi nhánh là bắt buộc').max(255),
+    name: z.string().min(1, 'Tên Workspace / Doanh nghiệp là bắt buộc').max(255),
     domain: z.string().min(3, 'Tên miền không hợp lệ').max(255),
     subdomain: z.string().max(255).optional().nullable(),
-    layout_style: z.string().default('traditional'),
+    layout_style: z.string().default('saas_violet'),
     logo_url: z.string().url().or(z.literal('')).optional().nullable(),
     theme_colors: z.record(z.string(), z.string()).optional().nullable(),
     contact_info: z.record(z.string(), z.any()).optional().nullable(),

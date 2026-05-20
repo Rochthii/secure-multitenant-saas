@@ -18,15 +18,15 @@ interface GlobalStatsGridProps {
 export function GlobalStatsGrid({ stats }: GlobalStatsGridProps) {
     const items = [
         {
-            title: 'Tổ chức & Chi nhánh',
+            title: 'Active Workspaces',
             value: stats.tenantsCount,
             icon: Building2,
-            gradient: 'from-blue-500/20 via-blue-500/5 to-transparent',
-            iconColor: 'text-blue-400',
-            bg: 'bg-blue-500/10 border-blue-500/20',
-            borderHover: 'hover:border-blue-500/50',
-            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)]',
-            desc: 'Đang hoạt động trên hệ thống'
+            gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
+            iconColor: 'text-amber-400',
+            bg: 'bg-amber-500/10 border-amber-500/20',
+            borderHover: 'hover:border-amber-500/50',
+            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]',
+            desc: 'Đang hoạt động trên nền tảng'
         },
         {
             title: 'Dòng tiền lưu chuyển',
@@ -43,22 +43,22 @@ export function GlobalStatsGrid({ stats }: GlobalStatsGridProps) {
             title: 'Ấn phẩm số',
             value: stats.newsCount,
             icon: Newspaper,
-            gradient: 'from-emerald-500/20 via-emerald-500/5 to-transparent',
-            iconColor: 'text-emerald-400',
-            bg: 'bg-emerald-500/10 border-emerald-500/20',
-            borderHover: 'hover:border-emerald-500/50',
-            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]',
+            gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
+            iconColor: 'text-amber-400',
+            bg: 'bg-amber-500/10 border-amber-500/20',
+            borderHover: 'hover:border-amber-500/50',
+            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]',
             desc: 'Tin tức & bài viết được phát hành'
         },
         {
             title: 'Sự kiện & Hội thảo',
             value: stats.eventsCount,
             icon: Sparkles,
-            gradient: 'from-purple-500/20 via-purple-500/5 to-transparent',
-            iconColor: 'text-purple-400',
-            bg: 'bg-purple-500/10 border-purple-500/20',
-            borderHover: 'hover:border-purple-500/50',
-            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.3)]',
+            gradient: 'from-amber-500/20 via-amber-500/5 to-transparent',
+            iconColor: 'text-amber-400',
+            bg: 'bg-amber-500/10 border-amber-500/20',
+            borderHover: 'hover:border-amber-500/50',
+            shadowHover: 'hover:shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)]',
             desc: 'Chiến dịch đang diễn ra'
         }
     ];
@@ -87,7 +87,7 @@ export function GlobalStatsGrid({ stats }: GlobalStatsGridProps) {
                             </div>
                             
                             <div>
-                                <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">{stat.title}</p>
+                                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1.5">{stat.title}</p>
                                 <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2 group-hover:translate-x-1 transition-transform duration-300">{stat.value}</h3>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{stat.desc}</p>
                             </div>

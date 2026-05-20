@@ -9,15 +9,11 @@ import {
     Newspaper,
     Calendar,
     Image as ImageIcon,
-    DollarSign,
-    UserCheck,
     Users,
     BarChart3,
     FileText,
     Layout,
-    Mail,
     GraduationCap,
-    BookOpen,
     FolderTree,
     Building2,
     Settings,
@@ -30,30 +26,31 @@ import {
     Shield,
     Globe,
     Sparkles,
-    Heart,
-    Handshake,
     Palette,
     TrendingUp,
+    Mail,
+    Handshake,
+    Boxes,
+    MonitorDot,
+    DollarSign,
+    UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-// Removed duplicate Handshake import
 
-// ROLE_LEVEL removed for Capability-Based Access Control
-
-// ─── Định nghĩa menu theo nhóm ─────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type ChildItem = {
     href: string;
     label: string;
     icon: React.ElementType;
-    resource?: string; // Resource required to view. If missing, assumes public/dashboard
+    resource?: string;
 };
 
 type MenuGroup = {
     id: string;
     label: string;
     icon: React.ElementType;
-    resource?: string; // If set, user must have access to THIS resource to see the group
+    resource?: string;
     children: ChildItem[];
 };
 
@@ -68,82 +65,59 @@ type StandaloneItem = {
 
 type MenuItem = MenuGroup | StandaloneItem;
 
-// Legacy menu items removed
-
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
-interface BusinessSidebarProps {
+interface EnterpriseSidebarProps {
     role?: string;
     tenantName?: string | null;
     themeColor?: string | null;
     email?: string;
-    canSwitchTenant?: boolean; // true for super_admin / company_editor
+    canSwitchTenant?: boolean;
     permissions?: Record<string, any>;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
-export function BusinessSidebar({
+export function EnterpriseSidebar({
     role = 'editor',
     tenantName: propTenantName,
     themeColor: propThemeColor,
     email,
     canSwitchTenant = false,
     permissions = {},
-}: BusinessSidebarProps) {
+}: EnterpriseSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const params = useParams();
     const tenantId = (params?.tenant_id as string) ?? '';
 
-    // Check capability explicitly checking `can_read` property
     const hasAccess = (resource?: string) => {
-        if (!resource) return true; // Undefined resource means always visible (like Dashboard)
-        
-        // Super admins have all access
+        if (!resource) return true;
         if (role === 'super_admin' || role === 'admin') return true;
-        
-        // agency_admin - restricted global role
-        if (role === 'agency_admin') {
-             // Block specific resources for agency_admin even if they are technically 'global'
-             if (resource === 'mobile_app') return false;
-             return !!permissions[resource]?.can_read;
-        }
-
-        // tenant_admin/editor - scoped access
         if (role === 'tenant_admin') return true;
-        
         return !!permissions[resource]?.can_read;
     };
 
-    // ─── Fetch tenant data từ DB dựa theo URL tenant_id ─────────────────────────
+    // ─── Fetch tenant data ────────────────────────────────────────────────────
     const [resolvedName, setResolvedName] = React.useState<string | null>(propTenantName ?? null);
-    const [resolvedColor, setResolvedColor] = React.useState<string | null>(propThemeColor ?? null);
     const [resolvedDomain, setResolvedDomain] = React.useState<string | null>(null);
-    const [resolvedTenantType, setResolvedTenantType] = React.useState<string>('tenant');
     const [modulesConfig, setModulesConfig] = React.useState<Record<string, boolean>>({});
 
     React.useEffect(() => {
         if (!tenantId) return;
-
         setResolvedName(propTenantName ?? null);
-        setResolvedColor(propThemeColor ?? null);
 
         const fetchTenantData = async () => {
             const supabase = createClient();
             const { data } = await (supabase as any)
                 .from('tenants')
-                .select('name, theme_colors, domain, modules_config, tenant_type')
+                .select('name, domain, modules_config')
                 .eq('id', tenantId)
                 .single();
             if (data) {
                 setResolvedName(data.name ?? null);
-                setResolvedColor(data.theme_colors?.primary ?? null);
                 setResolvedDomain(data.domain ?? null);
                 setModulesConfig(data.modules_config ?? {});
-                if (data.tenant_type) setResolvedTenantType(data.tenant_type);
-
-                // Lưu tenant vừa xem vào localStorage để GlobalSidebar có thể đọc lại
                 try {
                     localStorage.setItem('lastViewedTenantId', tenantId);
                     localStorage.setItem('lastViewedTenantName', data.name ?? '');
@@ -151,27 +125,20 @@ export function BusinessSidebar({
                 } catch { /* ignore */ }
             }
         };
-
         fetchTenantData();
-    }, [tenantId, propTenantName, propThemeColor]);
+    }, [tenantId, propTenantName]);
 
-    const accentColor = resolvedColor ?? '#8B5CF6';
-    const displayName = resolvedName ?? 'Quản lý Tổ chức';
-    const isCompany = true; // Ép toàn bộ hệ thống sử dụng menu Doanh nghiệp B2B SaaS
+    const displayName = resolvedName ?? 'Enterprise Workspace';
 
-    // Helper: kiểm tra module có bật không
-    // Nếu modules_config chưa load (empty obj) thì mặc định là true (tránh flash ẩn)
-    // Nếu module không được khai báo trong config → mặc định bật
-    // Chỉ ẩn khi explicitly set false
-    const hasModule = (moduleKey: string): boolean => {
-        if (Object.keys(modulesConfig).length === 0) return true; // Chưa load xong
-        return modulesConfig[moduleKey] !== false;
+    const hasModule = (key: string): boolean => {
+        if (Object.keys(modulesConfig).length === 0) return true;
+        return modulesConfig[key] !== false;
     };
 
-    const buildMenuItemsAdapted = (tenantId: string): MenuItem[] => {
+    const buildMenuItems = (tenantId: string): MenuItem[] => {
         const base = `/admin/t/${tenantId}`;
-        const items: MenuItem[] = [
-            // ── Tổng quan ────────────────────────────────────────────────────────
+        return [
+            // ── Tổng quan ────────────────────────────────────────────────────
             {
                 id: 'dashboard',
                 href: `${base}/dashboard`,
@@ -179,7 +146,7 @@ export function BusinessSidebar({
                 icon: LayoutDashboard,
                 standalone: true,
             },
-            // ── Quản lý Nội dung ─────────────────────────────────────────────────
+            // ── Trung tâm Nội dung ─────────────────────────────────────────────────
             {
                 id: 'content',
                 label: 'Trung tâm Nội dung',
@@ -225,9 +192,9 @@ export function BusinessSidebar({
                     ...(role === 'super_admin' ? [{ href: `${base}/theme`, label: 'Bộ nhận diện (Theme)', icon: Palette, resource: 'settings' }] : []),
                 ],
             },
-            // ── SAAS SYSTEM: Dữ liệu Tác động ────────────────────────
+            // ── Báo cáo & Tác động ─────────────────────────────────────────
             {
-                id: 'mcaaron-impact',
+                id: 'performance',
                 label: 'Báo cáo & Tác động',
                 icon: TrendingUp,
                 resource: 'analytics',
@@ -237,9 +204,9 @@ export function BusinessSidebar({
                     { href: `${base}/homepage?open=impact_dashboard`, label: 'Chỉ số KPI & Tác động', icon: BarChart3, resource: 'analytics' },
                 ],
             },
-            // ── Tương tác (Tài chính & Đối tác) ──
+            // ── Tài chính & Đối tác ──────────────────────────────────────────────
             {
-                id: 'interaction',
+                id: 'crm',
                 label: 'Tài chính & Đối tác',
                 icon: Handshake,
                 resource: 'transactions',
@@ -251,9 +218,9 @@ export function BusinessSidebar({
                     { href: `${base}/messages`, label: 'Trung tâm Phản hồi', icon: Mail, resource: 'registrations' },
                 ],
             },
-            // ── Quản lý Nhân sự & Phân quyền (Delegated Administration) ──
+            // ── Nhân sự & Phân quyền ──────────────────────────────────────────────────────
             {
-                id: 'hr-management',
+                id: 'people',
                 label: 'Nhân sự & Phân quyền',
                 icon: Shield,
                 resource: 'users',
@@ -262,10 +229,9 @@ export function BusinessSidebar({
                 ],
             },
         ];
-        return items;
     };
 
-    const menuItems = buildMenuItemsAdapted(tenantId);
+    const menuItems = buildMenuItems(tenantId);
 
     const defaultOpenGroups = () => {
         const map: Record<string, boolean> = {};
@@ -294,74 +260,67 @@ export function BusinessSidebar({
         router.refresh();
     };
 
+    const initial = displayName.charAt(0).toUpperCase();
+
     return (
-        <aside className="w-64 bg-[#0B0F19] text-white min-h-screen flex flex-col shadow-xl z-50 border-r border-white/5">
-            <div
-                className="p-5 border-b"
-                style={{ borderColor: `${accentColor}30`, background: `${accentColor}10` }}
-            >
-                <div className="flex items-center gap-3 mb-3">
-                    <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg shrink-0"
-                        style={{ backgroundColor: accentColor }}
-                    >
-                        {(displayName).charAt(0).toUpperCase()}
+        <aside className="w-64 bg-[#0a0a0f] text-white min-h-screen flex flex-col shadow-2xl z-50 border-r border-white/[0.06]">
+            {/* ── Header ────────────────────────────────────────────────────── */}
+            <div className="p-5 border-b border-white/[0.06]">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg bg-gradient-to-br from-violet-600 to-indigo-600 border border-white/10 shrink-0">
+                        {initial}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-sm font-bold text-white truncate">
+                        <p className="text-[13px] font-bold text-white truncate leading-tight">
                             {displayName}
-                        </h1>
+                        </p>
                         {resolvedDomain ? (
                             <a
                                 href={`https://${resolvedDomain}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs truncate flex items-center gap-1 hover:underline"
-                                style={{ color: `${accentColor}bb` }}
-                                title={`Mở trang web: ${resolvedDomain}`}
+                                className="text-[11px] text-slate-500 flex items-center gap-1 hover:text-slate-300 transition-colors truncate mt-0.5"
                             >
                                 <ExternalLink className="w-2.5 h-2.5 shrink-0" />
                                 <span className="truncate">{resolvedDomain}</span>
                             </a>
                         ) : (
-                            <p className="text-xs truncate" style={{ color: `${accentColor}aa` }}>
-                                ID: {tenantId.slice(0, 8)}...
+                            <p className="text-[11px] text-slate-600 mt-0.5">
+                                #{tenantId.slice(0, 8)}
                             </p>
                         )}
                     </div>
                 </div>
 
+                {/* Enterprise badge */}
+                <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.8)]" />
+                    <span className="text-[10px] font-black text-violet-400 uppercase tracking-widest">Enterprise Workspace</span>
+                </div>
+
+                {/* Switch controls */}
                 {canSwitchTenant && (
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5 mt-3">
                         <Link
                             href="/admin/dashboard"
-                            className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
-                            style={{
-                                backgroundColor: `rgba(255,255,255,0.1)`,
-                                color: `#fff`,
-                                border: `1px solid rgba(255,255,255,0.2)`,
-                            }}
+                            className="flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                         >
-                            <Shield className="w-3 h-3 text-purple-400" />
-                            <span>Quản trị Hệ thống</span>
+                            <Shield className="w-3 h-3 text-violet-400" />
+                            <span>Control Center</span>
                         </Link>
                         <Link
                             href="/admin/select-tenant"
-                            className="flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg transition-all"
-                            style={{
-                                backgroundColor: `${accentColor}20`,
-                                color: `${accentColor}`,
-                                border: `1px solid ${accentColor}40`,
-                            }}
+                            className="flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
                         >
                             <ArrowLeft className="w-3 h-3" />
-                            <span>{isCompany ? 'Đổi Tổ chức' : 'Đổi Chi nhánh Quản Trị'}</span>
+                            <span>Chuyển Workspace</span>
                         </Link>
                     </div>
                 )}
             </div>
 
-            <nav className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-1">
+            {/* ── Navigation ────────────────────────────────────────────────── */}
+            <nav className="flex-1 p-3 overflow-y-auto space-y-0.5 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/5">
                 {menuItems.map((item) => {
                     if ('standalone' in item) {
                         const Icon = item.icon;
@@ -374,10 +333,9 @@ export function BusinessSidebar({
                                 className={cn(
                                     'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium',
                                     isActive
-                                        ? 'text-[#1C1008] shadow-md font-bold'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-900/40'
+                                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                 )}
-                                style={isActive ? { backgroundColor: accentColor } : {}}
                             >
                                 <Icon className="h-4 w-4 shrink-0" />
                                 <span>{item.label}</span>
@@ -387,12 +345,10 @@ export function BusinessSidebar({
 
                     const group = item as MenuGroup;
                     const GroupIcon = group.icon;
-                    // Check if group resource is granted
                     if (group.resource && !hasAccess(group.resource)) return null;
 
                     const isOpen = openGroups[group.id] ?? false;
                     const visibleChildren = group.children.filter(child => hasAccess(child.resource));
-
                     if (visibleChildren.length === 0) return null;
 
                     const isGroupActive = visibleChildren.some(child =>
@@ -406,22 +362,21 @@ export function BusinessSidebar({
                                 className={cn(
                                     'w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-sm',
                                     isGroupActive && !isOpen
-                                        ? 'text-white font-semibold'
-                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                        ? 'text-white bg-white/5 border-l-2 border-violet-500'
+                                        : 'text-slate-500 hover:bg-white/5 hover:text-white'
                                 )}
-                                style={isGroupActive && !isOpen ? { backgroundColor: `${accentColor}25`, borderLeft: `2px solid ${accentColor}` } : {}}
                             >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2.5">
                                     <GroupIcon className="w-4 h-4 shrink-0" />
-                                    <span>{group.label}</span>
+                                    <span className="font-medium">{group.label}</span>
                                 </div>
                                 <ChevronDown
-                                    className={cn('w-4 h-4 text-gray-500 transition-transform duration-200', isOpen && 'rotate-180')}
+                                    className={cn('w-3.5 h-3.5 text-slate-600 transition-transform duration-200', isOpen && 'rotate-180')}
                                 />
                             </button>
 
                             {isOpen && (
-                                <ul className="mt-0.5 ml-4 pl-3 border-l border-white/10 space-y-0.5 py-1">
+                                <ul className="mt-0.5 ml-4 pl-3 border-l border-white/[0.06] space-y-0.5 py-1">
                                     {visibleChildren.map(child => {
                                         const ChildIcon = child.icon;
                                         const isChildActive = pathname === child.href || pathname.startsWith(child.href + '/');
@@ -430,12 +385,11 @@ export function BusinessSidebar({
                                                 <Link
                                                     href={child.href}
                                                     className={cn(
-                                                        'flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-sm',
+                                                        'flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-[13px]',
                                                         isChildActive
-                                                            ? 'text-white font-semibold'
-                                                            : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                                                            ? 'bg-violet-600/20 text-violet-300 font-semibold'
+                                                            : 'text-slate-500 hover:bg-white/5 hover:text-slate-200'
                                                     )}
-                                                    style={isChildActive ? { backgroundColor: `${accentColor}30`, color: accentColor } : {}}
                                                 >
                                                     <ChildIcon className="h-3.5 w-3.5 shrink-0" />
                                                     <span className="truncate">{child.label}</span>
@@ -449,26 +403,28 @@ export function BusinessSidebar({
                     );
                 })}
 
-                <div className="pt-4 mt-2 border-t border-white/10">
+                {/* View Public Site */}
+                <div className="pt-3 mt-2 border-t border-white/[0.06]">
                     <a
                         href={resolvedDomain ? `https://${resolvedDomain}` : `/?tenant_id=${tenantId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-all text-sm"
+                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-500 hover:bg-white/5 hover:text-white transition-all text-[13px]"
                     >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>{isCompany ? 'Xem trang công ty' : 'Xem trang chi nhánh'}</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span>Xem trang công ty</span>
                     </a>
                 </div>
             </nav>
 
-            <div className="p-3 border-t border-white/10 bg-black/20">
+            {/* ── Footer ────────────────────────────────────────────────────── */}
+            <div className="p-3 border-t border-white/[0.06] bg-black/20">
                 {email && (
-                    <p className="text-xs text-gray-600 truncate mb-2 px-2">{email}</p>
+                    <p className="text-[11px] text-slate-600 truncate mb-2 px-2">{email}</p>
                 )}
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-900/20 hover:text-red-400 transition-all w-full text-sm"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500/70 hover:bg-red-900/20 hover:text-red-400 transition-all w-full text-sm"
                 >
                     <LogOut className="h-4 w-4 shrink-0" />
                     <span>Đăng xuất</span>

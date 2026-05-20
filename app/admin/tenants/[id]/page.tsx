@@ -19,30 +19,30 @@ export default async function EditTenantPage({ params }: { params: Promise<{ id:
     if (!tenant || error) notFound();
 
     return (
-        <div className="space-y-6 max-w-2xl">
-            <div className="flex items-center gap-4">
+        <div className="space-y-6 max-w-2xl text-slate-300">
+            <div className="flex items-center gap-4 pb-2">
                 <Link href="/admin/tenants">
-                    <Button variant="outline" size="icon">
+                    <Button variant="outline" size="icon" className="border-white/10 text-slate-300 hover:bg-white/5 hover:text-white bg-slate-900/40">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 </Link>
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold">Chỉnh sửa Chi nhánh</h1>
-                    <p className="text-gray-500 mt-1">{tenant.name}</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Cấu hình Workspace</h1>
+                    <p className="text-slate-400 mt-1 text-sm">{tenant.name}</p>
                 </div>
             </div>
 
             {/* Theme shortcut */}
             <Link href={`/admin/tenants/${id}/theme`}>
-                <div className="flex items-center gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors cursor-pointer group">
-                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center group-hover:bg-amber-200 transition-colors flex-shrink-0">
-                        <Palette className="h-5 w-5 text-amber-700" />
+                <div className="flex items-center gap-4 p-5 bg-violet-950/20 border border-violet-500/20 rounded-2xl hover:bg-violet-950/40 transition-all duration-200 cursor-pointer group backdrop-blur-xl">
+                    <div className="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center group-hover:bg-violet-500/20 transition-colors flex-shrink-0 border border-violet-500/20">
+                        <Palette className="h-5 w-5 text-violet-400" />
                     </div>
                     <div className="flex-1">
-                        <p className="font-semibold text-amber-900">Cài đặt Giao diện (Theme)</p>
-                        <p className="text-xs text-amber-700">Tùy chỉnh màu sắc, nền, chữ cho giao diện trang web của chi nhánh</p>
+                        <p className="font-bold text-violet-200 text-sm">Cài đặt Giao diện (Theme)</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Tùy chỉnh hệ màu thương hiệu, hình nền và kiểu hiển thị cho cổng thông tin Web & App của đơn vị</p>
                     </div>
-                    <span className="text-amber-500 group-hover:translate-x-1 transition-transform">→</span>
+                    <span className="text-violet-400 group-hover:translate-x-1.5 transition-transform font-bold font-mono">→</span>
                 </div>
             </Link>
 

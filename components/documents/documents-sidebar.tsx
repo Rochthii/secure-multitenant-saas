@@ -30,8 +30,8 @@ interface DocumentsSidebarProps {
 const TYPE_FILTERS = [
     { value: 'all', label: 'Tất cả', icon: Grid3X3, color: 'text-gray-500' },
     { value: 'document', label: 'Tài liệu', icon: FileText, color: 'text-blue-500' },
-    { value: 'audio', label: 'Pháp âm', icon: Headphones, color: 'text-purple-500' },
-    { value: 'video', label: 'Video', icon: Video, color: 'text-red-500' },
+    { value: 'audio', label: 'Audio & Podcast SOP', icon: Headphones, color: 'text-purple-500' },
+    { value: 'video', label: 'Video đào tạo', icon: Video, color: 'text-red-500' },
     { value: 'image', label: 'Hình ảnh', icon: Library, color: 'text-teal-500' },
 ];
 
@@ -215,7 +215,7 @@ export function DocumentsSidebar({
                     <div className="space-y-2">
                         <Link href="/documents" className="flex items-center gap-2 text-sm text-white/80 hover:text-gold-primary transition-colors group">
                             <Headphones className="w-4 h-4 text-gold-primary/60 group-hover:text-gold-primary" />
-                            Thư viện Pháp Thoại
+                            Video Đào tạo & SOP
                         </Link>
                         <Link href="/thu-vien" className="flex items-center gap-2 text-sm text-white/80 hover:text-gold-primary transition-colors group">
                             <Video className="w-4 h-4 text-gold-primary/60 group-hover:text-gold-primary" />

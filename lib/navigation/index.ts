@@ -138,136 +138,43 @@ export function buildNavigation({
         return fallback;
     };
 
-    const isTemple = isCompany === false; // Doanh nghiệp làm mặc định, chỉ khi truyền false mới là chùa
-
     const nav: NavItem[] = [{ nameKey: 'home', href: '/' }];
 
-    // ── CHÙA PHẬT GIÁO (Buddhist Tenant) ────────────────────────────────────
-    if (isTemple) {
-        // Giới thiệu
-        if (isMenuItemVisible('about', true)) {
-            nav.push({
-                nameKey: 'about',
-                href: '/gioi-thieu',
-                children: (() => {
-                    const children: NavItem[] = [];
-                    if (aboutSectionsTree) {
-                        children.push(
-                            ...aboutSectionsTree.map((cat: any) =>
-                                mapCategoryToNavItem(cat, '/gioi-thieu'),
-                            ),
-                        );
-                    }
-                    children.push({ nameKey: 'about_rules', href: '/gioi-thieu/noi-quy-tu-vien' });
-                    return children;
-                })(),
-            });
-        }
-
-        // Tin tức
-        if (isMenuItemVisible('news', isCategoryVisible('news'))) {
-            nav.push({
-                nameKey: 'news',
-                href: '/tin-tuc',
-                children: categoriesTree?.news?.map(cat => mapCategoryToNavItem(cat, '/tin-tuc')),
-            });
-        }
-
-        // Pháp thoại
-        if (isMenuItemVisible('dharma', isCategoryVisible('dharma'))) {
-            nav.push({
-                nameKey: 'dharma_talks',
-                href: '/documents',
-                children: categoriesTree?.dharma?.map(cat => mapCategoryToNavItem(cat, '/documents')),
-            });
-        }
-
-        // Tài liệu số
-        if (isMenuItemVisible('documents', true)) {
-            nav.push({
-                nameKey: 'documents',
-                href: '/tai-lieu-so',
-                children: categoriesTree?.documents?.map(cat => mapCategoryToNavItem(cat, '/tai-lieu-so')),
-            });
-        }
-
-        // Phước Điền (Transactions)
-        if (isMenuItemVisible('transaction', isCategoryVisible('cta') && modulesConfig?.transactions !== false)) {
-            nav.push({
-                nameKey: 'transaction',
-                href: '/transactions',
-                children: [
-                    { nameKey: 'transaction_give', href: '/transactions' },
-                    { nameKey: 'transaction_merit', href: '/transactions/cong-duc-ghi-danh' },
-                    {
-                        nameKey: 'transaction_projects',
-                        href: '/transactions/hang-muc-du-an/dang-trien-khai',
-                        children: [
-                            { nameKey: 'transaction_ongoing', href: '/transactions/hang-muc-du-an/dang-trien-khai' },
-                            { nameKey: 'transaction_completed', href: '/transactions/hang-muc-du-an/da-hoan-thanh' },
-                        ],
-                    },
-                ],
-            });
-        }
-
-        // Liên hệ
-        if (isMenuItemVisible('contact', true)) {
-            nav.push({ nameKey: 'contact', href: '/lien-he' });
-        }
-        
-        return nav;
-    }
-
-    // ── CÔNG TY / FOUNDATION (Doanh nghiệp - Mặc định) ───────────────────────
+    // ── DOANH NGHIỆP B2B SAAS (Corporate Navigation) ───────────────────────────
+    
+    // Giới thiệu doanh nghiệp
     if (isMenuItemVisible('about', true)) {
         nav.push({ nameKey: 'about', href: '/gioi-thieu' });
     }
-        
+
+    // Tài liệu & SOP nội bộ
+    if (isMenuItemVisible('documents', true)) {
         nav.push({
-            nameKey: 'solutions',
-            href: '/giai-phap',
-            children: [
-                { nameKey: 'digital_transformation', href: '/giai-phap/chuyen-doi-so' },
-                { nameKey: 'community_communications', href: '/giai-phap/truyen-thong' },
-                { nameKey: 'culture_conservation', href: '/giai-phap/van-hoa' },
-                { nameKey: 'social_events', href: '/giai-phap/su-kien' },
-            ],
+            nameKey: 'documents',
+            href: '/documents',
+            children: categoriesTree?.documents?.map(cat => mapCategoryToNavItem(cat, '/documents')) || 
+                      categoriesTree?.dharma?.map(cat => mapCategoryToNavItem(cat, '/documents')),
         });
+    }
 
-        if (hasProjects) {
-            nav.push({ nameKey: 'projects', href: '/du-an' });
-        }
+    // Dự án & Giải pháp AI RAG
+    if (hasProjects || isMenuItemVisible('projects', true)) {
+        nav.push({ nameKey: 'projects', href: '/du-an' });
+    }
 
-        if (isMenuItemVisible('news', true)) {
-            nav.push({
-                nameKey: 'knowledge',
-                href: '/tin-tuc',
-                children: categoriesTree?.news?.map(cat => mapCategoryToNavItem(cat, '/tin-tuc')),
-            });
-        }
-        
-        if (isMenuItemVisible('transaction', modulesConfig?.transactions !== false)) {
-            nav.push({
-                nameKey: 'company_transaction',
-                href: '/transactions',
-                children: [
-                    { nameKey: 'transaction_give', href: '/transactions' },
-                    { nameKey: 'transaction_merit', href: '/transactions/cong-duc-ghi-danh' },
-                    {
-                        nameKey: 'transaction_projects',
-                        href: '/transactions/hang-muc-du-an/dang-trien-khai',
-                        children: [
-                            { nameKey: 'transaction_ongoing', href: '/transactions/hang-muc-du-an/dang-trien-khai' },
-                            { nameKey: 'transaction_completed', href: '/transactions/hang-muc-du-an/da-hoan-thanh' },
-                        ],
-                    },
-                ],
-            });
-        }
-        nav.push(
-            { nameKey: 'transparency_portal', href: '/minh-bach', variant: 'button' },
-            { nameKey: 'contact', href: '/lien-he' },
-        );
-        return nav;
+    // Tin tức & Truyền thông
+    if (isMenuItemVisible('news', true)) {
+        nav.push({
+            nameKey: 'news',
+            href: '/tin-tuc',
+            children: categoriesTree?.news?.map(cat => mapCategoryToNavItem(cat, '/tin-tuc')),
+        });
+    }
+
+    // Liên hệ hợp tác
+    if (isMenuItemVisible('contact', true)) {
+        nav.push({ nameKey: 'contact', href: '/lien-he' });
+    }
+
+    return nav;
 }

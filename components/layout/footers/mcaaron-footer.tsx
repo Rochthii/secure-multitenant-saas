@@ -7,38 +7,18 @@ import { DEFAULT_SITE_NAME, BRAND_NAME_VI } from '@/lib/constants';
 import { TenantLogo } from '@/components/layout/tenant-logo';
 
 const FOOTER_LINKS = {
-    solutions: {
-        title: 'Giải pháp',
-        items: [
-            { label: 'Chuyển đổi số Tổ chức', href: '/giai-phap/chuyen-doi-so' },
-            { label: 'Truyền thông Cộng đồng', href: '/giai-phap/truyen-thong' },
-            { label: 'Văn hóa & Bảo tồn', href: '/giai-phap/van-hoa' },
-            { label: 'Sự kiện Xã hội', href: '/giai-phap/su-kien' },
-        ],
-    },
     company: {
         title: 'Công ty',
         items: [
             { label: 'Về ' + BRAND_NAME_VI, href: '/gioi-thieu' },
-            { label: 'DNXH là gì?', href: '/gioi-thieu/doanh-nghiep-xa-hoi' },
-            { label: 'Đội ngũ', href: '/gioi-thieu/doi-ngu' },
+            { label: 'Tin tức & Thông cáo', href: '/tin-tuc' },
             { label: 'Tuyển dụng', href: '/lien-he' },
-        ],
-    },
-    impact: {
-        title: 'Tác động',
-        items: [
-            { label: 'Dashboard Tác động', href: '/minh-bach' },
-            { label: 'Dự án & Case Studies', href: '/du-an' },
-            { label: 'Kiến thức & Insights', href: '/tin-tuc' },
-            { label: 'Báo cáo thường niên', href: '/minh-bach#timeline' },
         ],
     },
     connect: {
         title: 'Kết nối',
         items: [
             { label: 'Liên hệ hợp tác', href: '/lien-he' },
-            { label: 'Đồng hành cùng chúng tôi', href: '/dong-hanh' },
             { label: 'Chính sách bảo mật', href: '#' },
             { label: 'Điều khoản sử dụng', href: '#' },
         ],
@@ -126,7 +106,7 @@ export function McAaronFooter({ settings = {} }: { settings?: Record<string, str
 
                 {/* Main footer grid */}
                 <div className="relative px-8 sm:px-12 py-12 lg:py-14">
-                    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
+                    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
 
                         {/* Brand column (2 cols) */}
                         <div className="lg:col-span-2 flex flex-col gap-5">

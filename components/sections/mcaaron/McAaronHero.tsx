@@ -22,8 +22,8 @@ export function McAaronHero({ data }: McAaronHeroProps) {
     const descriptionText = content.description || `${BRAND_NAME_VI} là doanh nghiệp xã hội công nghệ tiên phong, cung cấp nền tảng quản trị mạng lưới toàn diện, minh bạch và an toàn.`;
     const primaryButtonText = content.primaryButton || 'Khám Phá Hệ Sinh Thái';
     const secondaryButtonText = content.secondaryButton || `Về ${BRAND_NAME_VI}`;
-    const primaryLink = content.primaryLink || '#';
-    const secondaryLink = content.secondaryLink || '#';
+    const primaryLink = content.primaryLink || '/lien-he';
+    const secondaryLink = content.secondaryLink || '/gioi-thieu';
     const backgroundImage = content.backgroundImage || '';
     const overlayOpacity = parseFloat(content.overlayOpacity || '0.7');
 

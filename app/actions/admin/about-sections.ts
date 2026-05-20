@@ -197,25 +197,69 @@ export async function initializeDefaultSections(tenantId?: string) {
         const supabase = await createClient();
 
         const defaultSections = [
-            // Nhóm 1: Lịch sử
-            { key: 'dong-chay-lich-su', title_vi: 'DÒNG CHẢY LỊCH SỬ', content_vi: '<p>Nội dung về lịch sử hình thành và phát triển của chi nhánh...</p>', tenant_id: secureTenantId, display_order: 10, is_active: true },
-            
-            // Nhóm 2: Truyền thừa
-            { key: 'truyen-thua-tiep-noi', title_vi: 'TRUYỀN THỪA & TIẾP NỐI', content_vi: '<p>Thông tin về các đời Tổ sư và sự nối truyền đạo mạch...</p>', tenant_id: secureTenantId, display_order: 20, is_active: true },
-            { key: 'truyen-thua-tiep-noi/tru-tri-duong-nhiem', title_vi: 'Trụ trì Đương nhiệm', content_vi: '<p>Tiểu sử và các hoạt động của vị Trụ trì hiện nay...</p>', tenant_id: secureTenantId, display_order: 21, is_active: true },
-            { key: 'truyen-thua-tiep-noi/to-chuc-tang-doan', title_vi: 'Tổ chức Tăng đoàn', content_vi: '<p>Cấu trúc và danh sách chư Tăng đang tu học tại bổn tự...</p>', tenant_id: secureTenantId, display_order: 22, is_active: true },
-            { key: 'truyen-thua-tiep-noi/ban-thu-ky', title_vi: 'Ban Thư ký', content_vi: '<p>Thông tin về bộ phận văn phòng và quản lý hành chính của chi nhánh...</p>', tenant_id: secureTenantId, display_order: 23, is_active: true },
+            // ── Nhóm 1: Tầm nhìn & Sứ mệnh ───────────────────────────────────────
+            {
+                key: 'tam-nhin-su-menh',
+                title_vi: 'TẦM NHÌN & SỨ MỆNH',
+                content_vi: '<p>Chúng tôi hướng đến xây dựng một hệ sinh thái doanh nghiệp bền vững, tạo ra giá trị thực cho cộng đồng và đối tác.</p>',
+                tenant_id: secureTenantId, display_order: 10, is_active: true,
+            },
 
-            // Nhóm 3: Di sản
-            { key: 'di-san-nghe-thuat', title_vi: 'DI SẢN & NGHỆ THUẬT', content_vi: '<p>Giới thiệu về các giá trị văn hóa, kiến trúc đặc sắc...</p>', tenant_id: secureTenantId, display_order: 30, is_active: true },
-            { key: 'di-san-nghe-thuat/kien-truc-dieu-khac', title_vi: 'Kiến trúc & Điêu khắc', content_vi: '<p>Mô tả chi tiết về các công trình, pho tượng và hoa văn trang trí...</p>', tenant_id: secureTenantId, display_order: 31, is_active: true },
-            { key: 'di-san-nghe-thuat/co-vat-phap-bao', title_vi: 'Cố Vật & Pháp Bảo', content_vi: '<p>Danh sách các di vật cổ và pháp bảo quý giá đang được lưu giữ...</p>', tenant_id: secureTenantId, display_order: 32, is_active: true },
-            { key: 'di-san-nghe-thuat/nghe-thuat-truyen-thong', title_vi: 'Nghệ thuật Truyền thống', content_vi: '<p>Các loại hình nghệ thuật đặc thù gắn liền với ngôi chi nhánh...</p>', tenant_id: secureTenantId, display_order: 33, is_active: true },
-            { key: 'di-san-nghe-thuat/doi-song-van-hoa', title_vi: 'Đời Sống Văn Hóa', content_vi: '<p>Các hoạt động văn hóa, lễ hội thường niên tại tự viện...</p>', tenant_id: secureTenantId, display_order: 34, is_active: true },
+            // ── Nhóm 2: Đội ngũ lãnh đạo ──────────────────────────────────────────
+            {
+                key: 'doi-ngu',
+                title_vi: 'ĐỘI NGŨ LÃNH ĐẠO',
+                content_vi: '<p>Đội ngũ lãnh đạo giàu kinh nghiệm với tầm nhìn chiến lược dài hạn.</p>',
+                tenant_id: secureTenantId, display_order: 20, is_active: true,
+            },
+            {
+                key: 'doi-ngu/giam-doc-dieu-hanh',
+                title_vi: 'Giám đốc Điều hành (CEO)',
+                content_vi: '<p>Tiểu sử và định hướng phát triển từ CEO.</p>',
+                tenant_id: secureTenantId, display_order: 21, is_active: true,
+            },
+            {
+                key: 'doi-ngu/hoi-dong-quan-tri',
+                title_vi: 'Hội đồng Quản trị',
+                content_vi: '<p>Danh sách và thông tin các thành viên Hội đồng Quản trị.</p>',
+                tenant_id: secureTenantId, display_order: 22, is_active: true,
+            },
+            {
+                key: 'doi-ngu/ban-lanh-dao',
+                title_vi: 'Ban Lãnh đạo',
+                content_vi: '<p>Cơ cấu tổ chức và thông tin các phòng ban.</p>',
+                tenant_id: secureTenantId, display_order: 23, is_active: true,
+            },
 
-            // Nhóm 4: Nội quy
-            { key: 'noi-quy-tu-vien', title_vi: 'NỘI QUY TỰ VIỆN', content_vi: '<p>Các quy định dành cho Nhân sự và khách tham quan khi đến chi nhánh...</p>', tenant_id: secureTenantId, display_order: 40, is_active: true },
+            // ── Nhóm 3: Hành trình phát triển ─────────────────────────────────────
+            {
+                key: 'hanh-trinh',
+                title_vi: 'HÀNH TRÌNH PHÁT TRIỂN',
+                content_vi: '<p>Lịch sử hình thành và các cột mốc phát triển quan trọng của tổ chức.</p>',
+                tenant_id: secureTenantId, display_order: 30, is_active: true,
+            },
+            {
+                key: 'hanh-trinh/cot-moc-noi-bat',
+                title_vi: 'Các cột mốc nổi bật',
+                content_vi: '<p>Timeline các dấu mốc lịch sử và thành tựu của tổ chức theo thời gian.</p>',
+                tenant_id: secureTenantId, display_order: 31, is_active: true,
+            },
+            {
+                key: 'hanh-trinh/thanh-tuu-giai-thuong',
+                title_vi: 'Thành tựu & Giải thưởng',
+                content_vi: '<p>Những ghi nhận và giải thưởng từ các tổ chức uy tín trong và ngoài nước.</p>',
+                tenant_id: secureTenantId, display_order: 32, is_active: true,
+            },
+
+            // ── Nhóm 4: Giá trị cốt lõi ───────────────────────────────────────────
+            {
+                key: 'gia-tri-cot-loi',
+                title_vi: 'GIÁ TRỊ CỐT LÕI',
+                content_vi: '<p>Những nguyên tắc và giá trị định hướng toàn bộ hoạt động của tổ chức.</p>',
+                tenant_id: secureTenantId, display_order: 40, is_active: true,
+            },
         ];
+
 
         let count = 0;
         const insertedKeys: string[] = [];

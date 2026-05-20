@@ -12,6 +12,8 @@ import { DashboardTransactionSummary } from '@/components/admin/dashboard-transa
 import { requireTenantAccess } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { getTenantConfig } from '@/lib/tenant';
+import { EnterpriseDashboardUI } from '@/components/admin/enterprise-dashboard';
+
 
 export default async function AdminDashboard({ params }: { params: Promise<{ tenant_id: string }> }) {
     const { tenant_id } = await params;
@@ -23,6 +25,7 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
     // Get tenant type
     const tenantConfig = await getTenantConfig(tenant_id);
     const tenantName = (tenantConfig as any)?.name ?? 'Workspace';
+    const tenantType: string = (tenantConfig as any)?.tenant_type ?? 'tenant';
 
     // Use realtime stats (RLS enforced)
     const {
@@ -36,6 +39,23 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
         transactions,
         transactionSummary,
     } = await getAdminDashboardStats(tenant_id);
+
+    // ── Enterprise Route: separate clean UI ──────────────────────────────────
+    if (tenantType === 'company' || tenantType === 'ngo') {
+        return (
+            <EnterpriseDashboardUI
+                tenantId={tenant_id}
+                tenantName={tenantName}
+                newsCount={newsCount}
+                eventsCount={eventsCount}
+                pendingRegistrations={pendingRegistrations}
+                recentNews={recentNews || []}
+                recentTransactions={recentTransactions}
+            />
+        );
+    }
+
+
 
     const stats = [
         {

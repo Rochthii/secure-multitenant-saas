@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 export default function Error({
     error,
@@ -10,24 +11,24 @@ export default function Error({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error('[Phap Thoai Error]', error);
+        console.error('[Documents System Error]', error);
     }, [error]);
 
     return (
-        <div className="min-h-[60vh] flex items-center justify-center px-4">
-            <div className="text-center max-w-md mx-auto">
-                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">🙏</span>
+        <div className="min-h-[70vh] flex items-center justify-center px-4 bg-slate-50/50 dark:bg-zinc-950">
+            <div className="text-center max-w-md mx-auto bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 p-8 rounded-2xl shadow-sm">
+                <div className="w-16 h-16 bg-red-50 dark:bg-red-950/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-600 dark:text-red-400 shadow-sm">
+                    <AlertCircle className="w-8 h-8" />
                 </div>
-                <h2 className="text-2xl font-playfair font-bold text-coffee-dark mb-3">
-                    Trang tạm thời không khả dụng
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-zinc-100 mb-3">
+                    Hệ thống gặp sự cố tải dữ liệu
                 </h2>
-                <p className="text-gray-500 mb-8 leading-relaxed">
-                    Đã xảy ra sự cố khi tải nội dung pháp thoại. Vui lòng thử lại sau.
+                <p className="text-slate-500 dark:text-zinc-400 mb-8 leading-relaxed text-sm">
+                    Không thể hiển thị tài liệu hoặc SOP vào lúc này do lỗi kết nối. Quý doanh nghiệp vui lòng thử lại.
                 </p>
                 <button
                     onClick={reset}
-                    className="inline-flex items-center gap-2 bg-gold-primary text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-gold-dark transition-all shadow-lg shadow-gold-primary/20"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-violet-600 text-white px-8 py-3.5 rounded-xl font-bold text-sm hover:bg-violet-500 transition-all shadow-md shadow-violet-950/10"
                 >
                     ↻ Thử lại
                 </button>
