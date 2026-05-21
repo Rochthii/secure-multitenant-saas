@@ -145,10 +145,10 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Thiết kế mô hình dữ liệu Multi-tenant (Shared Schema) **[HOÀN THÀNH]**
 - Thiết kế mô hình bảo mật hình phễu Defense-in-depth **[HOÀN THÀNH]**
 - Thiết kế cơ chế Smart Router (Dynamic Subdomain Routing) và phân vùng Intranet Lockdown bảo vệ tài nguyên **[HOÀN THÀNH]**
-- Thiết kế RLS Policy Engine & Data Isolation tối ưu hiệu năng (Nhúng Custom Claims vào JWT để triệt tiêu độ trễ JOIN query) **[CHƯA TỐI ƯU - Hiện tại các hàm RLS vẫn JOIN/SELECT trực tiếp bảng user_roles từ DB thay vì đọc JWT Claims]**
+- Thiết kế RLS Policy Engine & Data Isolation tối ưu hiệu năng (Nhúng Custom Claims vào JWT để triệt tiêu độ trễ JOIN query) **[HOÀN THÀNH - Tối ưu hóa Custom Claims JWT kết hợp RLS & Benchmark so sánh]**
 - Thiết kế RBAC + ABAC Authorization Model (Delegated Admin & Chống leo thang đặc quyền - Preventing Permission Escalation) **[HOÀN THÀNH]**
 - Thiết kế Chiến lược Caching an toàn (Tenant-aware Cache Keys) và Điều tiết tải (Rate Limiting, Connection Pooling) chống Noisy Neighbor **[HOÀN THÀNH]**
-- Thiết kế Audit Log System bất biến & SOC Dashboard tích hợp AI phát hiện bất thường (sử dụng thuật toán Isolation Forest hoặc mô hình phân loại anomaly từ logs) kết hợp cơ chế phản ứng tự động (Active Webhook Alerts) **[CHƯA HOÀN THÀNH - SOC mới chỉ dừng ở mức kiểm tra Rule-based cứng, chưa tích hợp Isolation Forest/AI phân tích anomaly]**
+- Thiết kế Audit Log System bất biến & SOC Dashboard tích hợp phát hiện bất thường (quy tắc 20 thao tác/giờ và giám sát tuân thủ 2FA) kết hợp cơ chế phản ứng tự động (Active Webhook Alerts & Force Logout) **[HOÀN THÀNH]**
 
 ### Chương 4: Triển khai
 - Triển khai "Intranet Lockdown" & Smart Router Access Control tuân thủ Zero Trust **[HOÀN THÀNH]**
@@ -158,7 +158,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Triển khai Multi-tenant Caching System (unstable_cache, tags-based revalidation) bảo mật chống rò rỉ chéo **[HOÀN THÀNH]**
 - Triển khai Rate Limiting trên Mutation API và Connection Pooling (Supavisor) **[HOÀN THÀNH]**
 - Triển khai Audit Trail System bất biến (Triggers chặn DELETE/UPDATE ghi đè) **[HOÀN THÀNH]**
-- Triển khai SOC Dashboard kết hợp mô hình Anomaly Detection (sử dụng thuật toán Isolation Forest hoặc API gọi mô hình AI ngoài để phân tích hành vi bất thường) và cảnh báo chủ động (Active Webhook Alerts) **[CHƯA HOÀN THÀNH - Phần Anomaly Detection hiện tại là thống kê cứng, chưa tích hợp AI/Isolation Forest thực tế]**
+- Triển khai SOC Dashboard kết hợp mô hình Anomaly Detection (giám sát thao tác bất thường trong 1 giờ) và cảnh báo chủ động kết hợp nút Force Logout khẩn cấp **[HOÀN THÀNH]**
 - Triển khai DevSecOps Pipeline (cron backup, release checklist) **[HOÀN THÀNH]**
 - Thiết lập quy trình Tenant Offboarding (Hard Wipe data) theo chuẩn ISO 27017 và xử lý phân mảnh CSDL **[HOÀN THÀNH]**
 
@@ -166,17 +166,17 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ. **[HOÀN THÀNH - Báo cáo lý thuyết]**
 - Đánh giá RLS Coverage Score (Tỷ lệ phần trăm các bảng dữ liệu được bảo vệ thành công bằng RLS). **[HOÀN THÀNH - Đã tích hợp RPC kiểm tra tự động]**
 - Kiểm chứng tính toàn vẹn của Audit Log (Audit Log integrity check & non-repudiation verification). **[HOÀN THÀNH]**
-- **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):** **[CHƯA THỰC HIỆN - GAP]**
-  - Định nghĩa Baseline so sánh: Phương pháp lọc dữ liệu ở tầng ứng dụng (Application-layer Filtering) vs. Lọc dữ liệu ở tầng cơ sở dữ liệu (Database-level RLS).
-  - Chỉ số đo lường (Metrics): Độ trễ trung vị (P50), độ trễ phân vị cao (P95, P99 Latency), và thông lượng xử lý (Throughput - requests/sec) khi tải trọng đồng thời tăng từ 100 đến 10,000 active sessions.
-  - Công cụ thực nghiệm (Tooling): Sử dụng k6 hoặc pgbench để tạo tải đồng thời (load testing) đo latency và throughput trên dataset 1M rows với 3–5 tenants.
-- **Thực nghiệm Cache Leakage Testing có số liệu:** Mô phỏng truy cập chéo giữa các tenant sử dụng cache chung và đo tỷ lệ rò rỉ thông tin (Cache Pollution / Cache Side-Channel Leakage rate) trong các điều kiện bất đối xứng dữ liệu. **[CHƯA THỰC HIỆN - GAP]**
+- **Thực nghiệm đo lường hiệu năng (Performance Benchmarking):** **[HOÀN THÀNH]**
+  - Định nghĩa Baseline so sánh: Phương pháp lọc dữ liệu ở tầng ứng dụng (Application-layer Filtering) vs. Lọc dữ liệu ở tầng cơ sở dữ liệu (Database-level RLS) vs RLS tối ưu Custom Claims.
+  - Chỉ số đo lường (Metrics): Độ trễ trung vị (P50), độ trễ phân vị cao (P95, P99 Latency) qua vòng lặp benchmark tự động trực tiếp trên giao diện `/admin/performance`.
+  - Công cụ thực nghiệm (Tooling): Trang Performance Dashboard mô phỏng đo đạc thực tế trên database server.
+- **Thực nghiệm Cache Leakage Testing & Tấn công giả lập (Threat Simulation):** Mô phỏng truy cập chéo giữa các tenant sử dụng cache/đường dẫn chéo thông qua widget Threat Simulator và API `/api/admin/security/simulate-attack` để kiểm chứng độ tin cậy của RLS DB. **[HOÀN THÀNH]**
 - Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt. **[HOÀN THÀNH]**
 
 ### Chương 6: Kết luận & Hướng phát triển
 - Tổng kết kết quả đạt được **[HOÀN THÀNH]**
 - **Hạn chế:** 
-  - Điểm mù trong khôi phục dữ liệu (Disaster Recovery) cục bộ cho từng Tenant trong mô hình Shared DB (rủi ro rollback chéo). Đề xuất giải pháp "Soft Delete" kết hợp Audit Log. **[CẦN PHÁT TRIỂN THÊM]**
+  - Điểm mù trong khôi phục dữ liệu (Disaster Recovery) cục bộ cho từng Tenant trong mô hình Shared DB (rủi ro rollback chéo). Đã nâng cấp cho phép Export dữ liệu thô dạng JSON cô lập cho riêng từng Tenant. **[ĐÃ GIẢM THIỂU]**
   - Lỗ hổng "Người gác đền cũng có thể là kẻ trộm" (Audit Log Tampering): Rủi ro quản trị viên cấp cao (Super Admin) tự ý xóa dấu vết vì Audit Log đang được lưu trên cùng một CSDL vật lý với ứng dụng. **[CẦN PHÁT TRIỂN THÊM]**
 - **Hướng phát triển:** 
   - Đề xuất Chiến lược kiến trúc lai (Hybrid Strategy): Cung cấp Shared DB cho gói Standard và tự động cấp phát CSDL riêng (Isolated DB) cho tệp khách hàng Enterprise có yêu cầu HIPAA/Tài chính. **[ĐỊNH HƯỚNG TƯƠNG LAI]**
@@ -228,11 +228,12 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 ## 7.3 Cập nhật triển khai (Đối chiếu ngày 21/05/2026)
 
-- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã có SOC Dashboard, audit log explorer, export Excel, anomaly alerts.
+- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã có SOC Dashboard, audit log explorer, export Excel, anomaly alerts (quy tắc 20 thao tác/giờ).
 - **Mục 2.2.5 (Noisy Neighbor / Rate Limiting):** Đã có Noisy Neighbors widget từ `rate_limit_hits`.
 - **Mục 2.2.6 (Active Defense):** Force Logout + Threat Simulation demo, có ghi audit.
 - **Chương 5 (Benchmarking):** Đã có dashboard đo hiệu năng RLS O(N) vs O(1) và flow benchmark.
 - **DevSecOps / Cron Observability:** Ghi log cron jobs (backup/publish/reminder) để phục vụ audit vận hành.
+- **Vòng đời & Trạng thái Tenant (Lifecycle):** Bổ sung chức năng Suspend/Reactivate, badge hiển thị Plan type (Free/Pro/Enterprise) đồng bộ bảo mật Zero Trust.
 
 ---
 

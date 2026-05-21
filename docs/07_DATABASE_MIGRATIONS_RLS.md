@@ -182,6 +182,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 | `audit_logs` | ✅ | ✅ | ❌ | ❌ | 🔒 Immutable |
 | `site_settings` | ✅ | ✅ | ✅ | ❌ | — |
 | `bank_accounts` | ✅ | ✅ | ✅ | ✅ | — |
+| `cron_job_logs` | ✅ | ✅ | ❌ | ❌ | 🔒 Operational log |
+| `rls_benchmark_results` | ✅ | ✅ | ❌ | ❌ | 🔒 Performance log |
 
 ### 5.2 RLS Coverage Score
 
@@ -246,6 +248,7 @@ Module `lib/audit/security-stats.ts` tổng hợp dữ liệu từ `audit_logs` 
 | RBAC | user_roles, role_permissions | **Phân quyền vai trò** |
 | Broadcast | published_to UUID[] | Cross-tenant content sharing |
 | ABAC | Time-based + DELETE triggers | **ABAC bổ sung** |
+| Security SOC & Operations | `cron_job_logs`, `rls_benchmark_results`, `tenant_lifecycle` | **Đo lường kiểm chứng, giám sát vận hành và Vòng đời Tenant** |
 
 ### 7.3 Quy trình migration an toàn
 

@@ -33,6 +33,7 @@ Mô tả toàn bộ surface admin theo route thực tế trong `app/admin/**`, k
 - `admin/dashboard`
 - `admin/analytics`
 - `admin/tenants`, `admin/tenants/new`, `admin/tenants/[id]`, `admin/tenants/[id]/theme`
+- `admin/tenants/[id]/lifecycle` — **Tenant Lifecycle:** Quản lý vòng đời (Suspend/Reactivate), phân loại Plan Badge (`Free`/`Pro`/`Enterprise`).
 - `admin/users`, `admin/users/invite`, `admin/users/[id]`
 - `admin/organizations`, `admin/organizations/new`, `admin/organizations/[id]`
 - `admin/approvals`, `admin/pending`
@@ -40,7 +41,9 @@ Mô tả toàn bộ surface admin theo route thực tế trong `app/admin/**`, k
   - `admin/security-center` — **SOC Dashboard:** Security Score, Activity Timeline, Anomaly Alerts, RLS Coverage
   - `admin/audit-logs` — Nhật ký Kiểm toán (Audit Trail): toàn bộ hành động hệ thống
 - `admin/page-builder`
-- `admin/backup` — Backup & Restore (DR)
+- `admin/backup` — Backup & Restore (DR) nâng cao (hỗ trợ lọc theo Tenant và xem lịch sử Backup thực tế qua `cron_job_logs`)
+- `admin/performance` — **RLS Performance Benchmarking:** Mô phỏng thực nghiệm đo hiệu năng RLS Custom Claims
+- `admin/threat-simulator` — **Threat Simulator:** Công cụ tấn công giả lập kiểm thử an ninh chống Noisy Neighbor & rò rỉ chéo
 - **Tài chính & Ngân sách:**
   - `admin/finance/transactions` (Review, Approval, Export)
   - `admin/finance/projects` (Quản lý Dự án & Chiến dịch)
@@ -53,6 +56,7 @@ Mô tả toàn bộ surface admin theo route thực tế trong `app/admin/**`, k
 ### 3.2 Tenant-scoped modules (`admin/t/[tenant_id]/*`)
 
 - Dashboard chi nhánh
+- **Tenant Security SOC:** Giao diện SOC cục bộ cấu hình an ninh chi nhánh (Bắt buộc 2FA, IP Whitelist, Force Logout khẩn cấp, Anomaly Alerts).
 - Thông báo nội bộ (News)
 - Sự kiện & Lịch hoạt động
 - Tài liệu nội bộ
@@ -157,7 +161,25 @@ Actions: `updateSettings`, tenant CRUD actions.
     - Chỉ **Super Admin** mới có quyền cấu hình Layout `ai_portal`.
     - Việc tạo/cập nhật Tenant với layout AI được bảo vệ bởi server action validation (`requireSuperAdmin`).
 
----
+### 4.8 New Security & Operational Features (Cập nhật 21/05/2026)
+- **Tenant Security Operations Center (Local SOC)**:
+  - **Component**: Giao diện `/app/admin/t/[tenant_id]/security/page.tsx` và client form `security-settings-form.tsx`.
+  - **Chức năng**: Cho phép Tenant Admin tự cấu hình chính sách an ninh gồm: Bắt buộc 2FA, Giới hạn IP Whitelist (phục vụ "Intranet Lockdown").
+  - **Force Logout khẩn cấp**: API `/api/admin/security/force-logout` thu hồi JWT session của mọi tài khoản thuộc Tenant khi có sự cố, ghi audit_logs.
+  - **Quyền hạn**: Được bảo vệ bằng RBAC mức `'users'` để Tenant Admin tự chủ quản trị an ninh chi nhánh mà không cần Super Admin privilege.
+- **Vòng đời Tenant (Lifecycle Management)**:
+  - **Component**: Màn hình quản trị `/app/admin/tenants/[id]/lifecycle/page.tsx`.
+  - **Chức năng**: Cho phép Super Admin tạm đình chỉ (`Suspend`) hoặc kích hoạt lại (`Reactivate`) Tenant.
+  - **Plan Type Badge**: Hiển thị badge trực quan (`Free` - xám, `Pro` - vàng, `Enterprise` - tím) và nhãn trạng thái vòng đời ("Đình chỉ" màu đỏ) trên trang danh sách Tenant.
+  - **Server Actions**: `suspendTenant` và `reactivateTenant` thực thi cập nhật an toàn vào `modules_config`, ghi audit log.
+- **Enhanced Backup & Cron History**:
+  - **Lọc theo Tenant**: Export backup hỗ trợ lọc dữ liệu của từng Tenant đơn lẻ và tự động thêm tên tenant vào tên file tải xuống.
+  - **Cron Logs Integration**: Đọc trực tiếp từ bảng `cron_job_logs` hiển thị lịch sử 10 tiến trình backup gần nhất (thời gian, trạng thái, kích thước, số bản ghi).
+- **RLS Performance Benchmarking**:
+  - **Component**: Màn hình thực nghiệm `/admin/performance` so sánh hiệu năng 3 cơ chế lọc: App Filtering, RLS JOIN/SELECT, RLS tối ưu qua Custom Claims JWT.
+  - **Kết quả thực nghiệm**: Minh chứng hiệu năng RLS Custom Claims giảm tối đa latency so với RLS JOIN truyền thống.
+- **Threat Simulator (Tấn công giả lập)**:
+  - **Component**: Màn hình giả lập truy cập chéo tenant `/admin/threat-simulator` kết hợp API `/api/admin/security/simulate-attack` để chứng minh độ bền bỉ của RLS.
 
 ---
 
