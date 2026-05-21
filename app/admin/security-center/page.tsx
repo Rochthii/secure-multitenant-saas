@@ -4,6 +4,9 @@ import { isGlobalAdmin } from '@/lib/permissions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ShieldAlert, Activity, Users, ShieldCheck, AlertTriangle, Fingerprint, Lock, Shield, Server, ArrowRight } from 'lucide-react';
 import { AuditFilters } from '../audit-logs/AuditFilters';
+import { AnomalyActionButtons } from '@/components/admin/audit/anomaly-action-buttons';
+import { NoisyNeighborsWidget } from '@/components/admin/audit/noisy-neighbors-widget';
+import { ThreatSimulator } from '@/components/admin/threat-simulator';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -167,12 +170,23 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                                     <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-bold uppercase">Warning</span>
                                                 </div>
                                             </div>
+                                            
+                                            {/* Quick Actions (Task-2.1) */}
+                                            <div className="shrink-0 flex items-center">
+                                                <AnomalyActionButtons userEmail={alert.user_email} userId={alert.user_id} />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </CardContent>
                     </Card>
+
+                    {/* Rate Limits & Noisy Neighbors (Task-1.1 & 1.2) */}
+                    <NoisyNeighborsWidget rateLimitHits={stats.rateLimitHits} />
+
+                    {/* Threat Simulator Demo (Task-6.1) */}
+                    <ThreatSimulator />
 
                     <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                         <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">

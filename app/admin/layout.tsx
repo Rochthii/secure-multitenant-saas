@@ -133,8 +133,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
 
     return (
-        <html lang="vi" suppressHydrationWarning>
-            <body className={`${inter.variable} ${playfair.variable} font-inter antialiased`} suppressHydrationWarning>
+        <html lang="vi" className="dark" suppressHydrationWarning>
+            <body 
+                className={`${inter.variable} ${playfair.variable} font-inter antialiased`} 
+                suppressHydrationWarning
+                style={{ background: '#020617' }}
+            >
                 <AdminLayoutClient
                     role={role}
                     tenantId={tenantId}

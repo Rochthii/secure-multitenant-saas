@@ -22,6 +22,7 @@ import {
     ChevronDown,
     Calendar,
     BookOpen,
+    Gauge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -90,6 +91,13 @@ const groupedMenuItems: MenuGroup[] = [
                 icon: Database,
                 resource: 'settings',
                 desc: 'Sao lưu toàn hệ thống',
+            },
+            {
+                href: '/admin/performance',
+                label: 'Performance Benchmark',
+                icon: Gauge,
+                resource: 'settings',
+                desc: 'Đo lường RLS – Dữ liệu Đồ án',
             },
         ]
     },

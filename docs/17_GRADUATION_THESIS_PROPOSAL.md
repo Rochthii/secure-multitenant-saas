@@ -226,6 +226,16 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 ---
 
+## 7.3 Cập nhật triển khai (Đối chiếu ngày 21/05/2026)
+
+- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã có SOC Dashboard, audit log explorer, export Excel, anomaly alerts.
+- **Mục 2.2.5 (Noisy Neighbor / Rate Limiting):** Đã có Noisy Neighbors widget từ `rate_limit_hits`.
+- **Mục 2.2.6 (Active Defense):** Force Logout + Threat Simulation demo, có ghi audit.
+- **Chương 5 (Benchmarking):** Đã có dashboard đo hiệu năng RLS O(N) vs O(1) và flow benchmark.
+- **DevSecOps / Cron Observability:** Ghi log cron jobs (backup/publish/reminder) để phục vụ audit vận hành.
+
+---
+
 ## 8. Tài liệu tham khảo (Dự kiến)
 
 1. Microsoft Azure Architecture Center, "Multi-tenant SaaS Architecture Patterns", 2024.

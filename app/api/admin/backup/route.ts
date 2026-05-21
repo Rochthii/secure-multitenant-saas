@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const specificTable = searchParams.get('table');
+        const tenantIdParam = searchParams.get('tenant_id'); // Filter theo tenant cụ thể (chỉ super_admin)
         const now = getVietnamTime();
         
         // 1. Authenticate and retrieve scope
@@ -27,15 +28,26 @@ export async function GET(request: Request) {
         if (!ctx || !['super_admin', 'company_editor', 'admin', 'tenant_admin'].includes(ctx.role)) {
              return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Chỉ super_admin mới được dùng tenant_id filter
+        if (tenantIdParam && ctx.role !== 'super_admin') {
+            return NextResponse.json({ error: 'Forbidden: Chỉ super_admin mới được filter theo tenant' }, { status: 403 });
+        }
         
         const scope = await getTenantScope();
         const supabase = await createClient();
 
+        // Xác định tenant scope cuối cùng:
+        // - Nếu là super_admin và truyền tenant_id → dùng tenant_id đó
+        // - Nếu là tenant_admin → dùng scope của user
+        // - Nếu là super_admin không truyền tenant_id → global (null)
+        const effectiveScope = tenantIdParam || scope || null;
+
         // 2. Wrap queries to safely inject tenant isolation
         const fetchTable = (table: string) => {
             let query = supabase.from(table as any).select('*');
-            if (scope) {
-                query = query.eq('tenant_id', scope);
+            if (effectiveScope) {
+                query = query.eq('tenant_id', effectiveScope);
             }
             return query;
         };
@@ -99,7 +111,8 @@ export async function GET(request: Request) {
             version: '2.0',
             timestamp: new Date().toISOString(),
             exported_by: ctx.email,
-            scope: scope ? `tenant:${scope}` : 'global',
+            scope: effectiveScope ? `tenant:${effectiveScope}` : 'global',
+            tenant_filter: tenantIdParam || null,
             is_partial: !!specificTable,
             data: backupData,
         };
@@ -111,7 +124,8 @@ export async function GET(request: Request) {
             tableName: specificTable || 'system',
             newData: {
                 action: specificTable ? 'partial_backup_export' : 'full_backup_export',
-                scope: scope || 'global',
+                scope: effectiveScope || 'global',
+                tenant_filter: tenantIdParam || null,
                 tables_count: Object.keys(backup.data).length,
                 total_records: Object.values(backup.data).reduce((sum: number, arr) => sum + (arr as any[]).length, 0),
             },

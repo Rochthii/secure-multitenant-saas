@@ -28,6 +28,7 @@ import {
     ExternalLink,
     ArrowLeft,
     Shield,
+    ShieldAlert,
     Globe,
     Sparkles,
     Heart,
@@ -259,6 +260,8 @@ export function BusinessSidebar({
                 resource: 'users',
                 children: [
                     { href: `${base}/users`, label: 'Danh sách Nhân viên', icon: Users, resource: 'users' },
+                    { href: `${base}/audit-logs`, label: 'Nhật ký hoạt động', icon: FileText, resource: 'analytics' },
+                    { href: `${base}/security`, label: 'Trung tâm Bảo mật', icon: ShieldAlert, resource: 'users' },
                 ],
             },
         ];

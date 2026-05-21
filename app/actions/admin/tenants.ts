@@ -23,6 +23,8 @@ export interface Tenant {
     latitude: number | null;
     longitude: number | null;
     created_at: string;
+    plan_type?: string | null;
+    modules_config?: Record<string, any> | null;
 }
 
 // ------- READ -------
@@ -37,7 +39,7 @@ export async function getTenants(): Promise<{ tenants: Tenant[]; error?: string 
 
     let query = supabase
         .from('tenants')
-        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at');
+        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, plan_type, modules_config');
 
     // Filter for agency_admin and company_editor: only see tenants with web frontend
     if (role === 'agency_admin' || role === 'company_editor') {
@@ -57,7 +59,7 @@ export async function getTenant(id: string): Promise<{ tenant: Tenant | null; er
 
     const { data, error } = await supabase
         .from('tenants')
-        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at')
+        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, modules_config')
         .eq('id', id)
         .single();
 
@@ -520,3 +522,218 @@ export async function updateNavVisibility(
         return { success: false, error: err.message || 'Lỗi server' };
     }
 }
+
+/**
+ * Cập nhật modules_config cho tenant (Feature Toggles)
+ */
+export async function updateTenantConfig(formData: FormData): Promise<{ success: boolean; error?: string }> {
+    try {
+        const id = formData.get('id') as string;
+        const modulesConfigStr = formData.get('modules_config') as string;
+        
+        if (!id || !modulesConfigStr) return { success: false, error: 'Thiếu dữ liệu' };
+
+        await requireTenantAccess(id);
+        const ctx = await getUserContext();
+        if (!ctx) return { success: false, error: 'Unauthorized' };
+        const user = { id: ctx.userId, app_metadata: { role: ctx.role } } as any;
+
+        const modulesConfig = JSON.parse(modulesConfigStr);
+
+        const supabase = await createClient() as any;
+        const { data: oldData } = await supabase
+            .from('tenants')
+            .select('modules_config, domain')
+            .eq('id', id)
+            .single();
+
+        const { error } = await supabase
+            .from('tenants')
+            .update({ modules_config: modulesConfig })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        await createAuditLog({
+            user,
+            action: 'update',
+            tableName: 'tenants',
+            recordId: id,
+            oldData: { modules_config: oldData?.modules_config },
+            newData: { modules_config: modulesConfig },
+        });
+
+        if (oldData?.domain) {
+            // @ts-ignore
+            revalidateTag(CACHE_TAGS.system.tenantConfig(oldData.domain));
+        }
+        // @ts-ignore
+        revalidateTag(CACHE_TAGS.system.tenantConfigGlobal);
+        
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Lỗi server khi lưu modules config' };
+    }
+}
+
+// ------- TENANT LIFECYCLE -------
+
+export async function suspendTenant(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        await requireSuperAdmin();
+
+        const ctx = await getUserContext();
+        if (!ctx) return { success: false, error: 'Unauthorized' };
+        const user = { id: ctx.userId, app_metadata: { role: ctx.role } } as any;
+
+        const supabase = await createClient() as any;
+
+        const { data: oldData, error: fetchError } = await supabase
+            .from('tenants')
+            .select('modules_config')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) return { success: false, error: fetchError.message };
+
+        const existingConfig = oldData?.modules_config || {};
+        const newConfig = { ...existingConfig, lifecycle_status: 'suspended' };
+
+        const { error } = await supabase
+            .from('tenants')
+            .update({ modules_config: newConfig })
+            .eq('id', id);
+
+        if (error) return { success: false, error: error.message };
+
+        await createAuditLog({
+            user,
+            action: 'update',
+            tableName: 'tenants',
+            recordId: id,
+            oldData: { modules_config: oldData?.modules_config },
+            newData: { modules_config: newConfig, lifecycle_action: 'suspend' },
+        });
+
+        revalidatePath('/admin/tenants');
+        revalidatePath(`/admin/tenants/${id}`);
+        revalidatePath(`/admin/tenants/${id}/lifecycle`);
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Lỗi server khi đình chỉ tenant' };
+    }
+}
+
+export async function reactivateTenant(id: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        await requireSuperAdmin();
+
+        const ctx = await getUserContext();
+        if (!ctx) return { success: false, error: 'Unauthorized' };
+        const user = { id: ctx.userId, app_metadata: { role: ctx.role } } as any;
+
+        const supabase = await createClient() as any;
+
+        const { data: oldData, error: fetchError } = await supabase
+            .from('tenants')
+            .select('modules_config')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) return { success: false, error: fetchError.message };
+
+        const existingConfig = oldData?.modules_config || {};
+        const newConfig = { ...existingConfig, lifecycle_status: 'active' };
+
+        const { error } = await supabase
+            .from('tenants')
+            .update({ modules_config: newConfig })
+            .eq('id', id);
+
+        if (error) return { success: false, error: error.message };
+
+        await createAuditLog({
+            user,
+            action: 'update',
+            tableName: 'tenants',
+            recordId: id,
+            oldData: { modules_config: oldData?.modules_config },
+            newData: { modules_config: newConfig, lifecycle_action: 'reactivate' },
+        });
+
+        revalidatePath('/admin/tenants');
+        revalidatePath(`/admin/tenants/${id}`);
+        revalidatePath(`/admin/tenants/${id}/lifecycle`);
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Lỗi server khi kích hoạt lại tenant' };
+    }
+}
+
+/**
+ * Cập nhật cấu hình bảo mật (2FA, IP Whitelist) của riêng một Tenant
+ */
+export async function updateTenantSecuritySettings(
+    tenantId: string,
+    settings: { require_2fa: boolean; ip_whitelist?: string }
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        // Chốt chặn bảo mật cô lập đa tenant
+        await requireTenantAccess(tenantId);
+
+        const ctx = await getUserContext();
+        if (!ctx) return { success: false, error: 'Unauthorized' };
+        const user = { id: ctx.userId, app_metadata: { role: ctx.role } } as any;
+
+        const supabase = await createClient() as any;
+
+        // Fetch old config
+        const { data: oldData, error: fetchError } = await supabase
+            .from('tenants')
+            .select('modules_config')
+            .eq('id', tenantId)
+            .single();
+
+        if (fetchError) return { success: false, error: fetchError.message };
+
+        const existingConfig = oldData?.modules_config || {};
+        
+        // Cập nhật trường security_settings trong modules_config JSON
+        const securitySettings = {
+            require_2fa: settings.require_2fa,
+            ip_whitelist: settings.ip_whitelist || '',
+            last_updated: new Date().toISOString(),
+            updated_by: ctx.email,
+        };
+
+        const newConfig = {
+            ...existingConfig,
+            security_settings: securitySettings
+        };
+
+        // Ghi xuống cơ sở dữ liệu
+        const { error } = await supabase
+            .from('tenants')
+            .update({ modules_config: newConfig })
+            .eq('id', tenantId);
+
+        if (error) return { success: false, error: error.message };
+
+        // Ghi nhận log audit thay đổi cấu hình bảo mật
+        await createAuditLog({
+            user,
+            action: 'update',
+            tableName: 'tenants',
+            recordId: tenantId,
+            oldData: { modules_config: oldData?.modules_config },
+            newData: { modules_config: newConfig, security_action: 'update_settings' },
+        });
+
+        // Xóa cache và làm tươi trang an ninh
+        revalidatePath(`/admin/t/${tenantId}/security`);
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message || 'Lỗi server khi cập nhật cấu hình bảo mật' };
+    }
+}
+

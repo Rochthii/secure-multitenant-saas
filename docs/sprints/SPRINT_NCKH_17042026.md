@@ -45,3 +45,41 @@ epic: Scientific Agentic GraphRAG Upgrade
 
 ---
 *Người cập nhật: Antigravity AI — 17/04/2026*
+
+---
+
+# CẬP NHẬT NGÀY 21/05/2026
+
+## ✅ Các hạng mục đã làm
+
+1. **Performance Benchmark (RLS O(N) vs O(1))**
+   - Tạo trang **/admin/performance** với dashboard P50/P90/P99 và so sánh Legacy vs JWT Claims.
+   - Thêm action `runRlsBenchmark` + migrations `benchmark_legacy`/`benchmark_jwt` để có dataset đo lường.
+
+2. **SOC / Security Center**
+   - Bổ sung **Threat Simulation** (cross-tenant attack demo) + audit log ghi nhận.
+   - Thêm **Noisy Neighbors widget** (rate limit hits).
+   - Anomaly alerts có nút **Force Logout** (API bảo vệ tenant isolation).
+
+3. **Audit Logs theo Tenant**
+   - Tạo trang audit logs cho từng tenant: `/admin/t/[tenant_id]/audit-logs`.
+   - Hỗ trợ export Excel theo bộ lọc + tenant.
+
+4. **Backup / Cron Observability**
+   - Bổ sung bảng `cron_job_logs` + logging cho backup/publish/reminder crons.
+   - Trang backup có history panel và filter export theo tenant/table.
+
+5. **Tenant Security & Lifecycle**
+   - Tenant Security Center: KPI 24h, anomaly, tuân thủ 2FA, cấu hình IP whitelist.
+   - Tenant Lifecycle: suspend/reactivate workspace + trạng thái lifecycle.
+   - Feature toggles cho modules theo tenant.
+
+---
+
+## 🔎 Đối chiếu với [docs/17_GRADUATION_THESIS_PROPOSAL.md](../17_GRADUATION_THESIS_PROPOSAL.md)
+
+- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã có SOC Dashboard, audit log explorer, export, anomaly alerts.
+- **Mục 2.2.5 (Noisy Neighbor / Rate Limiting):** Đã có Noisy Neighbors widget từ `rate_limit_hits`.
+- **Mục 2.2.6 (Active Defense):** Force Logout + Threat Simulation demo, ghi audit.
+- **Mục 5 (Benchmarking):** Hoàn thiện flow đo hiệu năng RLS O(N) vs O(1).
+- **DevSecOps / Cron Observability:** Ghi log cron jobs (backup/publish/reminder) để phục vụ audit vận hành.

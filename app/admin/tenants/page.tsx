@@ -7,6 +7,13 @@ import Link from 'next/link';
 import { Plus, Building2, Globe, Pencil, Layers, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
+const PLAN_TYPE_BADGES: Record<string, { label: string; className: string }> = {
+    free: { label: 'Free', className: 'bg-slate-700/60 text-slate-300 border-slate-600/40' },
+    pro: { label: 'Pro', className: 'bg-amber-900/60 text-amber-300 border-amber-600/40' },
+    enterprise: { label: 'Enterprise', className: 'bg-purple-900/60 text-purple-300 border-purple-600/40' },
+};
+
+
 const LAYOUT_LABELS: Record<string, string> = {
     // Chỉ giữ lại các layout chuẩn doanh nghiệp
     saas_violet: '⚡ Violet Premium SaaS',
@@ -77,6 +84,22 @@ export default async function TenantsPage() {
                                         <div>
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <h3 className="font-semibold text-base text-white">{tenant.name}</h3>
+                                                {/* Plan type badge */}
+                                                {(() => {
+                                                    const plan = tenant.plan_type || 'free';
+                                                    const badge = PLAN_TYPE_BADGES[plan] || PLAN_TYPE_BADGES.free;
+                                                    return (
+                                                        <Badge variant="outline" className={`text-[10px] font-bold py-0.5 px-2 uppercase tracking-wide border ${badge.className}`}>
+                                                            {badge.label}
+                                                        </Badge>
+                                                    );
+                                                })()}
+                                                {/* Suspended badge */}
+                                                {(tenant.modules_config as any)?.lifecycle_status === 'suspended' && (
+                                                    <Badge variant="outline" className="text-[10px] font-bold py-0.5 px-2 uppercase tracking-wide bg-red-950/60 text-red-300 border-red-600/40">
+                                                        Đình chỉ
+                                                    </Badge>
+                                                )}
                                                 <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 text-slate-300 font-bold py-0.5 px-2 uppercase tracking-wide">
                                                     {LAYOUT_LABELS[tenant.layout_style || 'saas_violet'] || '⚡ Violet Premium SaaS'}
                                                 </Badge>

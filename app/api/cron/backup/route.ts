@@ -19,11 +19,15 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
 const MAX_BACKUPS = 30; // Keep last 30 daily backups
 export const maxDuration = 60; // Allow backup script up to 60s execution on Vercel
 
 export async function GET(request: NextRequest) {
+    const startTime = Date.now();
+    let logId: string | null = null;
+
     try {
         // SECURITY: Verify cron secret
         const authHeader = request.headers.get('authorization');
@@ -39,6 +43,16 @@ export async function GET(request: NextRequest) {
         if (token !== cronSecret) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+
+        // Log 'running' state to cron_job_logs
+        const adminDb = await createAdminClient();
+        const { data: logEntry } = await (adminDb as any).from('cron_job_logs').insert({
+            job_name: 'backup-db',
+            status: 'running',
+            message: 'Backup đang được thực thi...',
+            metadata: { triggered_at: new Date().toISOString() },
+        }).select('id').single();
+        logId = logEntry?.id ?? null;
 
         const supabase = await createClient();
 
@@ -199,6 +213,22 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        // Update log to 'success'
+        if (logId) {
+            const adminDb2 = await createAdminClient();
+            await (adminDb2 as any).from('cron_job_logs').update({
+                status: 'success',
+                message: `Backup hoàn tất: ${fileName} — ${totalRecords} bản ghi, ${Math.round(backupBuffer.length / 1024)} KB`,
+                duration_ms: Date.now() - startTime,
+                metadata: {
+                    file: fileName,
+                    total_records: totalRecords,
+                    size_kb: Math.round(backupBuffer.length / 1024),
+                    tables_count: Object.keys(backup.data).length,
+                },
+            }).eq('id', logId);
+        }
+
         return NextResponse.json({
             success: true,
             file: fileName,
@@ -209,6 +239,17 @@ export async function GET(request: NextRequest) {
         });
     } catch (err: any) {
         console.error('[Backup Cron] Error:', err);
+        // Update log to 'failed'
+        if (logId) {
+            try {
+                const adminDb3 = await createAdminClient();
+                await (adminDb3 as any).from('cron_job_logs').update({
+                    status: 'failed',
+                    message: err?.message || 'Backup thất bại',
+                    duration_ms: Date.now() - startTime,
+                }).eq('id', logId);
+            } catch (_) { /* ignore log error */ }
+        }
         return NextResponse.json({
             success: false,
             error: 'Backup failed',

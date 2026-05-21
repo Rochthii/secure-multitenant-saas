@@ -2,6 +2,7 @@ import React from 'react';
 import { getGlobalDashboardStats } from '@/lib/cache/queries';
 import { getSecurityStats } from '@/lib/audit/security-stats';
 import { GlobalStatsGrid } from '@/components/admin/global-stats-grid';
+import { SystemJobsWidget } from '@/components/admin/system-jobs-widget';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Building2, ArrowRight, ShieldCheck, Activity, ShieldAlert, Fingerprint, Sparkles } from 'lucide-react';
 import Link from 'next/link';
@@ -226,6 +227,8 @@ export default async function GlobalDashboardPage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    <SystemJobsWidget />
 
                     <Card className="border border-slate-800 shadow-2xl bg-slate-950 text-white overflow-hidden relative rounded-[2.5rem]">
                          <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl mix-blend-screen pointer-events-none" />

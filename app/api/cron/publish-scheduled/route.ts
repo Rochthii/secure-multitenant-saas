@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getVietnamTime } from '@/lib/utils/date';
 
@@ -7,6 +7,9 @@ import { getVietnamTime } from '@/lib/utils/date';
 // Security: Authorization: Bearer CRON_SECRET
 
 export async function POST(request: NextRequest) {
+    const startTime = Date.now();
+    let logId: string | null = null;
+
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
@@ -17,6 +20,16 @@ export async function POST(request: NextRequest) {
 
     try {
         const supabase = await createAdminClient();
+        
+        // Ghi log đang chạy
+        const { data: logEntry } = await (supabase as any).from('cron_job_logs').insert({
+            job_name: 'publish-scheduled',
+            status: 'running',
+            message: 'Đang kiểm tra và xuất bản bài viết theo lịch...',
+            metadata: { triggered_at: new Date().toISOString() },
+        }).select('id').single();
+        logId = logEntry?.id ?? null;
+
         // Sử dụng giờ Việt Nam để đồng bộ với các bài đăng được lên lịch tại Việt Nam
         const now = getVietnamTime().toISOString();
 
@@ -37,6 +50,15 @@ export async function POST(request: NextRequest) {
 
         if (!scheduledNews || scheduledNews.length === 0) {
             console.log('[publish-scheduled] Không có bài cần publish.');
+            
+            if (logId) {
+                await (supabase as any).from('cron_job_logs').update({
+                    status: 'success',
+                    message: 'Không có bài cần xuất bản.',
+                    duration_ms: Date.now() - startTime,
+                }).eq('id', logId);
+            }
+            
             return NextResponse.json({ success: true, published: 0, message: 'Không có bài cần publish' });
         }
 
@@ -84,6 +106,18 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        if (logId) {
+            await (supabase as any).from('cron_job_logs').update({
+                status: 'success',
+                message: `Đã xuất bản ${publishedIds.length} bài, ${failedIds.length} bài lỗi.`,
+                duration_ms: Date.now() - startTime,
+                metadata: {
+                    published_ids: publishedIds,
+                    failed_ids: failedIds
+                }
+            }).eq('id', logId);
+        }
+
         return NextResponse.json({
             success: true,
             published: publishedIds.length,
@@ -94,6 +128,18 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('[publish-scheduled] Cron job crashed:', error);
+        
+        if (logId) {
+            try {
+                const adminDb3 = await createAdminClient();
+                await (adminDb3 as any).from('cron_job_logs').update({
+                    status: 'failed',
+                    message: error instanceof Error ? error.message : String(error),
+                    duration_ms: Date.now() - startTime,
+                }).eq('id', logId);
+            } catch (_) {}
+        }
+
         return NextResponse.json(
             { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
             { status: 500 }

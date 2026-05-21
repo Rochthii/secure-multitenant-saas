@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,6 +34,9 @@ const actions = [
 export function AuditFilters() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const routeParams = useParams();
+    const tenantId = routeParams?.tenant_id as string | undefined;
+    const basePath = tenantId ? `/admin/t/${tenantId}/audit-logs` : '/admin/audit-logs';
 
     const [search, setSearch] = React.useState(searchParams.get('search') || '');
     const [resource, setResource] = React.useState(searchParams.get('resource') || 'all');
@@ -54,7 +57,7 @@ export function AuditFilters() {
         // Luôn reset về trang 1 khi lọc
         params.delete('page');
         
-        router.push(`/admin/audit-logs?${params.toString()}`);
+        router.push(`${basePath}?${params.toString()}`);
     };
 
     const handleSearch = () => {
@@ -65,7 +68,7 @@ export function AuditFilters() {
         setSearch('');
         setResource('all');
         setAction('all');
-        router.push('/admin/audit-logs');
+        router.push(basePath);
     };
 
     return (

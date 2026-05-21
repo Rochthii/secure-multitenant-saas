@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import { addDays, format } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -33,6 +33,8 @@ import { getVietnamTime } from '@/lib/utils/date';
 
 export async function POST(request: NextRequest) {
     console.log('Starting event reminder cron job...');
+    const startTime = Date.now();
+    let logId: string | null = null;
 
     // Security check: Verify CRON_SECRET if provided
     const authHeader = request.headers.get('authorization');
@@ -49,6 +51,15 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+        const adminDb = await createAdminClient();
+        const { data: logEntry } = await (adminDb as any).from('cron_job_logs').insert({
+            job_name: 'send-event-reminders',
+            status: 'running',
+            message: 'Đang kiểm tra và gửi email nhắc lịch...',
+            metadata: { triggered_at: new Date().toISOString() },
+        }).select('id').single();
+        logId = logEntry?.id ?? null;
+
         const supabase = await createClient();
 
         // 1. Identify events happening tomorrow chuẩn giờ VN
@@ -190,6 +201,21 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        if (logId) {
+            const adminDb2 = await createAdminClient();
+            await (adminDb2 as any).from('cron_job_logs').update({
+                status: 'success',
+                message: `Hoàn tất gửi nhắc hẹn. Tìm thấy ${events.length} sự kiện, đã gửi ${totalEmailsSent} emails.`,
+                duration_ms: Date.now() - startTime,
+                metadata: {
+                    date: tomorrowStr,
+                    total_events_found: events.length,
+                    total_emails_sent: totalEmailsSent,
+                    detail: results
+                }
+            }).eq('id', logId);
+        }
+
         return NextResponse.json({
             success: true,
             date: tomorrowStr,
@@ -200,6 +226,18 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('Cron job failed:', error);
+        
+        if (logId) {
+            try {
+                const adminDb3 = await createAdminClient();
+                await (adminDb3 as any).from('cron_job_logs').update({
+                    status: 'failed',
+                    message: error instanceof Error ? error.message : String(error),
+                    duration_ms: Date.now() - startTime,
+                }).eq('id', logId);
+            } catch (_) { /* ignore log error */ }
+        }
+
         return NextResponse.json(
             { error: 'Internal Server Error', details: error instanceof Error ? error.message : String(error) },
             { status: 500 }

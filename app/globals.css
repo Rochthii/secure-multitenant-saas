@@ -48,6 +48,8 @@
         overscroll-behavior-y: contain;
     }
 
+
+
     /* Prevent iOS Safari zoom on input focus */
     input,
     select,
@@ -63,6 +65,16 @@
             font-size: inherit !important;
         }
     }
+}
+
+/* ── Admin Dark Mode: Override the Buddhist cream gradient ───────────────
+   html.dark được set bởi app/admin/layout.tsx để kích hoạt dark mode.
+   Rule này phải nằm NGOÀI @layer base để có specificity cao nhất,
+   đảm bảo nền tối luôn thắng gradient màu kem của trang public.
+──────────────────────────────────────────────────────────────────────── */
+html.dark body {
+    background: #020617 !important; /* slate-950 */
+    color: #f1f5f9; /* slate-100 */
 }
 
 /* Masonry Grid Styles */

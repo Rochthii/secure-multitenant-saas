@@ -27,10 +27,13 @@ export interface SecurityStats {
     rlsCoverage: { protected: number; total: number; percentage: number };
     /** Timeline hoạt động 24h (phân theo giờ) */
     hourlyTimeline: { hour: string; count: number }[];
+    /** Cảnh báo Noisy Neighbors (Top Rate Limit Hits) */
+    rateLimitHits: { ip_address: string; action_type: string; hit_count: number; last_hit: string }[];
 }
 
 export interface AnomalyAlert {
     user_email: string;
+    user_id?: string;
     action_count: number;
     period: string;
     severity: 'critical' | 'warning' | 'info';
@@ -127,24 +130,28 @@ export async function getSecurityStats(): Promise<SecurityStats> {
     // 9. Anomaly detection: >20 actions trong 1h gần nhất
     const { data: recentLogs } = await supabase
         .from('audit_logs')
-        .select('user_email, action')
+        .select('user_email, user_id, action')
         .gte('created_at', lastHour);
 
-    const hourlyUserCounts: Record<string, number> = {};
+    const hourlyUserCounts: Record<string, { count: number, user_id?: string }> = {};
     (recentLogs || []).forEach((l: any) => {
         if (l.user_email && l.user_email !== 'guest@anonymous') {
-            hourlyUserCounts[l.user_email] = (hourlyUserCounts[l.user_email] || 0) + 1;
+            if (!hourlyUserCounts[l.user_email]) {
+                hourlyUserCounts[l.user_email] = { count: 0, user_id: l.user_id };
+            }
+            hourlyUserCounts[l.user_email].count += 1;
         }
     });
 
     const anomalyAlerts: AnomalyAlert[] = Object.entries(hourlyUserCounts)
-        .filter(([_, count]) => count > 20)
-        .map(([email, count]) => ({
+        .filter(([_, data]) => data.count > 20)
+        .map(([email, data]) => ({
             user_email: email,
-            action_count: count,
+            user_id: data.user_id,
+            action_count: data.count,
             period: '1 giờ gần nhất',
-            severity: count > 50 ? 'critical' as const : count > 30 ? 'warning' as const : 'info' as const,
-            description: `${email} thực hiện ${count} thao tác trong 1 giờ (ngưỡng: 20)`,
+            severity: data.count > 50 ? 'critical' as const : data.count > 30 ? 'warning' as const : 'info' as const,
+            description: `${email} thực hiện ${data.count} thao tác trong 1 giờ (ngưỡng: 20)`,
         }));
 
     // 10. RLS Coverage — đếm bảng có policy
@@ -176,6 +183,13 @@ export async function getSecurityStats(): Promise<SecurityStats> {
         hourlyTimeline.push({ hour: hourLabel, count });
     }
 
+    // 12. Top Rate Limit Hits (Noisy Neighbors)
+    const { data: rateLimitsData } = await (supabase as any)
+        .from('rate_limit_hits')
+        .select('ip_address, action_type, hit_count, last_hit')
+        .order('hit_count', { ascending: false })
+        .limit(10);
+        
     return {
         totalAuditLogs: totalAuditLogs || 0,
         last24hLogs: last24hLogs || 0,
@@ -188,5 +202,6 @@ export async function getSecurityStats(): Promise<SecurityStats> {
         anomalyAlerts,
         rlsCoverage,
         hourlyTimeline,
+        rateLimitHits: rateLimitsData || [],
     };
 }

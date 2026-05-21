@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 interface AuditExportDialogProps {
+    tenantId?: string;
     currentFilters?: {
         resource?: string;
         action?: string;
@@ -33,7 +34,7 @@ interface AuditExportDialogProps {
     };
 }
 
-export function AuditExportDialog({ currentFilters }: AuditExportDialogProps) {
+export function AuditExportDialog({ tenantId, currentFilters }: AuditExportDialogProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     
@@ -49,6 +50,7 @@ export function AuditExportDialog({ currentFilters }: AuditExportDialogProps) {
                 resource: currentFilters?.resource === 'all' ? undefined : currentFilters?.resource,
                 action: currentFilters?.action === 'all' ? undefined : currentFilters?.action,
                 search: currentFilters?.search || undefined,
+                tenant_id: tenantId,
             });
 
             if (!result.success || !result.data) {
