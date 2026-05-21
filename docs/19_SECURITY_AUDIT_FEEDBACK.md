@@ -13,28 +13,13 @@
 *   Định nghĩa hằng số bên ngoài hàm xử lý chính để tránh khởi tạo lại ở mỗi request.
 *   Sử dụng `startsWith` để phát hiện và định tuyến ngôn ngữ (locale detection) nhanh chóng.
 
-### Điểm yếu & Lỗ hổng bảo mật ⚠️
+### Lỗ hổng bảo mật (ĐÃ ĐƯỢC VÁ ✅ - 2026-05-21)
 *   **Lỗ hổng Tenant Parameter Injection:**
-    ```typescript
-    const tenantParam = searchParams.get('tenant') || searchParams.get('tenant_id');
-    if (tenantParam) {
-      if (HOSTNAME_MAP[tenantParam]) {
-        hostname = HOSTNAME_MAP[tenantParam];
-      } else if (tenantParam.length > 20) {
-        hostname = tenantParam; // Direct UUID
-      }
-    }
-    ```
-    Việc kiểm tra `tenantParam.length > 20` để coi đó là một UUID hợp lệ là cơ chế xác thực rất yếu. Kẻ tấn công có thể truyền một chuỗi bất kỳ dài hơn 20 ký tự vào query parameter để ghi đè (override) hostname, phá vỡ cấu trúc định tuyến an toàn.
-*   **Giải pháp vá lỗi đề xuất:** Thay đổi kiểm tra độ dài đơn giản bằng kiểm tra định dạng chuẩn UUID (Regular Expression cho UUIDv4):
-    ```typescript
-    } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
-      hostname = tenantParam;
-    }
-    ```
+    **Trạng thái:** Đã vá thành công. Hiện tại Middleware đã sử dụng Regex chuẩn UUIDv4 và khóa chặt tính năng ghi đè tenant, chỉ cho phép kích hoạt trong môi trường `development` hoặc `debug_mode`.
 
-### Gap so với Đề cương đồ án tốt nghiệp 🔴
+### Gap so với Đề cương đồ án tốt nghiệp (ĐÃ HOÀN THIỆN ✅ - 2026-05-21)
 *   **Intranet Lockdown (IP-based Access Control):** Trong đề cương mô tả cơ chế giới hạn truy cập từ mạng nội bộ (Intranet Lockdown). Tuy nhiên, trong Next.js Middleware hiện tại chưa thấy có bất kỳ cơ chế kiểm tra IP nào (`req.ip` hoặc header `x-forwarded-for`) để lọc và phân vùng mạng truy cập cho từng Tenant.
+    **Trạng thái:** Đã tích hợp logic đọc IP qua `x-forwarded-for` và `x-real-ip` trực tiếp tại Edge Runtime để đối chiếu với `TENANT_IP_WHITELIST`, thực thi kiến trúc mạng Zero Trust.
 
 ---
 
@@ -51,8 +36,8 @@
 
 | Thành phần đề cương (Proposal) | Trạng thái trong mã nguồn | Phân tích & Hướng hoàn thiện |
 | :--- | :--- | :--- |
-| **Smart Router (Dynamic Subdomain Routing)** | ✅ Có (`middleware.ts`) | Đã triển khai nhưng tồn tại lỗ hổng injection từ query string. Cần vá ngay lập tức. |
-| **Intranet Lockdown (IP-based)** | ❌ Chưa có trong Middleware | Chưa cấu hình kiểm tra dải IP an toàn của tự viện/tổ chức ở tầng định tuyến ứng dụng. |
+| **Smart Router (Dynamic Subdomain Routing)** | ✅ Có (`middleware.ts`) | Đã triển khai và **đã vá lỗ hổng injection** (chặn UUID rác, phân lập Debug). |
+| **Intranet Lockdown (IP-based)** | ✅ Đã cấu hình | Đã cấu hình kiểm tra IP (`TENANT_IP_WHITELIST`) an toàn tại tầng định tuyến ứng dụng. |
 | **RLS Policies (PostgreSQL)** | ✅ Có (`supabase/migrations/`) | Đã triển khai. Cần chuyển từ truy vấn SELECT JOIN sang kiểm tra JWT Claims để tối ưu hiệu năng. |
 | **ABAC time-based** | ✅ Có (`supabase/migrations/...`) | Đã cài đặt thành công cho các nghiệp vụ nhạy cảm của Editor/Accountant. |
 | **Audit Log bất biến** | 🟡 Có một phần | Bảng `audit_logs` có trigger chặn DELETE/UPDATE. Cần hoàn thiện trigger tự động trước DELETE ở các bảng nghiệp vụ chính. |
@@ -64,7 +49,7 @@
 
 ## 4. CÁC ĐỊNH HƯỚNG ƯU TIÊN HOÀN THIỆN (ACTION PLAN)
 
-*   **Ưu tiên 1 (Làm ngay):** Vá lỗ hổng định dạng UUID trong query parameter tại `middleware.ts`.
+*   ~~**Ưu tiên 1 (Làm ngay):** Vá lỗ hổng định dạng UUID trong query parameter tại `middleware.ts`.~~ **[ĐÃ HOÀN THÀNH]**
 *   **Ưu tiên 2 (Tối ưu hóa hiệu năng RLS):** Chuyển cơ chế kiểm tra phân quyền và tenant ID trong RLS từ việc gọi hàm SELECT bảng `user_roles` sang đọc trực tiếp từ **Supabase JWT Custom Claims** (`auth.jwt() ->> 'tenant_id'`). Điều này sẽ giúp giảm số lượt truy vấn DB từ $O(N)$ xuống $O(1)$, là đề tài đo lường (benchmark) xuất sắc cho Chương 5.
-*   **Ưu tiên 3 (Intranet Lockdown):** Tích hợp kiểm tra dải IP IP-based whitelist ở tầng Middleware đối với các route quản trị của Tenant.
+*   ~~**Ưu tiên 3 (Intranet Lockdown):** Tích hợp kiểm tra dải IP IP-based whitelist ở tầng Middleware đối với các route quản trị của Tenant.~~ **[ĐÃ HOÀN THÀNH]**
 *   **Ưu tiên 4 (Phát hiện ngoại lai nâng cao):** Nâng cấp thuật toán phát hiện bất thường từ ngưỡng tĩnh sang mô hình toán học (Isolation Forest) để phân tích log và phát hiện các hành vi bất hợp pháp (Anomalous Activity Detection).

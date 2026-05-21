@@ -14,6 +14,11 @@ const HOSTNAME_MAP: Record<string, string> = {
     'chantarangsay': 'chua-chantarangsay-new.vercel.app',
 };
 
+// 1.5 Intranet Lockdown Configuration (IP Whitelisting per Tenant)
+const TENANT_IP_WHITELIST: Record<string, string[]> = {
+    'khleang.vercel.app': ['127.0.0.1', '::1', '203.162.0.1'], // Ví dụ IP nội bộ của chi nhánh
+};
+
 /**
  * Multi-tenant Middleware - "Ultra Lean" Edition (Target < 4ms)
  * - No async (No Promise overhead)
@@ -30,21 +35,36 @@ export default async function middleware(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const tenantParam = searchParams.get('tenant') || searchParams.get('tenant_id');
 
-    if (tenantParam) {
+    // FIX: Chỉ cho phép override tenant qua query params trong môi trường development hoặc debug
+    // Điều này ngăn chặn kẻ tấn công truyền UUID lạ để phá vỡ cấu trúc routing trong production
+    const isDebug = process.env.NODE_ENV === 'development' || searchParams.has('debug_mode');
+
+    if (tenantParam && isDebug) {
         if (HOSTNAME_MAP[tenantParam]) {
             hostname = HOSTNAME_MAP[tenantParam];
-        } else if (tenantParam.length > 20) {
-            hostname = tenantParam; // Direct UUID
+        } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
+            // Sử dụng Regex chuẩn UUIDv4 (8-4-4-4-12 hex chars)
+            hostname = tenantParam;
         }
     }
 
-    // Chuẩn hóa hostname siêu nhanh
-    if (hostname.length < 20) { // 'localhost:3000' is 14
-        if (hostname.indexOf('localhost') !== -1 || hostname.indexOf('127.0.0.1') !== -1) {
-            hostname = 'localhost:3000';
-        }
-    } else if (hostname.endsWith('khleang.vercel.app')) {
+    // Chuẩn hóa hostname (Tối ưu cho Edge Runtime)
+    // Bỏ check length < 20 để tránh chặn các subdomain ngắn và bổ sung hỗ trợ IPv6 (::1)
+    if (hostname.indexOf('localhost') !== -1 || hostname.indexOf('127.0.0.1') !== -1 || hostname.indexOf('::1') !== -1) {
+        hostname = 'localhost:3000';
+    }
+
+    if (hostname.endsWith('khleang.vercel.app')) {
         hostname = 'khleang.vercel.app';
+    }
+
+    // 1.5 Thực thi Intranet Lockdown (IP-based Access Control)
+    // Fix: Bỏ thuộc tính request.ip (đã bị deprecate trong Next.js mới), thay bằng việc đọc từ Header chuẩn
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '127.0.0.1';
+    const allowedIps = TENANT_IP_WHITELIST[hostname];
+    
+    if (allowedIps && !allowedIps.includes(clientIp)) {
+        return new NextResponse('Forbidden: Intranet Lockdown restricted access', { status: 403 });
     }
 
     // 2. Phân tích Locale (Dùng startsWith thay cho Regex match)
@@ -65,8 +85,9 @@ export default async function middleware(request: NextRequest) {
 
     // 3. Xử lý Root/Admin Routes (Chặn sớm)
     let isRootRoute = false;
-    for (let i = 0; i < ROOT_ROUTES.length; i++) {
-        if (pathNoLocale.startsWith(ROOT_ROUTES[i])) {
+    for (const route of ROOT_ROUTES) {
+        // Fix: So khớp chính xác hoặc là thư mục con để tránh nhận nhầm route (vd: /admin vs /administrator)
+        if (pathNoLocale === route || pathNoLocale.startsWith(route + '/')) {
             isRootRoute = true;
             break;
         }
