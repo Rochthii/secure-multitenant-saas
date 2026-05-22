@@ -8,6 +8,7 @@ import { createAuditLog } from '@/lib/audit';
 import { TenantSchema, formatZodError } from '@/lib/validations/admin';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { addDomainToVercel } from '@/lib/vercel';
+import { DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
 
 export interface Tenant {
     id: string;
@@ -24,6 +25,7 @@ export interface Tenant {
     longitude: number | null;
     created_at: string;
     plan_type?: string | null;
+    lifecycle_status?: string | null;
     modules_config?: Record<string, any> | null;
 }
 
@@ -92,6 +94,18 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
             has_web_frontend: formData.get('has_web_frontend') === 'true',
             latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
             longitude: formData.get('longitude') ? Number(formData.get('longitude')) : null,
+            plan_type: (formData.get('plan_type') as string) || 'free',
+            lifecycle_status: (formData.get('lifecycle_status') as string) || 'active',
+            modules_config: {
+                news: formData.get('module_news') === 'true',
+                events: formData.get('module_events') === 'true',
+                library: formData.get('module_library') === 'true',
+                transactions: formData.get('module_transactions') === 'true',
+                jobs: formData.get('module_jobs') === 'true',
+                security_settings: {
+                    telegram_chat_id: (formData.get('telegram_chat_id') as string) || '',
+                }
+            }
         };
 
         const parsed = (await import('@/lib/validations/admin')).TenantSchema.safeParse(raw);
@@ -101,13 +115,12 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
 
         const supabase = await createClient() as any;
 
-        // --- TENANT TEMPLATING: CLONE FROM ROOT TENANT ---
-        const rootTenantId = '55555555-5555-5555-5555-555555555555';
-        const { data: rootTenant } = await supabase
-            .from('tenants')
-            .select('layout_blocks, theme_colors')
-            .eq('id', rootTenantId)
-            .single();
+        // --- DYNAMIC DEFAULT BLOCKS ROUTING ON CREATION ---
+        const defaultBlocks = parsed.data.layout_style === 'modern_tech'
+            ? DEFAULT_TECH_BLOCKS
+            : parsed.data.tenant_type !== 'tenant'
+                ? DEFAULT_COMPANY_BLOCKS
+                : DEFAULT_LAYOUT_BLOCKS;
 
         // Prepare contact_info with abbot and history
         const abbot = formData.get('abbot') as string;
@@ -119,8 +132,8 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
 
         const insertData = {
             ...parsed.data,
-            layout_blocks: rootTenant?.layout_blocks || null,
-            theme_colors: rootTenant?.theme_colors || null,
+            layout_blocks: defaultBlocks,
+            theme_colors: null, // Sẽ fallback theo theme preset
             has_web_frontend: parsed.data.has_web_frontend ?? true,
             contact_info: contactInfo,
         };
@@ -190,6 +203,18 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
             has_web_frontend: formData.get('has_web_frontend') === 'true',
             latitude: formData.get('latitude') ? Number(formData.get('latitude')) : null,
             longitude: formData.get('longitude') ? Number(formData.get('longitude')) : null,
+            plan_type: (formData.get('plan_type') as string) || 'free',
+            lifecycle_status: (formData.get('lifecycle_status') as string) || 'active',
+            modules_config: {
+                news: formData.get('module_news') === 'true',
+                events: formData.get('module_events') === 'true',
+                library: formData.get('module_library') === 'true',
+                transactions: formData.get('module_transactions') === 'true',
+                jobs: formData.get('module_jobs') === 'true',
+                security_settings: {
+                    telegram_chat_id: (formData.get('telegram_chat_id') as string) || '',
+                }
+            }
         };
 
         const parsed = (await import('@/lib/validations/admin')).TenantSchema.safeParse(raw);
@@ -205,17 +230,28 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         const history = formData.get('history') as string;
         const contactInfo = {
             ...(oldData?.contact_info || {}),
-            ...(parsed.data.contact_info || {}),
             abbot: abbot || undefined,
             history: history || undefined,
         };
+
+        // --- DYNAMIC DEFAULT BLOCKS RESET ON DEMAND ---
+        const resetDefaultBlocks = formData.get('reset_default_blocks') === 'true';
+        let layoutBlocksToUpdate = undefined;
+        if (resetDefaultBlocks) {
+            layoutBlocksToUpdate = parsed.data.layout_style === 'modern_tech'
+                ? DEFAULT_TECH_BLOCKS
+                : parsed.data.tenant_type !== 'tenant'
+                    ? DEFAULT_COMPANY_BLOCKS
+                    : DEFAULT_LAYOUT_BLOCKS;
+        }
 
         const { error: updateError } = await supabase
             .from('tenants')
             .update({
                 ...parsed.data,
                 contact_info: contactInfo,
-                has_web_frontend: parsed.data.has_web_frontend ?? oldData?.has_web_frontend ?? true
+                has_web_frontend: parsed.data.has_web_frontend ?? oldData?.has_web_frontend ?? true,
+                ...(layoutBlocksToUpdate ? { layout_blocks: layoutBlocksToUpdate } : {})
             })
             .eq('id', id);
 

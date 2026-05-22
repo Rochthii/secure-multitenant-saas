@@ -257,6 +257,16 @@ export const BUDDHIST_THEMES: ColorTheme[] = [
             background: '#FFFFFF', bgEnd: '#F1F8E9', text: '#1A2421',
             hero: '#0A1B0E', surface: '#F8FAF8', opacity: '0.05'
         }
+    },
+    {
+        id: 'modern_tech',
+        name: 'SaaS: Neon Cyberpunk Tech — Phá Cách',
+        description: 'Tông màu Neon Cyan & Dark Space — khẳng định đẳng cấp SaaS công nghệ.',
+        colors: {
+            primary: '#00F0FF', secondary: '#8A2BE2', accent: '#FF007F',
+            background: '#060B13', bgEnd: '#0D1527', text: '#E2F1FF',
+            hero: '#03060B', surface: '#0E1726'
+        }
     }
 ];
 

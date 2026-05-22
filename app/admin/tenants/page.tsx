@@ -18,6 +18,7 @@ const LAYOUT_LABELS: Record<string, string> = {
     // Chỉ giữ lại các layout chuẩn doanh nghiệp
     saas_violet: '⚡ Violet Premium SaaS',
     corp_navy: '🛡️ Corporate Navy Premium',
+    modern_tech: '🌌 Cyberpunk Neon Tech',
     charity_green: '🌱 Social Green Sustainable',
     creative_amber: '☀️ Creative Amber Studio',
     minimal_white: '❄️ Clean Minimalist Elite',

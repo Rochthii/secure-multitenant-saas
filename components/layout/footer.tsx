@@ -23,9 +23,17 @@ export function Footer({ settings = {}, layoutStyle = 'traditional', domain, isC
     const props = { settings, domain, isCompany, hasProjects, modulesConfig };
 
     switch (layoutStyle) {
-        case 'corporate': return <CorporateFooter {...props} />;
+        case 'saas_violet':
+        case 'corp_navy':
+        case 'charity_green':
+        case 'creative_amber':
+        case 'modern_tech':
+        case 'corporate': 
+            return <CorporateFooter {...props} />;
         case 'mcaaron': return <McAaronFooter {...props} />;
-        case 'minimal': return <MinimalFooter {...props} />;
+        case 'minimal_white':
+        case 'minimal': 
+            return <MinimalFooter {...props} />;
         case 'modern': return <ModernFooter {...props} />;
         case 'lotus': return <LotusFooter {...props} />;
         case 'angkor': return <AngkorFooter {...props} />;

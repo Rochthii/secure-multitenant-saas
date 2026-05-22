@@ -25,3 +25,13 @@ export const DEFAULT_COMPANY_BLOCKS: BlockConfig[] = [
     { id: 'ent-news', type: 'enterprise_news', visible: true },
     { id: 'ent-cta', type: 'enterprise_cta', visible: true },
 ];
+
+export const DEFAULT_TECH_BLOCKS: BlockConfig[] = [
+    { id: 'tech-hero', type: 'enterprise_hero', visible: true },
+    { id: 'tech-stats', type: 'enterprise_stats', visible: true },
+    { id: 'tech-features', type: 'enterprise_features', visible: true },
+    { id: 'tech-news', type: 'enterprise_news', visible: true },
+    { id: 'tech-ticker', type: 'modern_ticker', visible: true },
+    { id: 'tech-cta', type: 'enterprise_cta', visible: true },
+];
+

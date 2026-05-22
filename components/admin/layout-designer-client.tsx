@@ -836,7 +836,7 @@ export function LayoutDesignerClient({
 
     const visibleCount = blocks.filter(b => b.visible).length;
 
-    const isCompany = true;
+    const isCompany = tenantType !== 'tenant';
 
 
     // ─── Block scope filter (company vs temple) ────────────────────────────────

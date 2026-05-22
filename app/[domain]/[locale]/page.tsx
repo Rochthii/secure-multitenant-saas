@@ -1,7 +1,7 @@
 import { getTenantConfig } from '@/lib/tenant';
 import { setRequestLocale } from 'next-intl/server';
 import DynamicPageBuilder from './home-variants/dynamic-page-builder';
-import { DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS } from '@/lib/types/layout-blocks';
+import { DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
 import dynamic from 'next/dynamic';
 import type { Metadata } from 'next';
 import { getSiteSettings } from '@/lib/site-settings';
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ domain: s
 
     const settings = await getSiteSettings(tenant.id);
     const siteName = settings['site_name_vi'] || tenant.name || 'Workspace Doanh nghiệp';
-    const isCompany = true;
+    const isCompany = tenant?.tenant_type !== 'tenant';
     const tenantBaseUrl = getTenantBaseUrl(domain);
 
     const description = settings['site_description_vi'] || `${siteName} — Hệ thống quản trị nội bộ công nghệ phụng sự doanh nghiệp`;
@@ -64,7 +64,7 @@ export default async function HomePage({ params }: { params: Promise<{ domain: s
     const isHomeContext = true;
 
     const tenantId = tenant!.id;
-    const isCompany = true;
+    const isCompany = tenant?.tenant_type !== 'tenant';
     const layoutStyle = tenant!.layout_style || 'saas_violet';
 
     // Nếu là chế độ AI Portal riêng biệt
@@ -74,7 +74,11 @@ export default async function HomePage({ params }: { params: Promise<{ domain: s
 
     // ─── Lấy Blocks cấu hình từ DB hoặc Defaults —————————————————──────────────
     // Nếu có blocks tùy chỉnh trong DB thì dùng, nếu không thì lấy blocks mặc định của theme đó
-    const defaultBlocks = isCompany ? DEFAULT_COMPANY_BLOCKS : DEFAULT_LAYOUT_BLOCKS;
+    const defaultBlocks = layoutStyle === 'modern_tech'
+        ? DEFAULT_TECH_BLOCKS
+        : isCompany
+            ? DEFAULT_COMPANY_BLOCKS
+            : DEFAULT_LAYOUT_BLOCKS;
     const blocks = tenant?.layout_blocks || defaultBlocks;
 
     return (

@@ -3,7 +3,7 @@ import { generatePlaceSchema, generateOrganizationSchema } from '@/lib/seo/json-
 import { getCachedHeroSlides, getCachedDharmaTalks, getCachedAboutSection, getCachedAboutSections, getCachedMonthEvents, getCachedNews, getCachedUpcomingEvents, getCachedNextMajorFestival } from '@/lib/cache/queries';
 import { getSiteSettings } from '@/lib/site-settings';
 import { getTenantConfig } from '@/lib/tenant';
-import { BlockConfig, DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS } from '@/lib/types/layout-blocks';
+import { BlockConfig, DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
 import { SECTION_REGISTRY, SectionDataKey } from '@/lib/blocks-registry';
 import { hexToRgbString, darkenRgbString, lightenRgbString } from '@/lib/utils/colors';
 import { getVietnamTime } from '@/lib/utils/date';
@@ -63,7 +63,7 @@ export default async function DynamicPageBuilder({
     const architectureKey = settings?.['about_architecture_key'] || 'di-san-nghe-thuat/kien-truc-dieu-khac';
 
     const tenantConfig = await getTenantConfig(tenantId);
-    const isCompany = true;
+    const isCompany = tenantConfig?.tenant_type !== 'tenant';
 
     // Phase 2: fetch song song phần còn lại
     const [
@@ -170,6 +170,36 @@ export default async function DynamicPageBuilder({
         const type = block.type || `traditional_${block.id}`;
         const registryEntry = SECTION_REGISTRY[type as keyof typeof SECTION_REGISTRY];
         
+        if (isCompany) {
+            // Doanh nghiệp: Loại bỏ hoàn toàn các block chùa chiền/tâm linh Phật giáo
+            const isBuddhistBlock = 
+                type.startsWith('traditional_') ||
+                type.startsWith('sunrise_') ||
+                type.startsWith('lotus_') ||
+                type.startsWith('zen_') ||
+                type.startsWith('angkor_') ||
+                type.startsWith('festival_') ||
+                type.includes('dharma') ||
+                type.includes('abbot') ||
+                type.includes('monks') ||
+                type.includes('temples') ||
+                registryEntry?.category === 'spiritual' ||
+                registryEntry?.category === 'dharma';
+            
+            if (isBuddhistBlock) return false;
+        } else {
+            // Chùa chiền: Loại bỏ hoàn toàn các block doanh nghiệp/B2B/SaaS
+            const isCompanyBlock = 
+                type.startsWith('enterprise_') ||
+                type.startsWith('mcaaron_') ||
+                type === 'impact_dashboard' ||
+                type === 'transparency_timeline' ||
+                type === 'founder_section' ||
+                type === 'network_section';
+            
+            if (isCompanyBlock) return false;
+        }
+
         // Hide transaction-related CTAs and transparency blocks if transactions are disabled
         if (!isTransactionsEnabled) {
             // Danh sách các block cụ thể liên quan đến đóng góp quỹ (ngoài category cta chung)

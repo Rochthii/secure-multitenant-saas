@@ -55,7 +55,7 @@ export const EventSchema = z.object({
     start_time: z.string().optional().nullable(),
     end_time: z.string().optional().nullable(),
     location: z.string().max(255).optional().nullable(),
-    thumbnail_url: z.string().url('URL ảnh không hợp lệ').optional().nullable(),
+    thumbnail_url: z.union([z.string().url('URL ảnh không hợp lệ'), z.literal('')]).optional().nullable(),
     status: z.enum(['upcoming', 'ongoing', 'completed', 'cancelled']).default('upcoming'),
     category: z.string().optional().nullable(),
     registration_required: z.boolean().default(false),
@@ -98,7 +98,7 @@ export const MediaSchema = z.object({
     description_vi: z.string().optional().nullable(),
     type: z.enum(['image', 'video', 'audio', 'document']),
     url: z.string().url('URL không hợp lệ'),
-    thumbnail_url: z.string().url().optional().nullable(),
+    thumbnail_url: z.union([z.string().url('URL ảnh không hợp lệ'), z.literal('')]).optional().nullable(),
     category_id: z.union([z.string().uuid(), z.literal('')]).optional().nullable(),
     year: z.number().int().min(1900).max(2100).optional().nullable(),
     tags: z.array(z.string()).optional().nullable(),
@@ -227,6 +227,9 @@ export const TenantSchema = z.object({
     has_web_frontend: z.boolean().default(true).optional(),
     latitude: z.number().optional().nullable(),
     longitude: z.number().optional().nullable(),
+    plan_type: z.enum(['free', 'pro', 'enterprise']).default('free').optional(),
+    lifecycle_status: z.enum(['active', 'suspended', 'offboarding', 'terminated']).default('active').optional(),
+    modules_config: z.record(z.string(), z.any()).optional().nullable(),
 }).strip();
 
 export type TenantInput = z.infer<typeof TenantSchema>;

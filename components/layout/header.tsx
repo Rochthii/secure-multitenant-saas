@@ -46,9 +46,17 @@ export function Header({ settings = {}, categoriesTree, pagesTree, aboutSections
     };
 
     switch (layoutStyle) {
-        case 'corporate': return <CorporateHeader {...props} />;
+        case 'saas_violet':
+        case 'corp_navy':
+        case 'charity_green':
+        case 'creative_amber':
+        case 'modern_tech':
+        case 'corporate': 
+            return <CorporateHeader {...props} />;
         case 'mcaaron': return <McAaronHeader {...props} />;
-        case 'minimal': return <MinimalHeader {...props} />;
+        case 'minimal_white':
+        case 'minimal': 
+            return <MinimalHeader {...props} />;
         case 'modern': return <ModernHeader {...props} />;
         case 'lotus': return <LotusHeader {...props} />;
         case 'angkor': return <AngkorHeader {...props} />;

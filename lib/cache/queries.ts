@@ -1739,8 +1739,9 @@ export const getCachedLayoutData = async (domain: string, tenantId: string) => {
             const t = tenantData || {};
             const tColors = (t as any).theme_colors || {};
             
-            // Find theme preset from themes-config based on tenant ID
-            const themePreset = BUDDHIST_THEMES.find(th => th.tenantId === tenantId)?.colors;
+            // Find theme preset from themes-config based on tenant ID, fallback to layout_style preset
+            const themePreset = BUDDHIST_THEMES.find(th => th.tenantId === tenantId)?.colors 
+                || BUDDHIST_THEMES.find(th => th.id === (t as any).layout_style)?.colors;
 
             const primaryStr = hexToRgbString(tColors.primary || settings['theme_color_primary'] || themePreset?.primary, '245 158 11');
             const secondaryStr = hexToRgbString(tColors.secondary || settings['theme_color_secondary'] || themePreset?.secondary, '92 64 51');
