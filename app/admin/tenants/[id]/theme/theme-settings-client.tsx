@@ -10,9 +10,10 @@ interface ThemeSettingsClientProps {
     initialSettings: Record<string, string>;
     tenantId: string;
     tenantName: string;
+    tenantType?: string;
 }
 
-export function ThemeSettingsClient({ initialSettings, tenantId }: ThemeSettingsClientProps) {
+export function ThemeSettingsClient({ initialSettings, tenantId, tenantType }: ThemeSettingsClientProps) {
     const [isPending, startTransition] = useTransition();
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,19 +37,19 @@ export function ThemeSettingsClient({ initialSettings, tenantId }: ThemeSettings
 
     return (
         <form onSubmit={handleSubmit}>
-            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6">
-                <LiveThemeEditor initialSettings={initialSettings} />
+            <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl border border-white/[0.08] p-6">
+                <LiveThemeEditor initialSettings={initialSettings} tenantType={tenantType} />
             </div>
 
-            <div className="flex items-center gap-4 mt-6 sticky bottom-0 bg-white/80 backdrop-blur-md py-4 border-t border-stone-200 px-1 rounded-b-xl">
+            <div className="flex items-center gap-4 mt-6 sticky bottom-0 bg-slate-950/60 backdrop-blur-md py-4 border-t border-white/[0.08] px-1 rounded-b-xl z-20">
                 <Button
                     type="submit"
                     disabled={isPending}
-                    className="bg-gold-primary hover:bg-gold-dark text-white font-bold px-8 h-11"
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-8 h-11 border border-amber-500/20"
                 >
                     {isPending ? '⏳ Đang lưu...' : '💾 Lưu giao diện'}
                 </Button>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-slate-400">
                     Thay đổi sẽ có hiệu lực ngay sau khi lưu và cache được làm mới.
                 </p>
             </div>

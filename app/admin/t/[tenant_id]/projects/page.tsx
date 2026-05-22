@@ -3,6 +3,7 @@ import { checkPermission, requireTenantAccess } from '@/lib/permissions';
 import { createClient } from '@/lib/supabase/server';
 import { getBankAccounts } from '@/app/actions/admin/finance';
 import { ProjectsTable } from '@/components/admin/campaigns-table';
+import { Landmark } from 'lucide-react';
 
 export const revalidate = 0;
 
@@ -31,10 +32,13 @@ export default async function TenantProjectsPage({ params }: { params: Promise<{
     const { accounts: bankAccounts } = await getBankAccounts(tenant_id);
 
     return (
-        <div className="space-y-6" suppressHydrationWarning>
-            <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-playfair font-bold">Hạng mục đóng góp quỹ</h1>
-                <p className="text-gray-500">
+        <div className="space-y-6 text-slate-300" suppressHydrationWarning>
+            <div className="flex flex-col gap-1 pb-4 border-b border-white/5">
+                <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                    <Landmark className="w-8 h-8 text-amber-400" />
+                    Hạng mục đóng góp quỹ
+                </h1>
+                <p className="text-slate-400 text-sm mt-1">
                     Quản lý các danh mục nhận quỹ chung và tiến độ các dự án cụ thể của cơ sở.
                 </p>
             </div>

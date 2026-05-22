@@ -55,7 +55,7 @@ export default async function TenantThemePage({ params }: { params: Promise<{ id
             </div>
 
             {/* Theme Editor (Client Component) */}
-            <ThemeSettingsClient initialSettings={settings} tenantId={id} tenantName={tenant.name} />
+            <ThemeSettingsClient initialSettings={settings} tenantId={id} tenantName={tenant.name} tenantType={tenant.tenant_type} />
         </div>
     );
 }

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
     Plus, Eye, Edit, Clock, User, CalendarClock,
-    CheckCircle, XCircle, FileText, AlertCircle,
+    CheckCircle, XCircle, FileText, AlertCircle, Newspaper,
 } from 'lucide-react';
 // @ts-ignore
 import { DeleteNewsButton } from '@/components/admin/delete-news-button';
@@ -29,27 +29,27 @@ interface NewsListViewProps {
 
 const STATUS_TABS = [
     { value: '', label: 'Tất cả', icon: FileText },
-    { value: 'pending_review', label: 'Chờ duyệt', icon: AlertCircle, color: 'text-amber-600' },
-    { value: 'draft', label: 'Nháp', icon: FileText, color: 'text-gray-500' },
-    { value: 'scheduled', label: 'Lên lịch', icon: CalendarClock, color: 'text-blue-600' },
-    { value: 'published', label: 'Đã đăng', icon: CheckCircle, color: 'text-green-600' },
-    { value: 'rejected', label: 'Từ chối', icon: XCircle, color: 'text-red-600' },
+    { value: 'pending_review', label: 'Chờ duyệt', icon: AlertCircle, color: 'text-amber-400' },
+    { value: 'draft', label: 'Nháp', icon: FileText, color: 'text-slate-400' },
+    { value: 'scheduled', label: 'Lên lịch', icon: CalendarClock, color: 'text-blue-400' },
+    { value: 'published', label: 'Đã đăng', icon: CheckCircle, color: 'text-emerald-400' },
+    { value: 'rejected', label: 'Từ chối', icon: XCircle, color: 'text-red-400' },
 ];
 
 function getStatusBadge(status: string) {
     switch (status) {
         case 'published':
-            return <Badge className="bg-green-100 text-green-800 border-green-200 gap-1"><CheckCircle className="h-3 w-3" />Đã đăng</Badge>;
+            return <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><CheckCircle className="h-3 w-3" />Đã đăng</Badge>;
         case 'pending_review':
-            return <Badge className="bg-amber-100 text-amber-800 border-amber-200 gap-1"><AlertCircle className="h-3 w-3" />Chờ duyệt</Badge>;
+            return <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><AlertCircle className="h-3 w-3" />Chờ duyệt</Badge>;
         case 'scheduled':
-            return <Badge className="bg-blue-100 text-blue-800 border-blue-200 gap-1"><CalendarClock className="h-3 w-3" />Lên lịch</Badge>;
+            return <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><CalendarClock className="h-3 w-3" />Lên lịch</Badge>;
         case 'draft':
-            return <Badge className="bg-gray-100 text-gray-700 border-gray-200 gap-1"><FileText className="h-3 w-3" />Nháp</Badge>;
+            return <Badge className="bg-slate-700/50 text-slate-300 border border-slate-600/40 gap-1 rounded-full px-2.5 py-0.5 font-bold"><FileText className="h-3 w-3" />Nháp</Badge>;
         case 'rejected':
-            return <Badge className="bg-red-100 text-red-800 border-red-200 gap-1"><XCircle className="h-3 w-3" />Từ chối</Badge>;
+            return <Badge className="bg-red-500/10 text-red-400 border border-red-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><XCircle className="h-3 w-3" />Từ chối</Badge>;
         case 'archived':
-            return <Badge variant="secondary">Lưu trữ</Badge>;
+            return <Badge variant="secondary" className="bg-slate-800 text-slate-400 border border-slate-700/50 gap-1 rounded-full px-2.5 py-0.5 font-bold">Lưu trữ</Badge>;
         default:
             return <Badge variant="secondary">{status}</Badge>;
     }
@@ -120,19 +120,20 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
     });
 
     return (
-        <div className="space-y-6 max-w-6xl mx-auto p-4 md:p-8">
+        <div className="space-y-6 text-slate-300">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold text-gray-900">
+                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <Newspaper className="w-8 h-8 text-amber-400" />
                         {isCollaborator ? 'Quản lý tin tức CTV' : 'Quản lý tin tức'}
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-slate-400 text-sm mt-1">
                         {count ?? 0} bài viết · {isCollaborator ? 'Bài viết và nội dung của bạn.' : 'Lịch đăng, duyệt bài và quản lý nội dung.'}
                     </p>
                 </div>
                 <Link href={`${basePath}/new`}>
-                    <Button className="bg-gold-primary hover:bg-gold-dark shadow-md">
+                    <Button className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                         <Plus className="mr-2 h-4 w-4" />
                         Tạo tin tức mới
                     </Button>
@@ -142,7 +143,7 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
             {/* Filters Bar */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 {/* Status Tabs */}
-                <div className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+                <div className="flex flex-wrap gap-1.5 p-1.5 bg-slate-900/60 border border-white/[0.08] backdrop-blur-md rounded-xl w-fit">
                     {STATUS_TABS.map((tab) => {
                         const isActive = status === tab.value || (status === '' && tab.value === '');
                         const Icon = tab.icon;
@@ -153,11 +154,11 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
                                 key={tab.value}
                                 href={href}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${isActive
-                                    ? 'bg-white shadow text-gray-900'
-                                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                    ? 'bg-amber-600 shadow text-white font-bold'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
-                                <Icon className={`h-4 w-4 ${isActive ? (tab.color || 'text-gold-primary') : ''}`} />
+                                <Icon className={`h-4 w-4 ${isActive ? (tab.color || 'text-amber-400') : 'text-slate-400'}`} />
                                 {tab.label} {counts[tab.value] ? `(${counts[tab.value]})` : ''}
                             </Link>
                         );
@@ -171,70 +172,70 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
             </div>
 
             {/* Table */}
-            <Card className="shadow-sm border-gray-200">
-                <CardHeader className="p-4 border-b bg-gray-50/50">
+            <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl">
+                <CardHeader className="p-4 border-b border-white/5 bg-white/[0.02]">
                     <SearchInput placeholder="Tìm kiếm tiêu đề..." />
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b text-gray-700">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-[35%]">
+                            <thead>
+                                <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider w-[35%]">
                                         Tiêu đề
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                         Trạng thái
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                         Tác giả
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                         Thời gian đăng
                                     </th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                         Người duyệt
                                     </th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                                         Thao tác
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-100">
+                            <tbody className="divide-y divide-white/[0.05]">
                                 {news && (news as any[]).length > 0 ? (
                                     (news as any[]).map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
+                                        <tr key={item.id} className="hover:bg-white/[0.02] group transition-colors">
                                             {/* Title */}
-                                            <td className="px-4 py-3.5">
+                                            <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     {item.thumbnail_url ? (
                                                         <img
                                                             src={item.thumbnail_url}
                                                             alt=""
-                                                            className="h-10 w-14 rounded object-cover border flex-shrink-0"
+                                                            className="h-10 w-14 rounded-lg object-cover border border-white/10 flex-shrink-0"
                                                         />
                                                     ) : (
-                                                        <div className="h-10 w-14 rounded bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                                            <FileText className="h-4 w-4 text-gray-400" />
+                                                        <div className="h-10 w-14 rounded-lg bg-slate-950 flex items-center justify-center border border-white/10 flex-shrink-0">
+                                                            <FileText className="h-4 w-4 text-slate-500" />
                                                         </div>
                                                     )}
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-medium text-gray-900 line-clamp-2">
+                                                        <div className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-2">
                                                             {item.title_vi}
                                                         </div>
                                                         {item.categories?.name_vi && (
-                                                            <span className="text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                                                            <span className="inline-block mt-1 text-[10px] text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full font-bold">
                                                                 {item.categories.name_vi}
                                                             </span>
                                                         )}
                                                         {!tenantId && item.tenant_id && tenants && (
-                                                            <span className="text-xs text-amber-600 font-medium ml-2 border-l pl-2">
+                                                            <span className="text-[10px] text-amber-400 font-bold ml-2 border-l border-white/10 pl-2">
                                                                 {tenants.find(t => t.id === item.tenant_id)?.name || 'Hệ thống'}
                                                             </span>
                                                         )}
                                                         {/* Rejection note inline */}
                                                         {item.status === 'rejected' && item.review_note && (
-                                                            <div className="text-xs text-red-500 mt-0.5 line-clamp-1">
+                                                            <div className="text-[11px] text-red-400 mt-1 line-clamp-1 bg-red-500/5 px-2 py-0.5 rounded border border-red-500/10 w-fit">
                                                                 Lý do: {item.review_note}
                                                             </div>
                                                         )}
@@ -243,79 +244,79 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
                                             </td>
 
                                             {/* Status */}
-                                            <td className="px-4 py-3.5 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 {getStatusBadge(item.status)}
                                             </td>
 
                                             {/* Author */}
-                                            <td className="px-4 py-3.5 whitespace-nowrap">
-                                                <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                                                    <User className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
-                                                    <span className="truncate max-w-[120px]">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                                                    <User className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                                                    <span className="truncate max-w-[120px] font-medium">
                                                         {item.author_name || 'Không rõ'}
                                                     </span>
                                                 </div>
-                                                <div className="text-xs text-gray-400 mt-0.5">
+                                                <div className="text-xs text-slate-500 mt-1 font-mono">
                                                     {formatSmartDate(item.created_at)}
                                                 </div>
                                             </td>
 
                                             {/* Publish time */}
-                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                                                 {item.status === 'published' && item.published_at ? (
                                                     <div>
-                                                        <div className="flex items-center gap-1 text-green-700">
-                                                            <CheckCircle className="h-3.5 w-3.5" />
+                                                        <div className="flex items-center gap-1 text-emerald-400 font-bold">
+                                                            <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
                                                             {formatSmartDate(item.published_at)?.split(' ')[0]}
                                                         </div>
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
                                                             {formatSmartDate(item.published_at)?.split(' ')[1]}
                                                         </div>
                                                     </div>
                                                 ) : item.status === 'scheduled' && item.scheduled_at ? (
                                                     <div>
-                                                        <div className="flex items-center gap-1 text-blue-700">
-                                                            <CalendarClock className="h-3.5 w-3.5" />
+                                                        <div className="flex items-center gap-1 text-blue-400 font-bold">
+                                                            <CalendarClock className="h-3.5 w-3.5 text-blue-400" />
                                                             {formatSmartDate(item.scheduled_at)?.split(' ')[0]}
                                                         </div>
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
                                                             {formatSmartDate(item.scheduled_at)?.split(' ')[1]}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-300 text-xs">—</span>
+                                                    <span className="text-slate-600 text-xs">—</span>
                                                 )}
                                             </td>
 
                                             {/* Reviewer */}
-                                            <td className="px-4 py-3.5 whitespace-nowrap text-sm">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
                                                 {item.reviewer_name ? (
                                                     <div>
-                                                        <div className="flex items-center gap-1 text-gray-600">
-                                                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                                                        <div className="flex items-center gap-1 text-slate-300 font-medium">
+                                                            <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
                                                             <span className="truncate max-w-[100px]">{item.reviewer_name}</span>
                                                         </div>
-                                                        <div className="text-xs text-gray-400">
+                                                        <div className="text-xs text-slate-500 mt-0.5 font-mono">
                                                             {formatSmartDate(item.reviewed_at)}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-300 text-xs">Chưa duyệt</span>
+                                                    <span className="text-slate-600 text-xs">Chưa duyệt</span>
                                                 )}
                                             </td>
 
                                             {/* Actions */}
-                                            <td className="px-4 py-3.5 whitespace-nowrap text-right">
-                                                <div className="flex items-center justify-end gap-1">
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <div className="flex items-center justify-end gap-1.5">
                                                     {item.status === 'published' && item.slug && (
                                                         <Link href={`/vi/tin-tuc/${item.slug}`} target="_blank">
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600" title="Xem trên website">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-400 hover:bg-white/5 rounded-xl animate-none" title="Xem trên website">
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
                                                         </Link>
                                                     )}
                                                     <Link href={`${basePath}/${item.id}`}>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gold-primary" title="Chỉnh sửa">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-amber-400 hover:bg-white/5 rounded-xl animate-none" title="Chỉnh sửa">
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                     </Link>
@@ -331,16 +332,16 @@ export async function NewsListView({ searchParams, basePath, isCollaborator, dbC
                                     <tr>
                                         <td colSpan={6} className="px-6 py-16 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="bg-gray-100 p-4 rounded-full">
-                                                    <FileText className="h-8 w-8 text-gray-400" />
+                                                <div className="bg-slate-900/60 p-4 rounded-full border border-white/[0.08]">
+                                                    <FileText className="h-8 w-8 text-slate-500" />
                                                 </div>
-                                                <p className="text-lg font-medium text-gray-700">
+                                                <p className="text-lg font-bold text-white">
                                                     {status === 'pending_review' ? 'Không có bài chờ duyệt' :
                                                         status === 'draft' ? 'Không có bản nháp' :
                                                             status === 'scheduled' ? 'Không có bài lên lịch' :
                                                                 'Chưa có tin tức nào'}
                                                 </p>
-                                                <p className="text-sm text-gray-400">
+                                                <p className="text-sm text-slate-400">
                                                     {!status && 'Bắt đầu bằng cách tạo tin tức mới.'}
                                                 </p>
                                             </div>

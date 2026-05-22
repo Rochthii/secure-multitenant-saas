@@ -26,9 +26,9 @@ Mô tả cách hệ thống quản lý vòng đời schema, migration, và **ten
 
 | Nhóm | Bảng | RLS |
 |---|---|---|
-| **Nội dung** | `news`, `events`, `pages`, `about_sections`, `categories`, `media`, `hero_slides`, `faqs` | ✅ tenant_id |
+| **Nội dung** | `news`, `events`, `pages`, `about_sections`, `categories`, `media`, `hero_slides`, `faqs`, `layout_blocks` | ✅ tenant_id |
 | **Vận hành** | `event_registrations`, `contact_messages`, `newsletter_subscribers` | ✅ tenant_id |
-| **Tài chính** | `transactions`, `transaction_projects`, `bank_accounts` | ✅ tenant_id |
+| **Tài chính** | `donations`, `donation_campaigns`, `bank_accounts` | ✅ tenant_id |
 | **Quản trị** | `user_roles`, `role_permissions`, `audit_logs`, `site_settings` | ✅ tenant_id |
 | **Hệ thống** | `tenants`, `organizations` | 🔒 Admin-only |
 
@@ -176,7 +176,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 |---|:---:|:---:|:---:|:---:|:---:|
 | `news` | ✅ | ✅ | ✅ | ✅ | ⏰ Time |
 | `events` | ✅ | ✅ | ✅ | ✅ | — |
-| `transactions` | ✅ | ✅ | ✅ | ✅ | 🔒 Trigger |
+| `donation_campaigns` | ✅ | ✅ | ✅ | ✅ | — |
+| `donations` | ✅ | ✅ | ✅ | ✅ | 🔒 Audit-controlled |
 | `media` | ✅ | ✅ | ✅ | ✅ | — |
 | `user_roles` | ✅ | ✅ | ✅ | ✅ | — |
 | `audit_logs` | ✅ | ✅ | ❌ | ❌ | 🔒 Immutable |
@@ -249,6 +250,7 @@ Module `lib/audit/security-stats.ts` tổng hợp dữ liệu từ `audit_logs` 
 | Broadcast | published_to UUID[] | Cross-tenant content sharing |
 | ABAC | Time-based + DELETE triggers | **ABAC bổ sung** |
 | Security SOC & Operations | `cron_job_logs`, `rls_benchmark_results`, `tenant_lifecycle` | **Đo lường kiểm chứng, giám sát vận hành và Vòng đời Tenant** |
+| Consolidated Patch | Đồng bộ UUID donations, user_roles UNIQUE, array types, bank_accounts default index | **Vá lỗi bảo mật và tối ưu hóa vận hành** |
 
 ### 7.3 Quy trình migration an toàn
 

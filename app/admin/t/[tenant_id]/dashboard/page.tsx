@@ -1,14 +1,10 @@
 import React from 'react';
-import { createClient } from '@/lib/supabase/server';
 import { getAdminDashboardStats } from '@/lib/cache/queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Newspaper, Calendar, DollarSign, UserCheck, ArrowRight, FileText, Settings, Activity } from 'lucide-react';
-import { formatCurrency } from '@/lib/constants/transaction';
+import { Newspaper, Calendar, UserCheck, ArrowRight, FileText, Settings, Activity } from 'lucide-react';
 import Link from 'next/link';
-import { TransactionAnalyticsWrapper } from '@/components/admin/transaction-analytics-wrapper';
 import { RecentActivity } from '@/components/admin/dashboard-widgets';
 import { UnreadMessagesWidget } from '@/components/admin/unread-messages-widget';
-import { DashboardTransactionSummary } from '@/components/admin/dashboard-transaction-summary';
 import { requireTenantAccess } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { getTenantConfig } from '@/lib/tenant';
@@ -31,26 +27,27 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
     const {
         newsCount,
         eventsCount,
-        projectsCount,
-        totalTransactions,
         pendingRegistrations,
+        auditLogsCount,
         recentNews,
-        recentTransactions,
-        transactions,
-        transactionSummary,
+        recentRegistrations,
+        recentAuditLogs,
     } = await getAdminDashboardStats(tenant_id);
 
-    // ── Enterprise Route: separate clean UI ──────────────────────────────────
+    // ── Enterprise / Company Route: dedicated premium UI ─────────────────────
     if (tenantType === 'company' || tenantType === 'ngo') {
         return (
             <EnterpriseDashboardUI
                 tenantId={tenant_id}
                 tenantName={tenantName}
+                tenantType={tenantType}
                 newsCount={newsCount}
                 eventsCount={eventsCount}
                 pendingRegistrations={pendingRegistrations}
+                auditLogsCount={auditLogsCount}
                 recentNews={recentNews || []}
-                recentTransactions={recentTransactions}
+                recentRegistrations={recentRegistrations || []}
+                recentAuditLogs={recentAuditLogs || []}
             />
         );
     }
@@ -59,36 +56,36 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
 
     const stats = [
         {
-            title: 'Bài viết & Giải pháp',
+            title: 'Bài viết & Nội dung',
             value: newsCount,
             icon: Newspaper,
-            color: 'text-blue-600',
-            bg: 'bg-blue-500/10',
-            border: 'border-blue-500/20'
-        },
-        {
-            title: 'Hạng mục & Dự án',
-            value: projectsCount || eventsCount, // Fallback if old data
-            icon: Calendar,
-            color: 'text-indigo-600',
+            color: 'text-indigo-400',
             bg: 'bg-indigo-500/10',
             border: 'border-indigo-500/20'
         },
         {
-            title: 'Tổng doanh thu (MRR)',
-            value: formatCurrency(totalTransactions),
-            icon: DollarSign,
-            color: 'text-emerald-600',
+            title: 'Sự kiện & Lịch trình',
+            value: eventsCount,
+            icon: Calendar,
+            color: 'text-sky-400',
+            bg: 'bg-sky-500/10',
+            border: 'border-sky-500/20'
+        },
+        {
+            title: 'Khách hàng & Leads',
+            value: pendingRegistrations,
+            icon: UserCheck,
+            color: 'text-emerald-400',
             bg: 'bg-emerald-500/10',
             border: 'border-emerald-500/20'
         },
         {
-            title: 'Lượt đăng ký / Leads',
-            value: pendingRegistrations,
-            icon: UserCheck,
-            color: 'text-purple-600',
-            bg: 'bg-purple-500/10',
-            border: 'border-purple-500/20'
+            title: 'Nhật ký Hoạt động',
+            value: auditLogsCount,
+            icon: FileText,
+            color: 'text-violet-400',
+            bg: 'bg-violet-500/10',
+            border: 'border-violet-500/20'
         },
     ];
 
@@ -127,33 +124,21 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
             </div>
 
             {/* Statistic Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
                 <UnreadMessagesWidget tenantId={tenant_id} />
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                        <Card key={stat.title} className="group border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-purple-500/30 transition-all duration-500 rounded-[2rem] overflow-hidden bg-white/60 backdrop-blur-xl">
-                            <CardContent className="p-7 relative h-full flex flex-col justify-center">
-                                <div className={`absolute -bottom-4 -right-4 p-6 opacity-0 group-hover:opacity-5 transition-all duration-500 transform scale-150 rotate-12 ${stat.color}`}>
-                                    <Icon className="w-24 h-24" />
+                        <Card key={stat.title} className={cn(
+                            'group border shadow-sm hover:shadow-xl transition-all duration-500 rounded-2xl overflow-hidden bg-slate-900/50 backdrop-blur-md',
+                            stat.border
+                        )}>
+                            <CardContent className="p-6 relative">
+                                <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center mb-4 border', stat.bg, stat.border)}>
+                                    <Icon className={cn('h-5 w-5', stat.color)} />
                                 </div>
-                                <div className="relative z-10">
-                                    <div className={cn(
-                                        "w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-transform group-hover:scale-110 group-hover:-rotate-3 duration-500 shadow-sm border",
-                                        stat.bg,
-                                        stat.border
-                                    )}>
-                                        <Icon className={cn("h-5 w-5", stat.color)} />
-                                    </div>
-                                    <div>
-                                        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-                                            {stat.title}
-                                        </p>
-                                        <h3 className="text-3xl font-black text-slate-900 tracking-tight">
-                                            {stat.value}
-                                        </h3>
-                                    </div>
-                                </div>
+                                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.title}</p>
+                                <h3 className={cn('text-3xl font-black', stat.color)}>{stat.value}</h3>
                             </CardContent>
                         </Card>
                     );
@@ -163,21 +148,9 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
             {/* Content Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Transaction Summary Table */}
-                    {transactionSummary && (
-                        <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-500">
-                            <DashboardTransactionSummary summary={transactionSummary} />
-                        </div>
-                    )}
-
-                    {/* Analytics Chart */}
-                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-500">
-                        <TransactionAnalyticsWrapper transactions={transactions || []} />
-                    </div>
-
                     {/* Recent Activity */}
-                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow duration-500">
-                        <RecentActivity news={recentNews || []} transactions={recentTransactions} />
+                    <div className="bg-slate-900/50 backdrop-blur-md rounded-2xl p-6 sm:p-8 border border-slate-800/80 hover:border-slate-700 transition-all duration-500">
+                        <RecentActivity news={recentNews || []} transactions={[]} />
                     </div>
                 </div>
 

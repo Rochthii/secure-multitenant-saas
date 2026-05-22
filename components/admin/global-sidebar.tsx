@@ -65,10 +65,24 @@ const groupedMenuItems: MenuGroup[] = [
         items: [
             {
                 href: '/admin/security-center',
-                label: 'Trung tâm An ninh (SOC)',
+                label: 'Giám sát SOC',
                 icon: ShieldAlert,
                 resource: 'settings',
-                desc: 'Giám sát bảo mật thời gian thực',
+                desc: 'An ninh thời gian thực',
+            },
+            {
+                href: '/admin/performance',
+                label: 'Benchmark RLS',
+                icon: Gauge,
+                resource: 'settings',
+                desc: 'Đo lường hiệu năng',
+            },
+            {
+                href: '/admin/audit-logs',
+                label: 'Nhật ký Kiểm toán',
+                icon: FileText,
+                resource: 'settings',
+                desc: 'Lịch sử hành động',
             },
             {
                 href: '/admin/users',
@@ -78,26 +92,11 @@ const groupedMenuItems: MenuGroup[] = [
                 desc: 'Phân quyền RBAC',
             },
             {
-                href: '/admin/audit-logs',
-                label: 'Nhật ký Kiểm toán',
-                icon: FileText,
-                resource: 'settings',
-                desc: 'Lịch sử hành động hệ thống',
-            },
-
-            {
                 href: '/admin/backup',
                 label: 'Backup & Restore',
                 icon: Database,
                 resource: 'settings',
-                desc: 'Sao lưu toàn hệ thống',
-            },
-            {
-                href: '/admin/performance',
-                label: 'Performance Benchmark',
-                icon: Gauge,
-                resource: 'settings',
-                desc: 'Đo lường RLS – Dữ liệu Đồ án',
+                desc: 'Sao lưu hệ thống',
             },
         ]
     },
@@ -150,22 +149,6 @@ const groupedMenuItems: MenuGroup[] = [
                 icon: BookOpen,
                 resource: 'media',
                 desc: 'Tài liệu pháp lý, hình ảnh',
-            },
-        ]
-    },
-    {
-        groupTitle: 'Tài chính & Ngân sách',
-        items: [
-            {
-                label: 'Ngân sách & Quỹ nội bộ',
-                icon: DollarSign,
-                resource: 'transactions',
-                desc: 'Quản lý thu chi hệ thống',
-                subItems: [
-                    { href: '/admin/finance/transactions', label: 'Quản lý Ngân sách' },
-                    { href: '/admin/finance/projects', label: 'Hạng mục Dự án' },
-                    { href: '/admin/finance/bank-accounts', label: 'Tài khoản Ngân hàng' },
-                ]
             },
         ]
     }

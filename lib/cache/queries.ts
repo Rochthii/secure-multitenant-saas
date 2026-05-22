@@ -1094,105 +1094,57 @@ export const getCachedAboutSection = async (key: string, tenantId?: string): Pro
 
 export const getAdminDashboardStats = async (tenantId: string) => {
     const supabase = await createClient();
-    
-    // Lấy thông tin tenant để biết có phải công ty không (RLS applied)
-    const { data: tenantData } = await (supabase as any).from('tenants').select('tenant_type').eq('id', tenantId).maybeSingle();
-    const isMaster = tenantData?.tenant_type === 'company';
 
-    // Company Tenant (isMaster) sees global stats; other tenants are siloed
-    let newsQuery = supabase.from('news').select('*', { count: 'exact', head: true });
-    let eventsQuery = supabase.from('events').select('*', { count: 'exact', head: true });
-    let projectsQuery = supabase.from('transaction_projects' as any).select('*', { count: 'exact', head: true }).eq('is_active', true);
-    let transactionConfirmedQuery = supabase.from('transactions').select('amount, created_at, status').eq('status', 'confirmed');
-    let eventRegQuery = supabase.from('event_registrations').select(`*, events!inner(id)`, { count: 'exact', head: true }).eq('status', 'confirmed');
-    let recentNewsQuery = supabase.from('news').select('id, title_vi, created_at, status').order('created_at', { ascending: false }).limit(5);
-    let recentTransactionQuery = supabase.from('transactions').select('*, transaction_projects(title_vi)').order('created_at', { ascending: false }).limit(5);
-    let allTransactionQuery = supabase.from('transactions').select('amount, status, purpose, payment_method, project_id, transaction_projects(title_vi)');
-
-    if (!isMaster) {
-        newsQuery = newsQuery.eq('tenant_id', tenantId);
-        eventsQuery = eventsQuery.eq('tenant_id', tenantId);
-        projectsQuery = projectsQuery.eq('tenant_id', tenantId);
-        transactionConfirmedQuery = transactionConfirmedQuery.eq('tenant_id', tenantId);
-        eventRegQuery = eventRegQuery.eq('events.tenant_id', tenantId);
-        recentNewsQuery = recentNewsQuery.eq('tenant_id', tenantId);
-        recentTransactionQuery = recentTransactionQuery.eq('tenant_id', tenantId);
-        allTransactionQuery = allTransactionQuery.eq('tenant_id', tenantId);
-    }
-
+    // Queries: all scoped to tenantId via RLS + explicit filter
     const [
         { count: newsCount },
         { count: eventsCount },
-        { count: projectsCount },
-        { data: transactionData },
-        { count: pendingRegistrations },
+        { count: registrationsCount },
+        { count: auditLogsCount },
         { data: recentNews },
-        { data: recentTransactions },
-        { data: allTransactions },
+        { data: recentRegistrations },
+        { data: recentAuditLogs },
     ] = await Promise.all([
-        newsQuery,
-        eventsQuery,
-        projectsQuery,
-        transactionConfirmedQuery,
-        eventRegQuery,
-        recentNewsQuery,
-        recentTransactionQuery,
-        allTransactionQuery,
+        supabase.from('news').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('events').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('event_registrations')
+            .select('*, events!inner(id)', { count: 'exact', head: true })
+            .eq('events.tenant_id', tenantId),
+        supabase.from('audit_logs').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('news')
+            .select('id, title_vi, created_at, status')
+            .eq('tenant_id', tenantId)
+            .order('created_at', { ascending: false })
+            .limit(5),
+        supabase.from('event_registrations')
+            .select('id, full_name, email, status, created_at, events!inner(title_vi, tenant_id)')
+            .eq('events.tenant_id', tenantId)
+            .order('created_at', { ascending: false })
+            .limit(5),
+        supabase.from('audit_logs')
+            .select('id, action, table_name, user_email, created_at, ip_address')
+            .eq('tenant_id', tenantId)
+            .order('created_at', { ascending: false })
+            .limit(5),
     ]);
-
-    const totalTransactions = (transactionData as any[])?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
-
-    // Tính breakdown tại server để không gửi raw data lên client
-    const arr = (allTransactions as any[]) || [];
-
-    const byStatus = {
-        pending: { count: 0, total: 0 },
-        confirmed: { count: 0, total: 0 },
-        cancelled: { count: 0, total: 0 },
-    } as Record<string, { count: number; total: number }>;
-
-    const byPurpose = {} as Record<string, { count: number; total: number }>;
-    const byMethod = {} as Record<string, { count: number; total: number }>;
-
-    for (const d of arr) {
-        const st = d.status || 'pending';
-        if (!byStatus[st]) byStatus[st] = { count: 0, total: 0 };
-        byStatus[st].count++;
-        byStatus[st].total += d.amount || 0;
-
-        // Prefer project title for purpose breakdown
-        let pu = d.purpose || 'general';
-        if (d.transaction_projects?.title_vi) {
-            pu = d.transaction_projects.title_vi;
-        }
-        
-        if (!byPurpose[pu]) byPurpose[pu] = { count: 0, total: 0 };
-        byPurpose[pu].count++;
-        byPurpose[pu].total += d.amount || 0;
-
-        const me = d.payment_method || 'cash';
-        if (!byMethod[me]) byMethod[me] = { count: 0, total: 0 };
-        byMethod[me].count++;
-        byMethod[me].total += d.amount || 0;
-    }
 
     return {
         newsCount: newsCount || 0,
         eventsCount: eventsCount || 0,
-        projectsCount: projectsCount || 0,
-        totalTransactions,
-        pendingRegistrations: pendingRegistrations || 0,
+        pendingRegistrations: registrationsCount || 0,
+        auditLogsCount: auditLogsCount || 0,
         recentNews: recentNews || [],
-        recentTransactions: recentTransactions || [],
-        transactions: transactionData || [],
-        transactionSummary: {
-            total: arr.length,
-            byStatus,
-            byPurpose,
-            byMethod,
-        },
+        recentRegistrations: recentRegistrations || [],
+        recentAuditLogs: recentAuditLogs || [],
+        // Legacy compat (used by default tenant dashboard, kept as empty)
+        projectsCount: 0,
+        totalTransactions: 0,
+        recentTransactions: [],
+        transactions: [],
+        transactionSummary: null,
     };
 };
+
 
 /**
  * GLOBAL DASHBOARD STATS (System-wide for Super Admins)

@@ -34,9 +34,9 @@ export function DeleteFAQButton({ id, tenantId }: { id: string; tenantId: string
         <Button
             onClick={handleDelete}
             disabled={loading}
-            variant="outline"
-            size="sm"
-            className={`transition-colors ${confirm ? 'border-red-500 bg-red-50 text-red-700' : 'text-red-600 hover:text-red-700'}`}
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 rounded-xl transition-colors ${confirm ? 'text-red-400 bg-red-500/10 border border-red-500/20' : 'text-slate-400 hover:text-red-400 hover:bg-white/5'}`}
             title={confirm ? 'Nhấn lần nữa để xác nhận xóa' : 'Xóa câu hỏi'}
         >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}

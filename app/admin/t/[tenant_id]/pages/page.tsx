@@ -3,11 +3,12 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, FileText, CornerDownRight } from 'lucide-react';
+import { Plus, Edit, FileText, CornerDownRight, Info } from 'lucide-react';
 import { formatDate } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { requireTenantAccess } from '@/lib/permissions';
 import { DeletePageButton } from '@/components/admin/pages/delete-page-button';
+import { Badge } from '@/components/ui/badge';
 
 export default async function PagesListPage({ params }: { params: Promise<{ tenant_id: string }> }) {
     const { tenant_id } = await params;
@@ -34,43 +35,48 @@ export default async function PagesListPage({ params }: { params: Promise<{ tena
 
         const renderNode = (node: any, level: number = 0) => {
             const nodeChildren = getChildren(node.id);
-            const indentClass = level === 1 ? 'ml-8 border-l-2 border-gray-200 pl-4' : level === 2 ? 'ml-16 border-l-2 border-gray-200 pl-4' : '';
+            const indentClass = level === 1 ? 'ml-8 border-l-2 border-white/10 pl-4' : level === 2 ? 'ml-16 border-l-2 border-white/10 pl-4' : '';
 
             return (
                 <React.Fragment key={node.id}>
-                    <div className={`p-4 hover:bg-gray-50 flex items-center justify-between border-t border-gray-100 ${indentClass}`}>
+                    <div className={`p-4 hover:bg-white/[0.02] flex items-center justify-between border-t border-white/[0.05] transition-colors ${indentClass}`}>
                         <div className="flex items-center gap-3">
                             {level === 0 ? (
-                                <FileText className="h-5 w-5 text-gold-primary" />
+                                <FileText className="h-5 w-5 text-amber-400" />
                             ) : (
-                                <CornerDownRight className="h-4 w-4 text-gray-400" />
+                                <CornerDownRight className="h-4 w-4 text-slate-500" />
                             )}
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <h3 className={`font-semibold text-gray-900 ${level === 0 ? 'text-base' : 'text-sm'}`}>
+                                    <h3 className={`font-bold text-white ${level === 0 ? 'text-base' : 'text-sm'}`}>
                                         {node.title_vi}
                                     </h3>
-                                    <span className={`px-2 inline-flex text-[10px] leading-4 font-semibold rounded-full ${node.status === 'published'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-100 text-gray-800'
-                                        }`}>
-                                        {node.status === 'published' ? 'Công khai' : 'Nháp'}
-                                    </span>
+                                    {node.status === 'published' ? (
+                                        <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full px-2 py-0.5 text-[10px] font-bold">
+                                            Công khai
+                                        </Badge>
+                                    ) : (
+                                        <Badge className="bg-white/5 text-slate-400 border border-white/10 rounded-full px-2 py-0.5 text-[10px] font-bold">
+                                            Nháp
+                                        </Badge>
+                                    )}
                                     {node.show_in_menu === false && (
-                                        <span className="text-[10px] bg-red-50 text-red-700 px-1.5 py-0.5 rounded border border-red-200">Ẩn khỏi Menu</span>
+                                        <Badge className="bg-red-500/10 text-red-400 border border-red-500/20 rounded px-1.5 py-0.5 text-[10px] font-bold">
+                                            Ẩn khỏi Menu
+                                        </Badge>
                                     )}
                                 </div>
-                                <p className="text-xs text-gray-400">/{node.slug} • Khởi tạo: {formatDate(new Date(node.created_at), 'dd/MM/yyyy', { locale: vi })}</p>
+                                <p className="text-xs text-slate-400 mt-1">/{node.slug} • Khởi tạo: {formatDate(new Date(node.created_at), 'dd/MM/yyyy', { locale: vi })}</p>
                             </div>
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="flex gap-1 mr-4">
-                                {node.title_en && <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded">EN</span>}
-                                {node.title_km && <span className="text-[10px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded">KM</span>}
+                                {node.title_en && <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">EN</Badge>}
+                                {node.title_km && <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[10px] font-bold">KM</Badge>}
                             </div>
                             <Link href={`/admin/t/${tenant_id}/pages/${node.slug}`}>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                    <Edit className="h-4 w-4 text-gray-500 hover:text-gold-primary" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-amber-400 hover:bg-white/5 rounded-xl transition-colors">
+                                    <Edit className="h-4 w-4" />
                                 </Button>
                             </Link>
                             <DeletePageButton slug={node.slug} tenantId={tenant_id} hasChildren={nodeChildren.length > 0} />
@@ -83,7 +89,7 @@ export default async function PagesListPage({ params }: { params: Promise<{ tena
         };
 
         return (
-            <Card className="rounded-xl overflow-hidden shadow-sm">
+            <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
                 <CardContent className="p-0 flex flex-col">
                     {roots.map((root: any) => renderNode(root))}
                 </CardContent>
@@ -92,14 +98,17 @@ export default async function PagesListPage({ params }: { params: Promise<{ tena
     };
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-8">
+        <div className="space-y-6 text-slate-300">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold text-gray-900">Quản lý Trang Nội Dung</h1>
-                    <p className="text-gray-500 mt-1">Cấu trúc cây trang (Hoạt động như thanh điều hướng chính)</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <FileText className="w-8 h-8 text-amber-400" />
+                        Quản lý Trang Nội Dung
+                    </h1>
+                    <p className="text-slate-400 text-sm mt-1">Cấu trúc cây trang (Hoạt động như thanh điều hướng chính)</p>
                 </div>
                 <Link href={`/admin/t/${tenant_id}/pages/new`}>
-                    <Button className="bg-gold-primary hover:bg-gold-dark shadow-md">
+                    <Button className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                         <Plus className="h-4 w-4 mr-2" />
                         Tạo trang mới
                     </Button>
@@ -109,12 +118,12 @@ export default async function PagesListPage({ params }: { params: Promise<{ tena
             {pgs.length > 0 ? (
                 renderPageTree()
             ) : (
-                <Card>
-                    <CardContent className="p-12 text-center text-gray-500">
-                        <FileText className="h-8 w-8 mx-auto mb-4 text-gray-300" />
-                        <p className="mb-4">Chưa có trang nội dung nào</p>
+                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                    <CardContent className="p-16 text-center text-slate-400">
+                        <FileText className="h-10 w-10 mx-auto mb-4 text-slate-600" />
+                        <p className="mb-4 font-bold text-white">Chưa có trang nội dung nào</p>
                         <Link href={`/admin/t/${tenant_id}/pages/new`}>
-                            <Button className="bg-gold-primary hover:bg-gold-dark">
+                            <Button className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                                 Tạo trang đầu tiên
                             </Button>
                         </Link>
@@ -122,13 +131,18 @@ export default async function PagesListPage({ params }: { params: Promise<{ tena
                 </Card>
             )}
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-blue-900 mb-2">📝 Hướng dẫn Tổ chức Trang</h3>
-                <ul className="text-sm text-blue-800 list-disc ml-5 space-y-1">
-                    <li>Các Trang hoạt động theo mô hình <strong>Cha - Con</strong>. Nếu một trang có "Trang cha", nó sẽ hiển thị lùi vào dưới nhánh cha đổ xuống.</li>
-                    <li><strong>Menu Website</strong> sẽ tự động hiển thị các trang nằm ngoài cùng là Menu gốc, và trang con dưới dạng mục sổ xuống (Dropdown - Nếu bạn chọn "Hiển thị trên Menu").</li>
-                    <li>Sử dụng thuộc tính <strong>Order Index</strong> trong lúc Sửa trang để tùy biến thứ tự hiển thị từ Trái sang Phải trên Header.</li>
-                </ul>
+            <div className="p-5 bg-blue-950/20 rounded-2xl border border-blue-500/20 text-slate-300 flex gap-4">
+                <div className="mt-0.5 bg-blue-500/10 p-2 rounded-xl h-fit border border-blue-500/20">
+                    <Info className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                    <h3 className="font-bold text-blue-300 mb-2">📝 Hướng dẫn Tổ chức Trang</h3>
+                    <ul className="text-sm text-slate-400 list-disc ml-5 space-y-1">
+                        <li>Các Trang hoạt động theo mô hình <strong>Cha - Con</strong>. Nếu một trang có "Trang cha", nó sẽ hiển thị lùi vào dưới nhánh cha đổ xuống.</li>
+                        <li><strong>Menu Website</strong> sẽ tự động hiển thị các trang nằm ngoài cùng là Menu gốc, và trang con dưới dạng mục sổ xuống (Dropdown - Nếu bạn chọn "Hiển thị trên Menu").</li>
+                        <li>Sử dụng thuộc tính <strong>Order Index</strong> trong lúc Sửa trang để tùy biến thứ tự hiển thị từ Trái sang Phải trên Header.</li>
+                    </ul>
+                </div>
             </div>
         </div>
     );

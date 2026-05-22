@@ -41,7 +41,7 @@ export function SeedCategoriesButton({ tenantId }: SeedCategoriesButtonProps) {
             variant="outline" 
             onClick={handleSeed} 
             disabled={loading}
-            className="border-gold-primary text-gold-primary hover:bg-gold-50"
+            className="border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300 rounded-xl transition-all font-bold"
         >
             {loading ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

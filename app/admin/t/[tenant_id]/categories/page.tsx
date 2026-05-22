@@ -30,16 +30,19 @@ export default async function CategoriesListPage({ params }: { params: Promise<{
     const cats = (categories || []) as any[];
 
     return (
-        <div>
-            <div className="flex items-center justify-between mb-8">
+        <div className="space-y-6 text-slate-300">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5">
                 <div>
-                    <h1 className="text-3xl font-playfair font-bold text-gray-900">Quản lý Danh mục</h1>
-                    <p className="text-gray-500 mt-1">Xây dựng & sắp xếp cấu trúc cây thư mục (Hỗ trợ kéo thả)</p>
+                    <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <FolderTree className="w-8 h-8 text-amber-400" />
+                        Quản lý Danh mục
+                    </h1>
+                    <p className="text-slate-400 text-sm mt-1">Xây dựng & sắp xếp cấu trúc cây thư mục (Hỗ trợ kéo thả)</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <SeedCategoriesButton tenantId={tenant_id} />
                     <Link href={`/admin/t/${tenant_id}/categories/new`}>
-                        <Button className="bg-gold-primary hover:bg-gold-dark shadow-md">
+                        <Button className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                             <Plus className="h-4 w-4 mr-2" />
                             Tạo danh mục mới
                         </Button>
@@ -57,14 +60,14 @@ export default async function CategoriesListPage({ params }: { params: Promise<{
             {cats.length > 0 ? (
                 <CategoriesClient initialCategories={cats} tenantId={tenant_id} />
             ) : (
-                <Card>
-                    <CardContent className="p-12 text-center text-gray-500">
-                        <FolderTree className="h-8 w-8 mx-auto mb-4 text-gray-300" />
-                        <p className="mb-4 text-lg">Chưa có danh mục nào trong hệ thống</p>
+                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                    <CardContent className="p-16 text-center text-slate-400">
+                        <FolderTree className="h-10 w-10 mx-auto mb-4 text-slate-600" />
+                        <p className="mb-6 text-lg font-bold text-white">Chưa có danh mục nào trong hệ thống</p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <SeedCategoriesButton tenantId={tenant_id} />
                             <Link href={`/admin/t/${tenant_id}/categories/new`}>
-                                <Button className="bg-gold-primary hover:bg-gold-dark">
+                                <Button className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                                     Tạo danh mục thủ công
                                 </Button>
                             </Link>

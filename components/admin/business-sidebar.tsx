@@ -238,14 +238,12 @@ export function BusinessSidebar({
                     { href: `${base}/homepage?open=impact_dashboard`, label: 'Chỉ số KPI & Tác động', icon: BarChart3, resource: 'analytics' },
                 ],
             },
-            // ── Tương tác (Tài chính & Đối tác) ──
+            // ── Tương tác (Đối tác & Tương tác) ──
             {
                 id: 'interaction',
-                label: 'Tài chính & Đối tác',
+                label: 'Đối tác & Tương tác',
                 icon: Handshake,
-                resource: 'transactions',
                 children: [
-                    { href: `${base}/donations`, label: 'Ngân sách & Quỹ', icon: DollarSign, resource: 'transactions' },
                     { href: `${base}/projects`, label: 'Dự án & Phân bổ', icon: FolderTree, resource: 'settings' },
                     { href: `${base}/organizations`, label: 'Danh sách Đối tác', icon: Building2, resource: 'tenants' },
                     ...(hasModule('registrations') ? [{ href: `${base}/events/calendar`, label: 'Lịch hẹn / Đăng ký', icon: UserCheck, resource: 'registrations' }] : []),

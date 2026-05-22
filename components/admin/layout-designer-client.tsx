@@ -60,19 +60,19 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <button
-                    className="p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-2 text-gray-400 hover:text-amber-500 hover:bg-white/5 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                     title="Cài đặt khối này"
                 >
                     <Settings className="w-5 h-5" />
                 </button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white">
+            <DialogContent className="sm:max-w-[425px] bg-slate-950 border border-white/[0.08] text-slate-200">
                 <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+                    <DialogTitle className="flex items-center gap-2 text-white">
                         <Settings className="w-5 h-5 text-amber-500" />
                         Cài đặt: {registryEntry.name}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-slate-400">
                         {registryEntry.description}
                     </DialogDescription>
                 </DialogHeader>
@@ -80,35 +80,37 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                     defaultValue={['founder_section', 'impact_dashboard', 'transparency_timeline', 'traditional_mosaic_alt1', 'traditional_mosaic_alt2', 'traditional_mosaic_alt3', 'traditional_mosaic_alt4', 'traditional_mosaic_alt5', 'traditional_mosaic_alt6', 'traditional_mosaic_alt7'].includes(block.type) ? 'content' : 'general'}
                     className="w-full"
                 >
-                    <TabsList className="grid w-full grid-cols-2 mb-4">
-                        <TabsTrigger value="general">Cơ bản</TabsTrigger>
-                        <TabsTrigger value="content">Nội dung</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-900 border border-white/[0.08] p-1 rounded-lg">
+                        <TabsTrigger value="general" className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">Cơ bản</TabsTrigger>
+                        <TabsTrigger value="content" className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">Nội dung</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="grid gap-4 py-4">
                         <div className="space-y-2">
-                            <Label htmlFor="customTitle">Tiêu đề tuỳ chỉnh</Label>
+                            <Label htmlFor="customTitle" className="text-slate-300">Tiêu đề tuỳ chỉnh</Label>
                             <Input
                                 id="customTitle"
                                 placeholder="Để trống để dùng tiêu đề gốc..."
                                 value={settings.customTitle || ''}
                                 onChange={(e) => handleChange('customTitle', e.target.value)}
+                                className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="customSubtitle">Phụ đề (Subtitle)</Label>
+                            <Label htmlFor="customSubtitle" className="text-slate-300">Phụ đề (Subtitle)</Label>
                             <Input
                                 id="customSubtitle"
                                 placeholder="Mô tả phụ bên dưới tiêu đề..."
                                 value={settings.customSubtitle || ''}
                                 onChange={(e) => handleChange('customSubtitle', e.target.value)}
+                                className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50"
                             />
                         </div>
 
                         {['news', 'events', 'dharma'].includes(registryEntry.category) && (
                             <div className="space-y-2">
-                                <Label htmlFor="limit">Số bài tối đa hiển thị (Limit)</Label>
+                                <Label htmlFor="limit" className="text-slate-300">Số bài tối đa hiển thị (Limit)</Label>
                                 <Input
                                     id="limit"
                                     type="number"
@@ -117,6 +119,7 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     placeholder="VD: 3, 6, 9..."
                                     value={settings.limit || ''}
                                     onChange={(e) => handleChange('limit', parseInt(e.target.value) || undefined)}
+                                    className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50"
                                 />
                             </div>
                         )}
@@ -126,18 +129,18 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                         {/* FOUNDER SECTION SPECIALIZED FIELDS */}
                         {block.type === 'founder_section' && (
                             <div className="space-y-6">
-                                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100 flex items-center gap-2 text-amber-800 text-xs mb-4">
+                                <div className="p-3 bg-amber-950/20 rounded-lg border border-amber-900/30 flex items-center gap-2 text-amber-200 text-xs mb-4">
                                     <User className="w-4 h-4" />
                                     <span>Tùy chỉnh danh sách thành viên. Thành viên đầu tiên sẽ được hiển thị nổi bật (CEO).</span>
                                 </div>
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <Label className="font-bold">Danh sách Thành viên / Founders</Label>
+                                        <Label className="font-bold text-slate-200">Danh sách Thành viên / Founders</Label>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-8 gap-1 text-[10px] uppercase font-bold text-amber-600 border-amber-200 bg-amber-50"
+                                            className="h-8 gap-1 text-[10px] uppercase font-bold text-amber-400 border-amber-900/30 bg-amber-950/30 hover:bg-amber-950/50"
                                             onClick={() => {
                                                 const current = settings.members || [];
                                                 handleChange('members', [...current, { name: 'Thành viên mới', role: 'Vị trí', desc: 'Mô tả ngắn...', icon: 'User', link: '' }]);
@@ -148,9 +151,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     </div>
 
                                     {(settings.members || []).map((member: any, idx: number) => (
-                                        <div key={idx} className="space-y-3 p-4 border rounded-xl bg-gray-50/50 relative group/member">
+                                        <div key={idx} className="space-y-3 p-4 border border-white/[0.06] rounded-xl bg-slate-900/40 relative group/member">
                                             <button
-                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-opacity shadow-sm border border-red-200 z-20"
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-950/60 text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-opacity shadow-sm border border-red-900/50 z-20"
                                                 onClick={() => {
                                                     const current = [...(settings.members || [])];
                                                     current.splice(idx, 1);
@@ -161,16 +164,16 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                             </button>
 
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Badge variant="outline" className={cn("bg-white", idx === 0 ? "border-amber-200 text-amber-700 font-bold" : "")}>
+                                                <Badge variant="outline" className={cn("bg-slate-950 text-slate-300 border-white/10", idx === 0 ? "border-amber-500/30 text-amber-400 font-bold bg-amber-950/10" : "")}>
                                                     {idx === 0 ? 'Featured (CEO)' : `Thành viên ${idx + 1}`}
                                                 </Badge>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Họ tên</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Họ tên</Label>
                                                     <Input
-                                                        className="h-8 text-xs"
+                                                        className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                         placeholder="VD: Nguyễn Ngọc Minh Châu"
                                                         value={member.name || ''}
                                                         onChange={(e) => {
@@ -181,9 +184,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Vai trò</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Vai trò</Label>
                                                     <Input
-                                                        className="h-8 text-xs"
+                                                        className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                         placeholder="VD: Tổng Giám đốc"
                                                         value={member.role || ''}
                                                         onChange={(e) => {
@@ -197,9 +200,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
 
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Icon</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Icon</Label>
                                                     <select
-                                                        className="w-full h-8 text-[10px] border rounded bg-white px-2"
+                                                        className="w-full h-8 text-[10px] border border-white/10 rounded bg-slate-900 text-white px-2"
                                                         value={member.icon || 'User'}
                                                         onChange={(e) => {
                                                             const current = [...(settings.members || [])];
@@ -213,9 +216,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Link bài viết</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Link bài viết</Label>
                                                     <Input
-                                                        className="h-8 text-xs font-mono"
+                                                        className="h-8 text-xs font-mono bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                         placeholder="/vi/slug-bai-viet"
                                                         value={member.link || ''}
                                                         onChange={(e) => {
@@ -228,9 +231,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                             </div>
 
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase font-bold text-gray-400">Mô tả ngắn</Label>
+                                                <Label className="text-[10px] uppercase font-bold text-slate-400">Mô tả ngắn</Label>
                                                 <textarea
-                                                    className="w-full min-h-[60px] p-2 text-xs border rounded-md bg-white resize-none"
+                                                    className="w-full min-h-[60px] p-2 text-xs border border-white/10 rounded-md bg-slate-900 text-white resize-none placeholder:text-slate-500"
                                                     placeholder="Mô tả tóm tắt kinh nghiệm..."
                                                     value={member.desc || ''}
                                                     onChange={(e) => {
@@ -244,7 +247,7 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     ))}
 
                                     {(!settings.members || settings.members.length === 0) && (
-                                        <div className="text-center py-8 border-2 border-dashed rounded-xl bg-gray-50 text-gray-400 text-xs">
+                                        <div className="text-center py-8 border border-dashed border-white/10 rounded-xl bg-slate-950/40 text-slate-400 text-xs">
                                             Chưa có thành viên nào. Hãy nhấn "Thêm thành viên" để bắt đầu.
                                         </div>
                                     )}
@@ -255,59 +258,64 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                         {/* IMPACT DASHBOARD SPECIALIZED FIELDS */}
                         {block.type === 'impact_dashboard' && (
                             <div className="space-y-6">
-                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center gap-2 text-blue-800 text-xs mb-4">
+                                <div className="p-3 bg-blue-950/20 rounded-lg border border-blue-900/30 flex items-center gap-2 text-blue-200 text-xs mb-4">
                                     <BarChart3 className="w-4 h-4" />
                                     <span>Dữ liệu sẽ tự động lấy từ DB, nhưng bạn có thể ghi đè thủ công tại đây.</span>
                                 </div>
 
                                 <div className="grid gap-4">
                                     <div className="space-y-2">
-                                        <Label>Tiêu đề Dashboard (HTML support)</Label>
+                                        <Label className="text-slate-300">Tiêu đề Dashboard (HTML support)</Label>
                                         <Input
                                             placeholder="Tác động <span class='...'>Cộng đồng</span>"
                                             value={settings.sectionTitleHtml || ''}
                                             onChange={(e) => handleChange('sectionTitleHtml', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
                                     </div>
 
                                     {/* Stat 1: Main Highlight */}
-                                    <div className="p-4 border rounded-xl bg-[#002B5B]/5 space-y-3">
+                                    <div className="p-4 border border-blue-500/20 rounded-xl bg-blue-950/10 space-y-3">
                                         <div className="flex items-center justify-between">
-                                            <Label className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> Card Chính (Tổng Quỹ)</Label>
-                                            <Badge variant="outline" className="bg-white border-blue-200 text-blue-700">Highlight</Badge>
+                                            <Label className="font-bold flex items-center gap-2 text-slate-200"><div className="w-2 h-2 rounded-full bg-blue-500" /> Card Chính (Tổng Quỹ)</Label>
+                                            <Badge variant="outline" className="bg-blue-950/40 border-blue-500/30 text-blue-300">Highlight</Badge>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase text-gray-400">Giá trị</Label>
+                                                <Label className="text-[10px] uppercase text-slate-400">Giá trị</Label>
                                                 <Input
                                                     placeholder="VD: 15.4 Tỷ"
                                                     value={settings.stat1Value || ''}
                                                     onChange={(e) => handleChange('stat1Value', e.target.value)}
+                                                    className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase text-gray-400">Tiêu đề</Label>
+                                                <Label className="text-[10px] uppercase text-slate-400">Tiêu đề</Label>
                                                 <Input
                                                     placeholder="VD: Tổng Quỹ Cộng Đồng"
                                                     value={settings.stat1Title || ''}
                                                     onChange={(e) => handleChange('stat1Title', e.target.value)}
+                                                    className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-[10px] uppercase text-gray-400">Nhãn phụ / Thời gian</Label>
+                                            <Label className="text-[10px] uppercase text-slate-400">Nhãn phụ / Thời gian</Label>
                                             <Input
                                                 placeholder="VD: Cập nhật 5 phút trước"
                                                 value={settings.stat1Sub || ''}
                                                 onChange={(e) => handleChange('stat1Sub', e.target.value)}
+                                                className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-[10px] uppercase text-gray-400">Link hành động</Label>
+                                            <Label className="text-[10px] uppercase text-slate-400">Link hành động</Label>
                                             <Input
                                                 placeholder="/vi/slug-bai-viet"
                                                 value={settings.stat1Link || ''}
                                                 onChange={(e) => handleChange('stat1Link', e.target.value)}
+                                                className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                             />
                                         </div>
                                     </div>
@@ -315,11 +323,11 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     {/* Dynamic Metrics List */}
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
-                                            <Label className="font-bold">Danh sách Chỉ số Tác động</Label>
+                                            <Label className="font-bold text-slate-200">Danh sách Chỉ số Tác động</Label>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-8 gap-1 text-[10px] uppercase font-bold text-blue-600 border-blue-200 bg-blue-50"
+                                                className="h-8 gap-1 text-[10px] uppercase font-bold text-blue-400 border-blue-900/30 bg-blue-950/30 hover:bg-blue-950/50"
                                                 onClick={() => {
                                                     const current = settings.metrics || [];
                                                     handleChange('metrics', [...current, { title: 'Tên chỉ số', value: '100', icon: 'Target', unit: '+' }]);
@@ -331,9 +339,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
 
                                         <div className="space-y-3">
                                             {(settings.metrics || []).map((m: any, idx: number) => (
-                                                <div key={idx} className="p-3 border rounded-xl bg-gray-50 space-y-3 relative group/item">
+                                                <div key={idx} className="p-3 border border-white/[0.06] rounded-xl bg-slate-900/40 space-y-3 relative group/item">
                                                     <button
-                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity shadow-sm border border-red-200"
+                                                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-950/60 text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity shadow-sm border border-red-900/50"
                                                         onClick={() => {
                                                             const current = [...(settings.metrics || [])];
                                                             current.splice(idx, 1);
@@ -344,9 +352,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                     </button>
                                                     <div className="grid grid-cols-12 gap-2">
                                                         <div className="col-span-4 space-y-1">
-                                                            <Label className="text-[10px] uppercase text-gray-400">Icon (Lucide)</Label>
+                                                            <Label className="text-[10px] uppercase text-slate-400">Icon (Lucide)</Label>
                                                             <select
-                                                                className="w-full h-8 text-[10px] border rounded bg-white"
+                                                                className="w-full h-8 text-[10px] border border-white/10 rounded bg-slate-900 text-white px-2"
                                                                 value={m.icon || 'Target'}
                                                                 onChange={(e) => {
                                                                     const current = [...(settings.metrics || [])];
@@ -360,9 +368,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                             </select>
                                                         </div>
                                                         <div className="col-span-8 space-y-1">
-                                                            <Label className="text-[10px] uppercase text-gray-400">Tiêu đề</Label>
+                                                            <Label className="text-[10px] uppercase text-slate-400">Tiêu đề</Label>
                                                             <Input
-                                                                className="h-8 text-xs"
+                                                                className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                                 value={m.title}
                                                                 onChange={(e) => {
                                                                     const current = [...(settings.metrics || [])];
@@ -374,9 +382,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div className="space-y-1">
-                                                            <Label className="text-[10px] uppercase text-gray-400">Giá trị</Label>
+                                                            <Label className="text-[10px] uppercase text-slate-400">Giá trị</Label>
                                                             <Input
-                                                                className="h-8 text-xs font-bold"
+                                                                className="h-8 text-xs font-bold bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                                 value={m.value}
                                                                 onChange={(e) => {
                                                                     const current = [...(settings.metrics || [])];
@@ -386,9 +394,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <Label className="text-[10px] uppercase text-gray-400">Đơn vị (VD: +, K)</Label>
+                                                            <Label className="text-[10px] uppercase text-slate-400">Đơn vị (VD: +, K)</Label>
                                                             <Input
-                                                                className="h-8 text-xs"
+                                                                className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                                 value={m.unit || ''}
                                                                 onChange={(e) => {
                                                                     const current = [...(settings.metrics || [])];
@@ -399,9 +407,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                         </div>
                                                     </div>
                                                     <div className="space-y-1">
-                                                        <Label className="text-[10px] uppercase text-gray-400">Link điều hướng</Label>
+                                                        <Label className="text-[10px] uppercase text-slate-400">Link điều hướng</Label>
                                                         <Input
-                                                            className="h-8 text-xs"
+                                                            className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                             placeholder="/vi/..."
                                                             value={m.link || ''}
                                                             onChange={(e) => {
@@ -417,14 +425,14 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     </div>
 
                                     <div className="space-y-2 mt-4">
-                                        <Label>Dữ liệu Biểu đồ (JSON Format)</Label>
+                                        <Label className="text-slate-300">Dữ liệu Biểu đồ (JSON Format)</Label>
                                         <textarea
-                                            className="w-full h-32 p-3 text-xs font-mono border rounded-lg bg-gray-900 text-emerald-400"
+                                            className="w-full h-32 p-3 text-xs font-mono border border-white/10 rounded-lg bg-slate-900 text-emerald-400 placeholder:text-slate-600"
                                             placeholder='[{"name": "T1", "transactions": 4000, "projects": 24}, ...]'
                                             value={settings.monthlyDataJson || ''}
                                             onChange={(e) => handleChange('monthlyDataJson', e.target.value)}
                                         />
-                                        <p className="text-[10px] text-gray-400">Thận trọng khi sửa JSON. Sai cú pháp sẽ làm biểu đồ không hiển thị.</p>
+                                        <p className="text-[10px] text-slate-400">Thận trọng khi sửa JSON. Sai cú pháp sẽ làm biểu đồ không hiển thị.</p>
                                     </div>
                                 </div>
                             </div>
@@ -433,32 +441,34 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                         {/* TRANSPARENCY TIMELINE SPECIALIZED FIELDS */}
                         {block.type === 'transparency_timeline' && (
                             <div className="space-y-6">
-                                <div className="p-3 bg-blue-50 rounded-lg border border-blue-100 flex items-center gap-2 text-blue-800 text-xs mb-4">
+                                <div className="p-3 bg-blue-950/20 rounded-lg border border-blue-900/30 flex items-center gap-2 text-blue-200 text-xs mb-4">
                                     <Clock className="w-4 h-4" />
                                     <span>Tùy chỉnh lộ trình phát triển và các cột mốc quan trọng.</span>
                                 </div>
 
-                                <div className="grid gap-4 p-4 border rounded-xl bg-gray-50/50">
+                                <div className="grid gap-4 p-4 border border-white/[0.06] rounded-xl bg-slate-900/40">
                                     <div className="grid gap-2">
-                                        <Label className="text-[10px] uppercase font-bold text-gray-400">Badge (Nhãn phụ)</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-slate-400">Badge (Nhãn phụ)</Label>
                                         <Input
                                             placeholder="VD: Lộ Trình Minh Bạch"
                                             value={settings.sectionBadge || ''}
                                             onChange={(e) => handleChange('sectionBadge', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label className="text-[10px] uppercase font-bold text-gray-400">Tiêu đề chính</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-slate-400">Tiêu đề chính</Label>
                                         <Input
                                             placeholder="VD: Hành Trình Kiến Tạo Giá Trị"
                                             value={settings.sectionTitle || ''}
                                             onChange={(e) => handleChange('sectionTitle', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label className="text-[10px] uppercase font-bold text-gray-400">Mô tả tóm tắt</Label>
+                                        <Label className="text-[10px] uppercase font-bold text-slate-400">Mô tả tóm tắt</Label>
                                         <textarea
-                                            className="w-full min-h-[80px] p-2 text-xs border rounded-md bg-white resize-none"
+                                            className="w-full min-h-[80px] p-2 text-xs border border-white/10 rounded-md bg-slate-900 text-white resize-none placeholder:text-slate-500"
                                             placeholder="Mô tả mục đích của lộ trình này..."
                                             value={settings.sectionDesc || ''}
                                             onChange={(e) => handleChange('sectionDesc', e.target.value)}
@@ -468,11 +478,11 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <Label className="font-bold">Các Cột Mốc / Sự Kiện</Label>
+                                        <Label className="font-bold text-slate-200">Các Cột Mốc / Sự Kiện</Label>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="h-8 gap-1 text-[10px] uppercase font-bold text-blue-600 border-blue-200 bg-blue-50"
+                                            className="h-8 gap-1 text-[10px] uppercase font-bold text-blue-400 border-blue-900/30 bg-blue-950/30 hover:bg-blue-950/50"
                                             onClick={() => {
                                                 const current = settings.items || [];
                                                 handleChange('items', [...current, { date: 'Thời gian', title: 'Sự kiện mới', description: 'Mô tả...', status: 'planned' }]);
@@ -483,9 +493,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                     </div>
 
                                     {(settings.items || []).map((item: any, idx: number) => (
-                                        <div key={idx} className="space-y-3 p-4 border rounded-xl bg-gray-50/50 relative group/item">
+                                        <div key={idx} className="space-y-3 p-4 border border-white/[0.06] rounded-xl bg-slate-900/40 relative group/item">
                                             <button
-                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity shadow-sm border border-red-200"
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-950/60 text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-opacity shadow-sm border border-red-900/50"
                                                 onClick={() => {
                                                     const current = [...(settings.items || [])];
                                                     current.splice(idx, 1);
@@ -497,9 +507,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
 
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Thời gian (VD: Q1 2024)</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Thời gian (VD: Q1 2024)</Label>
                                                     <Input
-                                                        className="h-8 text-xs font-bold"
+                                                        className="h-8 text-xs font-bold bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                         value={item.date || ''}
                                                         onChange={(e) => {
                                                             const current = [...(settings.items || [])];
@@ -509,9 +519,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <Label className="text-[10px] uppercase font-bold text-gray-400">Trạng thái</Label>
+                                                    <Label className="text-[10px] uppercase font-bold text-slate-400">Trạng thái</Label>
                                                     <select
-                                                        className="w-full h-8 text-[10px] border rounded bg-white px-2"
+                                                        className="w-full h-8 text-[10px] border border-white/10 rounded bg-slate-900 text-white px-2"
                                                         value={item.status || 'planned'}
                                                         onChange={(e) => {
                                                             const current = [...(settings.items || [])];
@@ -527,9 +537,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                             </div>
 
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase font-bold text-gray-400">Tiêu đề cột mốc</Label>
+                                                <Label className="text-[10px] uppercase font-bold text-slate-400">Tiêu đề cột mốc</Label>
                                                 <Input
-                                                    className="h-8 text-xs"
+                                                    className="h-8 text-xs bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                     value={item.title || ''}
                                                     onChange={(e) => {
                                                         const current = [...(settings.items || [])];
@@ -540,9 +550,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                             </div>
 
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase font-bold text-gray-400">Chi tiết nội dung</Label>
+                                                <Label className="text-[10px] uppercase font-bold text-slate-400">Chi tiết nội dung</Label>
                                                 <textarea
-                                                    className="w-full min-h-[60px] p-2 text-xs border rounded-md bg-white resize-none"
+                                                    className="w-full min-h-[60px] p-2 text-xs border border-white/10 rounded-md bg-slate-900 text-white resize-none placeholder:text-slate-500"
                                                     value={item.description || ''}
                                                     onChange={(e) => {
                                                         const current = [...(settings.items || [])];
@@ -553,9 +563,9 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                                             </div>
 
                                             <div className="space-y-1">
-                                                <Label className="text-[10px] uppercase font-bold text-gray-400">Link chi tiết (Tùy chọn)</Label>
+                                                <Label className="text-[10px] uppercase font-bold text-slate-400">Link chi tiết (Tùy chọn)</Label>
                                                 <Input
-                                                    className="h-8 text-xs font-mono"
+                                                    className="h-8 text-xs font-mono bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                                     placeholder="/vi/slug-bai-viet"
                                                     value={item.link || ''}
                                                     onChange={(e) => {
@@ -574,45 +584,48 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
                         {/* ABOUT MOSAIC ALT SPECIALIZED FIELDS (Content Mapping) */}
                         {['traditional_mosaic_alt1', 'traditional_mosaic_alt2', 'traditional_mosaic_alt3', 'traditional_mosaic_alt4', 'traditional_mosaic_alt5', 'traditional_mosaic_alt6', 'traditional_mosaic_alt7'].includes(block.type) && (
                             <div className="space-y-6">
-                                <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center gap-2 text-indigo-800 text-xs mb-4">
+                                <div className="p-3 bg-indigo-950/20 rounded-lg border border-indigo-900/30 flex items-center gap-2 text-indigo-200 text-xs mb-4">
                                     <Info className="w-4 h-4" />
                                     <span>Hệ thống tự động ánh xạ bài viết từ trang Giới thiệu. Bạn có thể ghi đè từ khóa tìm kiếm tại đây.</span>
                                 </div>
 
                                 <div className="grid gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="about_intro_key" className="text-xs font-bold">Từ khóa Lịch sử / Giới thiệu</Label>
+                                        <Label htmlFor="about_intro_key" className="text-xs font-bold text-slate-300">Từ khóa Lịch sử / Giới thiệu</Label>
                                         <Input
                                             id="about_intro_key"
                                             placeholder="Mặc định: lich-su, gioi-thieu"
                                             value={settings.about_intro_key || ''}
                                             onChange={(e) => handleChange('about_intro_key', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
-                                        <p className="text-[10px] text-gray-400">Tìm bài viết có URL hoặc tiêu đề chứa từ này.</p>
+                                        <p className="text-[10px] text-slate-500">Tìm bài viết có URL hoặc tiêu đề chứa từ này.</p>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="about_abbot_key" className="text-xs font-bold">Từ khóa Lãnh Đạo</Label>
+                                        <Label htmlFor="about_abbot_key" className="text-xs font-bold text-slate-300">Từ khóa Lãnh Đạo</Label>
                                         <Input
                                             id="about_abbot_key"
                                             placeholder="Mặc định: lanh-dao, ceo"
                                             value={settings.about_abbot_key || ''}
                                             onChange={(e) => handleChange('about_abbot_key', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="about_arch_key" className="text-xs font-bold">Từ khóa Kiến trúc</Label>
+                                        <Label htmlFor="about_arch_key" className="text-xs font-bold text-slate-300">Từ khóa Kiến trúc</Label>
                                         <Input
                                             id="about_arch_key"
                                             placeholder="Mặc định: kien-truc"
                                             value={settings.about_arch_key || ''}
                                             onChange={(e) => handleChange('about_arch_key', e.target.value)}
+                                            className="bg-slate-900 border-white/10 text-white placeholder:text-slate-500"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="p-3 bg-amber-50 rounded-lg border border-amber-100 text-[10px] text-amber-700 leading-relaxed italic">
+                                <div className="p-3 bg-amber-950/20 rounded-lg border border-amber-900/30 text-[10px] text-amber-200 leading-relaxed italic">
                                     <strong>Ghi chú:</strong> Nếu không tìm thấy bài viết khớp từ khóa, hệ thống sẽ tự động lấy bài viết đầu tiên/thứ hai trong danh sách để đảm bảo không bị trống dữ liệu.
                                 </div>
                             </div>
@@ -620,14 +633,14 @@ const BlockSettingsDialog = React.memo(function BlockSettingsDialog({
 
 
                         {!['founder_section', 'impact_dashboard', 'transparency_timeline', 'traditional_mosaic_alt1', 'traditional_mosaic_alt2', 'traditional_mosaic_alt3', 'traditional_mosaic_alt4', 'traditional_mosaic_alt5', 'traditional_mosaic_alt6', 'traditional_mosaic_alt7'].includes(block.type) && (
-                            <div className="text-center py-10 text-gray-400 italic">
+                            <div className="text-center py-10 text-slate-500 italic">
                                 Khối này chưa có tùy chỉnh nội dung đặc thù.
                             </div>
                         )}
                     </TabsContent>
                 </Tabs>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>Hủy</Button>
+                    <Button variant="outline" onClick={() => setOpen(false)} className="border-white/10 text-slate-300 hover:bg-white/5">Hủy</Button>
                     <Button onClick={handleSave} className="bg-amber-600 hover:bg-amber-700 text-white">Lưu thay đổi</Button>
                 </DialogFooter>
             </DialogContent>
@@ -879,25 +892,18 @@ export function LayoutDesignerClient({
     // Presets filtered by tenant type
     const COMPANY_PRESET_IDS = new Set(['mcaaron', 'corporate', 'stitch', 'modern', 'minimal', 'ink']);
     const TEMPLE_PRESET_IDS = new Set(['traditional', 'zen', 'lotus', 'angkor', 'sunrise', 'festival', 'theravada', 'ink']);
+    
     const filteredPresets = LAYOUT_PRESETS.filter(p =>
         isCompany ? COMPANY_PRESET_IDS.has(p.id) : TEMPLE_PRESET_IDS.has(p.id)
     );
 
-    // Phân loại các Blocks theo Group mới (Architecture Pro) — filtered by tenantType
     const groupedRegistry = Object.entries(SECTION_REGISTRY).reduce((acc, [key, val]) => {
         const group = (val as any).group || 'LEGACY';
-        
-        // Filter by tenant type scope
         if (!isBlockAllowed(key)) return acc;
-
-        // Search query filter for "Add Block" section
         const nameMatch = val.name.toLowerCase().includes(searchQuery.toLowerCase());
         const descMatch = val.description.toLowerCase().includes(searchQuery.toLowerCase());
         if (searchQuery && !nameMatch && !descMatch) return acc;
-        
-        // Filter by active group tab
         if (activeGroup !== 'ALL' && group !== activeGroup) return acc;
-
         if (!acc[group]) acc[group] = [];
         acc[group].push({ key, ...val });
         return acc;
@@ -905,7 +911,6 @@ export function LayoutDesignerClient({
 
     const groupOrder = ['HERO', 'INTRO', 'TRIPLE_GEM', 'NEWS', 'DHARMA', 'EVENTS', 'QUOTE_BANNER', 'SOCIAL', 'LEGACY'];
 
-    
     const groupLabels: Record<string, string> = {
         HERO: '🎯 Hero & Banner',
         INTRO: '🏛️ 1. Giới Thiệu',
@@ -927,9 +932,9 @@ export function LayoutDesignerClient({
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                         <div>
-                            <h2 className="text-xl font-bold text-gray-800">Visual Page Builder</h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                <span className="text-green-600 font-semibold">{visibleCount}</span> / {blocks.length} sections đang mở
+                            <h2 className="text-xl font-bold text-white">Visual Page Builder</h2>
+                            <p className="text-sm text-slate-400 mt-1">
+                                <span className="text-green-400 font-semibold">{visibleCount}</span> / {blocks.length} sections đang mở
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -938,7 +943,7 @@ export function LayoutDesignerClient({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleReset}
-                                    className="gap-2 text-gray-600"
+                                    className="gap-2 border-white/10 text-slate-300 hover:bg-white/5 bg-transparent"
                                 >
                                     <RotateCcw className="h-4 w-4" />
                                     Hoàn tác
@@ -950,8 +955,8 @@ export function LayoutDesignerClient({
                                 className={cn(
                                     'gap-2',
                                     isDirty
-                                        ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-md shadow-amber-500/30'
-                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-md shadow-amber-500/30'
+                                        : 'bg-white/5 border border-white/[0.05] text-slate-500 cursor-not-allowed'
                                 )}
                             >
                                 <Save className="h-4 w-4" />
@@ -963,23 +968,23 @@ export function LayoutDesignerClient({
                     {/* Search & View Mode Toggle */}
                     <div className="flex items-center gap-3">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input 
                                 placeholder="Tìm khối đang dùng..." 
-                                className="pl-9 bg-white border-gray-200 rounded-xl h-10 text-sm"
+                                className="pl-9 bg-slate-900 border-white/10 text-white placeholder:text-slate-500 rounded-xl h-10 text-sm focus:border-amber-500/50"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200">
+                        <div className="flex items-center bg-slate-950/40 p-1 rounded-xl border border-white/[0.08]">
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className={cn(
                                     "h-8 gap-1.5 px-3 rounded-lg text-xs font-bold transition-all", 
                                     viewMode === 'grid' 
-                                        ? "bg-white shadow-sm text-gray-900 hover:bg-white" 
-                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                                        ? "bg-white/[0.08] text-white hover:bg-white/[0.08]" 
+                                        : "text-slate-400 hover:text-white hover:bg-white/5"
                                 )}
                                 onClick={() => setViewMode('grid')}
                             >
@@ -992,8 +997,8 @@ export function LayoutDesignerClient({
                                 className={cn(
                                     "h-8 gap-1.5 px-3 rounded-lg text-xs font-bold transition-all", 
                                     viewMode === 'table' 
-                                        ? "bg-white shadow-sm text-gray-900 hover:bg-white" 
-                                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+                                        ? "bg-white/[0.08] text-white hover:bg-white/[0.08]" 
+                                        : "text-slate-400 hover:text-white hover:bg-white/5"
                                 )}
                                 onClick={() => setViewMode('table')}
                             >
@@ -1004,18 +1009,18 @@ export function LayoutDesignerClient({
                     </div>
                 </div>
 
-    {/* --- LAYOUT PRESET SWITCHER --- */}
-                <div className="bg-white p-5 rounded-2xl border border-indigo-100 shadow-sm space-y-4">
+                {/* --- LAYOUT PRESET SWITCHER --- */}
+                <div className="bg-slate-900/20 backdrop-blur-xl border border-white/[0.08] p-5 rounded-2xl space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <LayoutGrid className="w-5 h-5 text-indigo-500" />
-                            <h3 className="font-bold text-gray-800">Chọn Phong Cách Trang Chủ</h3>
+                            <LayoutGrid className="w-5 h-5 text-indigo-450 text-indigo-400" />
+                            <h3 className="font-bold text-white">Chọn Phong Cách Trang Chủ</h3>
                         </div>
-                        <Badge variant="outline" className={isCompany ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-amber-50 text-amber-700 border-amber-200"}>
+                        <Badge variant="outline" className={isCompany ? "bg-blue-950/40 text-blue-300 border-blue-500/30" : "bg-amber-950/40 text-amber-300 border-amber-500/30"}>
                             {isCompany ? '🏢 Doanh nghiệp' : '🏛️ Chi nhánh'} · {filteredPresets.length} phong cách
                         </Badge>
                     </div>
-                    <p className="text-xs text-gray-500">Chọn một phong cách để tự động thay thế toàn bộ cấu trúc hiện tại.</p>
+                    <p className="text-xs text-slate-400">Chọn một phong cách để tự động thay thế toàn bộ cấu trúc hiện tại.</p>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {filteredPresets.map(preset => {
@@ -1031,21 +1036,21 @@ export function LayoutDesignerClient({
                                     className={cn(
                                         'relative flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 text-center transition-all text-left',
                                         isConfirming
-                                            ? 'border-orange-400 bg-orange-50 ring-2 ring-orange-400/20'
+                                            ? 'border-orange-500/50 bg-orange-950/20 ring-2 ring-orange-500/20'
                                             : isActive
-                                                ? 'border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20'
-                                                : 'border-gray-100 hover:border-indigo-200 bg-gray-50/50 hover:bg-indigo-50/30'
+                                                ? 'border-indigo-500 bg-indigo-950/20 ring-2 ring-indigo-500/20'
+                                                : 'border-white/[0.06] hover:border-indigo-500/30 bg-slate-950/40 hover:bg-slate-900/60'
                                     )}
                                 >
                                     <span className="text-2xl">{preset.emoji}</span>
                                     <span className={cn(
                                         'text-[11px] font-bold leading-tight',
-                                        isConfirming ? 'text-orange-700' : isActive ? 'text-indigo-800' : 'text-gray-600'
+                                        isConfirming ? 'text-orange-300' : isActive ? 'text-indigo-300' : 'text-slate-300'
                                     )}>
                                         {preset.nameVi}
                                     </span>
                                     {isConfirming && (
-                                        <span className="text-[9px] font-bold text-orange-600 flex items-center gap-0.5">
+                                        <span className="text-[9px] font-bold text-orange-400 flex items-center gap-0.5">
                                             <AlertTriangle className="w-2.5 h-2.5" /> Bấm lại để xác nhận
                                         </span>
                                     )}
@@ -1061,13 +1066,15 @@ export function LayoutDesignerClient({
                 </div>
 
                 {/* --- THEME PALETTE SELECTOR --- */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm space-y-4">
+                <div className="bg-slate-900/20 backdrop-blur-xl border border-white/[0.08] p-5 rounded-2xl space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Palette className="w-5 h-5 text-amber-500" />
-                            <h3 className="font-bold text-gray-800">Bộ màu Doanh nghiệp Premium</h3>
+                            <Palette className="w-5 h-5 text-amber-555 text-amber-500" />
+                            <h3 className="font-bold text-white">
+                                {isCompany ? 'Bộ màu Doanh nghiệp Premium' : 'Bộ màu Phật giáo Premium'}
+                            </h3>
                         </div>
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        <Badge variant="outline" className="bg-amber-950/40 text-amber-300 border-amber-500/30">
                             12 Themes nghiên cứu
                         </Badge>
                     </div>
@@ -1082,20 +1089,20 @@ export function LayoutDesignerClient({
                                     className={cn(
                                         "group relative flex flex-col items-center gap-2 p-2 rounded-xl border-2 transition-all",
                                         isSelected
-                                            ? "border-amber-500 bg-amber-50/50 shadow-md ring-2 ring-amber-500/20"
-                                            : "border-gray-100 hover:border-amber-200 bg-gray-50/50"
+                                            ? "border-amber-500 bg-amber-950/20 shadow-md ring-2 ring-amber-500/20"
+                                            : "border-white/[0.06] hover:border-amber-500/30 bg-slate-950/40"
                                     )}
                                     title={theme.description}
                                 >
                                     {/* Palette Preview */}
                                     <div className="flex -space-x-2 overflow-hidden py-1">
-                                        <div className="w-6 h-6 rounded-full border-2 border-white ring-1 ring-gray-100 shadow-sm" style={{ backgroundColor: theme.colors.primary }} />
-                                        <div className="w-6 h-6 rounded-full border-2 border-white ring-1 ring-gray-100 shadow-sm" style={{ backgroundColor: theme.colors.secondary }} />
-                                        <div className="w-6 h-6 rounded-full border-2 border-white ring-1 ring-gray-100 shadow-sm" style={{ backgroundColor: theme.colors.background }} />
+                                        <div className="w-6 h-6 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: theme.colors.primary }} />
+                                        <div className="w-6 h-6 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: theme.colors.secondary }} />
+                                        <div className="w-6 h-6 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: theme.colors.background }} />
                                     </div>
                                     <span className={cn(
                                         "text-[10px] font-bold truncate w-full text-center",
-                                        isSelected ? "text-amber-800" : "text-gray-500"
+                                        isSelected ? "text-amber-300" : "text-slate-400"
                                     )}>
                                         {theme.name.split(' (')[0]}
                                     </span>
@@ -1112,10 +1119,10 @@ export function LayoutDesignerClient({
 
                     {/* --- CUSTOM COLOR PICKER (Super Admin Only) --- */}
                     {isSuperAdmin && (
-                        <div className="mt-6 pt-6 border-t border-amber-100">
+                        <div className="mt-6 pt-6 border-t border-white/[0.08]">
                             <div className="flex items-center gap-2 mb-4">
-                                <Settings2 className="w-4 h-4 text-amber-600" />
-                                <h4 className="text-sm font-bold text-gray-700">Tùy chỉnh màu sắc chi tiết</h4>
+                                <Settings2 className="w-4 h-4 text-amber-500" />
+                                <h4 className="text-sm font-bold text-slate-200">Tùy chỉnh màu sắc chi tiết</h4>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -1169,7 +1176,7 @@ export function LayoutDesignerClient({
                                 />
                             </div>
                             
-                            <p className="text-[10px] text-gray-400 mt-4 italic">
+                            <p className="text-[10px] text-slate-500 mt-4 italic">
                                 * Lưu ý: Các thay đổi màu sắc sẽ được xem trước tức thì ở bảng bên phải. Bấm "Lưu Giao Diện" để áp dụng thực tế.
                             </p>
                         </div>
@@ -1178,16 +1185,16 @@ export function LayoutDesignerClient({
 
                 {/* Drag & Drop list */}
                 <div className={cn(
-                    "p-4 bg-gray-50 rounded-2xl border border-gray-100 min-h-[400px]",
+                    "p-4 bg-slate-955/20 bg-slate-950/20 backdrop-blur-xl rounded-2xl border border-white/[0.08] min-h-[400px]",
                     viewMode === 'table' ? "space-y-0 p-0 overflow-hidden" : "space-y-3"
                 )}>
                     {blocks.length === 0 && (
-                        <div className="text-center py-12 text-gray-400">Chưa có linh kiện nào. Hãy thêm ở bên dưới!</div>
+                        <div className="text-center py-12 text-slate-500">Chưa có linh kiện nào. Hãy thêm ở bên dưới!</div>
                     )}
 
                     {viewMode === 'table' && blocks.length > 0 && (
                         <div className="w-full">
-                            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-100/80 border-b text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-slate-900 border-b border-white/[0.08] text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                 <div className="col-span-1">STT</div>
                                 <div className="col-span-5">Tên Khối / Chức năng</div>
                                 <div className="col-span-3">Loại</div>
@@ -1226,27 +1233,27 @@ export function LayoutDesignerClient({
                                     onDrop={e => handleDrop(e, index)}
                                     onDragEnd={handleDragEnd}
                                     className={cn(
-                                        'grid grid-cols-12 gap-4 items-center px-6 py-3 border-b bg-white transition-all select-none group border-l-4',
-                                        block.visible ? 'border-l-amber-500' : 'border-l-gray-300 opacity-50 grayscale bg-gray-50/30'
+                                        'grid grid-cols-12 gap-4 items-center px-6 py-3 border-b border-white/[0.05] bg-slate-950/30 hover:bg-white/5 transition-all select-none group border-l-4',
+                                        block.visible ? 'border-l-amber-500 text-slate-200' : 'border-l-slate-700 opacity-50 grayscale bg-slate-900/10 text-slate-400'
                                     )}
                                 >
                                     <div className="col-span-1 flex items-center gap-2">
-                                        <GripVertical className="h-4 w-4 text-gray-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <span className="text-xs font-mono text-gray-400">{index + 1}</span>
+                                        <GripVertical className="h-4 w-4 text-slate-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <span className="text-xs font-mono text-slate-500">{index + 1}</span>
                                     </div>
                                     <div className="col-span-5 flex items-center gap-3">
                                         <span className="text-lg">{icon}</span>
                                         <div className="truncate">
-                                            <p className={cn("text-xs font-bold truncate", block.visible ? "text-gray-800" : "text-gray-400")}>
+                                            <p className={cn("text-xs font-bold truncate", block.visible ? "text-slate-200" : "text-slate-500")}>
                                                 {customTitle || registryEntry.name}
                                             </p>
-                                            {customTitle && <p className="text-[10px] text-gray-400 italic">({registryEntry.name})</p>}
+                                            {customTitle && <p className="text-[10px] text-slate-500 italic">({registryEntry.name})</p>}
                                         </div>
                                     </div>
                                     <div className="col-span-3">
                                         <Badge variant="outline" className={cn(
                                             "text-[9px] uppercase font-bold px-1.5 h-5",
-                                            group === 'LEGACY' ? "bg-gray-100 text-gray-400 border-gray-200" : "bg-blue-50 text-blue-600 border-blue-100"
+                                            group === 'LEGACY' ? "bg-slate-950 text-slate-500 border-white/10" : "bg-blue-950/40 text-blue-300 border-blue-500/30"
                                         )}>
                                             {group}
                                         </Badge>
@@ -1260,13 +1267,13 @@ export function LayoutDesignerClient({
                                         />
                                         <button 
                                             onClick={() => toggleVisible(customId)} 
-                                            className={cn("p-1.5 rounded-md transition-colors", block.visible ? "text-amber-600 hover:bg-amber-50" : "text-gray-400 hover:bg-gray-100")}
+                                            className={cn("p-1.5 rounded-md transition-colors", block.visible ? "text-amber-500 hover:bg-white/5" : "text-slate-500 hover:bg-white/5")}
                                         >
                                             {block.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                         </button>
                                         <button
                                             onClick={() => handleRemoveBlock(customId)}
-                                            className="p-1.5 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                            className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-950/30 rounded-md transition-colors"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -1285,56 +1292,49 @@ export function LayoutDesignerClient({
                                 onDrop={e => handleDrop(e, index)}
                                 onDragEnd={handleDragEnd}
                                 className={cn(
-                                    'flex items-center gap-3 p-4 rounded-xl border-2 bg-white transition-all select-none group relative overflow-hidden',
+                                    'flex items-center gap-3 p-4 rounded-xl border-2 bg-slate-900/40 border-white/[0.08] hover:border-amber-500/30 transition-all select-none group relative overflow-hidden',
                                     block.visible
-                                        ? 'border-gray-200 hover:border-amber-300 shadow-sm'
-                                        : 'border-dashed border-gray-200 bg-gray-50 opacity-60 grayscale'
+                                        ? 'text-slate-200'
+                                        : 'border-dashed border-white/10 bg-slate-950/20 opacity-60 grayscale text-slate-400'
                                 )}
                             >
-                                {/* Legacy dimming overlay */}
-                                {group === 'LEGACY' && (
-                                    <div className="absolute top-0 right-0 p-1 bg-gray-100 text-gray-400 rounded-bl-lg">
-                                        <Info className="w-3 h-3" />
-                                    </div>
-                                )}
-
                                 {/* Grab Handle */}
-                                <div className="text-gray-300 hover:text-gray-600 shrink-0 cursor-grab active:cursor-grabbing px-1">
+                                <div className="text-slate-500 hover:text-slate-350 shrink-0 cursor-grab active:cursor-grabbing px-1">
                                     <GripVertical className="h-5 w-5" />
                                 </div>
 
                                 {/* Index badge */}
                                 <div className={cn(
                                     'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
-                                    block.visible ? 'bg-amber-100 text-amber-800' : 'bg-gray-200 text-gray-500'
+                                    block.visible ? 'bg-amber-950/40 border border-amber-500/20 text-amber-300' : 'bg-slate-900/50 text-slate-500'
                                 )}>
                                     {index + 1}
                                 </div>
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0 flex items-center gap-4">
-                                    <div className="p-2 bg-gray-50 rounded-lg text-lg border border-gray-100 shrink-0 hidden sm:block">
+                                    <div className="p-2 bg-slate-950/50 rounded-lg text-lg border border-white/10 shrink-0 hidden sm:block">
                                         {icon}
                                     </div>
                                     <div className="w-full">
                                         <div className="flex items-center gap-2">
                                             <p className={cn(
                                                 'font-bold text-[14px] sm:text-[15px] truncate',
-                                                block.visible ? 'text-gray-800' : 'text-gray-400 line-through'
+                                                block.visible ? 'text-slate-200' : 'text-slate-400 line-through'
                                             )}>
-                                                {customTitle ? <span className="text-amber-700">{customTitle}</span> : registryEntry.name}
+                                                {customTitle ? <span className="text-amber-400">{customTitle}</span> : registryEntry.name}
                                             </p>
                                             {/* Badge to show if there are customized settings */}
                                             {Object.keys(block.settings || {}).filter(k => block.settings?.[k]).length > 0 && (
-                                                <Badge variant="outline" className="text-[10px] h-5 bg-amber-50 text-amber-600 border-amber-200">
+                                                <Badge variant="outline" className="text-[10px] h-5 bg-amber-950/40 text-amber-300 border-amber-500/30">
                                                     Đã tùy chỉnh
                                                 </Badge>
                                             )}
                                             {group === 'LEGACY' && (
-                                                <Badge variant="secondary" className="text-[9px] h-4 bg-gray-100 text-gray-400">LEGACY</Badge>
+                                                <Badge variant="secondary" className="text-[9px] h-4 bg-slate-950 text-slate-500 border-white/10">LEGACY</Badge>
                                             )}
                                         </div>
-                                        <p className="text-xs text-gray-400 truncate mt-0.5 hidden sm:block">
+                                        <p className="text-xs text-slate-400 truncate mt-0.5 hidden sm:block">
                                             {customTitle ? `(${registryEntry.name}) - ${registryEntry.description}` : registryEntry.description}
                                         </p>
                                     </div>
@@ -1356,7 +1356,7 @@ export function LayoutDesignerClient({
                                     />
                                     <button
                                         onClick={() => handleRemoveBlock(customId)}
-                                        className="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                        className="p-2 text-red-400 hover:text-red-500 hover:bg-red-950/30 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                                         title="Xóa Component này"
                                     >
                                         <Trash2 className="w-5 h-5" />
@@ -1368,22 +1368,22 @@ export function LayoutDesignerClient({
                 </div>
 
                 {/* --- CATEGORIZED BLOCK SELECTOR (Tabs Mode) --- */}
-                <div className="mt-8 pt-6 border-t border-gray-100 space-y-4">
+                <div className="mt-8 pt-6 border-t border-white/[0.08] space-y-4">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <Plus className="w-5 h-5 text-blue-500" />
+                        <h3 className="font-bold text-white flex items-center gap-2">
+                            <Plus className="w-5 h-5 text-blue-400" />
                             Thêm linh kiện mới
                         </h3>
                     </div>
 
                     <Tabs value={activeGroup} onValueChange={setActiveGroup} className="w-full">
-                        <TabsList className="w-full h-auto flex flex-wrap bg-gray-100 p-1 gap-1 rounded-xl">
-                            <TabsTrigger value="ALL" className="flex-1 min-w-[60px] text-[10px] font-bold py-1.5 rounded-lg">TẤT CẢ</TabsTrigger>
+                        <TabsList className="w-full h-auto flex flex-wrap bg-slate-955/40 bg-slate-950/40 border border-white/[0.08] p-1 gap-1 rounded-xl">
+                            <TabsTrigger value="ALL" className="flex-1 min-w-[60px] text-[10px] font-bold py-1.5 rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">TẤT CẢ</TabsTrigger>
                             {groupOrder.map(group => (
                                 <TabsTrigger 
                                     key={group} 
                                     value={group} 
-                                    className="flex-1 min-w-[100px] text-[10px] font-bold py-1.5 rounded-lg whitespace-nowrap"
+                                    className="flex-1 min-w-[100px] text-[10px] font-bold py-1.5 rounded-lg whitespace-nowrap data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400"
                                 >
                                     {groupLabels[group] || group}
                                 </TabsTrigger>
@@ -1398,8 +1398,8 @@ export function LayoutDesignerClient({
                                             key={item.key}
                                             variant="outline"
                                             className={cn(
-                                                "justify-start h-auto py-3 px-4 border-gray-200 hover:border-blue-500 hover:bg-blue-50 group/btn transition-all text-left",
-                                                selectedType === item.key ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500/20 shadow-sm" : ""
+                                                "justify-start h-auto py-3 px-4 border-white/[0.06] hover:border-blue-500/50 hover:bg-blue-955/20 hover:bg-blue-950/20 bg-slate-900/30 group/btn transition-all text-left text-slate-350 text-slate-300 hover:text-white",
+                                                selectedType === item.key ? "border-blue-500 bg-blue-950/30 ring-1 ring-blue-500/20 shadow-sm text-blue-400" : ""
                                             )}
                                             onClick={() => {
                                                 setSelectedType(item.key);
@@ -1408,10 +1408,10 @@ export function LayoutDesignerClient({
                                             <div className="flex items-center gap-3 w-full">
                                                 <span className="text-xl shrink-0 opacity-80 group-hover/btn:scale-110 transition-transform">{item.icon || '🧩'}</span>
                                                 <div className="flex flex-col min-w-0 flex-1">
-                                                    <span className="font-bold text-xs mb-0.5 group-hover/btn:text-blue-700 truncate">{item.name}</span>
-                                                    <span className="text-[10px] text-gray-500 font-normal leading-tight line-clamp-1">{item.description}</span>
+                                                    <span className="font-bold text-xs mb-0.5 group-hover/btn:text-blue-400 truncate">{item.name}</span>
+                                                    <span className="text-[10px] text-slate-500 font-normal leading-tight line-clamp-1">{item.description}</span>
                                                 </div>
-                                                {selectedType === item.key && <Check className="w-4 h-4 text-blue-500 shrink-0" />}
+                                                {selectedType === item.key && <Check className="w-4 h-4 text-blue-450 text-blue-450 text-blue-400 shrink-0" />}
                                             </div>
                                         </Button>
                                     ))
@@ -1430,7 +1430,7 @@ export function LayoutDesignerClient({
                     </Button>
                 </div>
 
-                <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-200 text-sm text-blue-800 shadow-inner">
+                <div className="p-4 bg-blue-950/20 rounded-xl border border-blue-900/30 text-sm text-blue-200 shadow-inner">
                     <strong>💡 Lưu ý:</strong> Vui lòng bấm "Lưu Giao Diện" để thay đổi có hiệu lực. Bảng xem trước bên phải sẽ tự cập nhật sau khi Lưu thành công.
                 </div>
             </div>
@@ -1439,29 +1439,29 @@ export function LayoutDesignerClient({
             <div className="relative sticky top-6 lg:h-[calc(100vh-120px)] flex flex-col">
                 <div className="flex items-center justify-between mb-4 shrink-0">
                     <div>
-                        <h3 className="font-bold flex items-center gap-2 text-gray-800">
-                            <Monitor className="w-5 h-5 text-indigo-500" />
+                        <h3 className="font-bold flex items-center gap-2 text-white">
+                            <Monitor className="w-5 h-5 text-indigo-400" />
                             XEM TRƯỚC TRỰC TIẾP
                         </h3>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-slate-400 mt-1">
                             {isDirty ? (
-                                <span className="text-orange-500 flex items-center gap-1">
+                                <span className="text-orange-400 flex items-center gap-1 font-bold">
                                     <AlertTriangle className="w-3 h-3" /> Chế độ xem thử (Chưa lưu)
                                 </span>
                             ) : (
-                                <span className="text-green-600">Đã đồng bộ with thực tế</span>
+                                <span className="text-green-400">Đã đồng bộ với thực tế</span>
                             )}
                         </p>
                     </div>
 
                     {/* Device Toggle */}
                     <Tabs value={previewMode} onValueChange={(v) => setPreviewMode(v as 'mobile' | 'desktop')} className="w-auto">
-                        <TabsList className="grid w-full grid-cols-2 h-9 p-1 bg-gray-100 rounded-lg">
-                            <TabsTrigger value="mobile" className="gap-2 text-[10px] font-bold">
+                        <TabsList className="grid w-full grid-cols-2 h-9 p-1 bg-slate-950/40 border border-white/[0.08] rounded-lg">
+                            <TabsTrigger value="mobile" className="gap-2 text-[10px] font-bold text-slate-400 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white">
                                 <Smartphone className="w-3.5 h-3.5" />
                                 Mobile
                             </TabsTrigger>
-                            <TabsTrigger value="desktop" className="gap-2 text-[10px] font-bold">
+                            <TabsTrigger value="desktop" className="gap-2 text-[10px] font-bold text-slate-400 data-[state=active]:bg-white/[0.08] data-[state=active]:text-white">
                                 <Monitor className="w-3.5 h-3.5" />
                                 Desktop
                             </TabsTrigger>
@@ -1470,28 +1470,28 @@ export function LayoutDesignerClient({
                 </div>
 
                 {/* Iframe Container */}
-                <div className="flex-1 w-full bg-gray-50 rounded-2xl flex justify-center border-2 border-gray-200 border-dashed overflow-hidden relative group">
+                <div className="flex-1 w-full bg-slate-955/20 bg-slate-950/20 rounded-2xl flex justify-center border-2 border-white/[0.08] border-dashed overflow-hidden relative group">
                     <div
                         className={cn(
-                            "relative bg-white overflow-hidden shadow-2xl transition-all duration-500 ease-in-out border border-gray-200",
+                            "relative bg-white overflow-hidden shadow-2xl transition-all duration-500 ease-in-out border border-white/[0.08]",
                             previewMode === 'mobile'
-                                ? "w-[375px] h-[90%] my-auto rounded-[2.5rem] border-[10px] border-gray-900 shadow-xl"
+                                ? "w-[375px] h-[90%] my-auto rounded-[2.5rem] border-[10px] border-slate-900 shadow-xl"
                                 : "w-full h-full rounded-xl"
                         )}
                     >
                         {/* Mobile Notch UI (Only on Mobile Mode) */}
                         {previewMode === 'mobile' && (
                             <div className="absolute top-0 inset-x-0 h-6 z-50 flex justify-center pointer-events-none">
-                                <div className="w-32 h-6 bg-gray-900 rounded-b-2xl"></div>
+                                <div className="w-32 h-6 bg-slate-900 rounded-b-2xl"></div>
                             </div>
                         )}
 
                         {/* Loading Overlay when saving */}
                         {isSaving && (
-                            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px] z-50 flex items-center justify-center">
                                 <div className="flex flex-col items-center gap-3">
                                     <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                    <p className="text-sm font-bold text-amber-700">Đang lưu thay đổi...</p>
+                                    <p className="text-sm font-bold text-amber-400 animate-pulse">Đang lưu thay đổi...</p>
                                 </div>
                             </div>
                         )}

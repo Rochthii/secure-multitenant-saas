@@ -24,9 +24,10 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RevisionHistory } from '@/components/admin/revision-history';
 import { useAutoSave } from '@/hooks/use-auto-save';
-import { Save, RotateCcw, Clock } from 'lucide-react';
+import { Save, RotateCcw, Clock, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface HeroSlideFormProps {
     tenantId: string;
@@ -92,7 +93,7 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
         setLoading(false);
 
         if (result.success) {
-            toast.success(initialData ? 'Cập nhật thành công' : 'Tạo mới thành công');
+            toast.success(initialData ? '✅ Cập nhật thành công' : '✅ Tạo mới thành công');
             clearDraft();
             router.refresh();
             if (onSuccess) onSuccess();
@@ -106,23 +107,24 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 
                 {/* Header Actions & Revision History */}
-                <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm pb-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="sticky top-0 z-10 bg-slate-950/80 backdrop-blur-xl pb-4 border-b border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Button
                             type="button"
                             variant="ghost"
                             onClick={() => router.back()}
-                            className="text-gray-500 hover:text-gray-900 -ml-2"
+                            className="text-slate-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors -ml-2"
                         >
-                             Quay lại
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Quay lại
                         </Button>
                         <div>
-                            <h2 className="text-xl font-bold text-gray-800">
+                            <h2 className="text-xl font-bold text-white">
                                 {initialData ? 'Chỉnh sửa Trình chiếu' : 'Thêm Trình chiếu mới'}
                             </h2>
                             {lastSaved && (
-                                <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                    <Clock className="w-3 h-3" />
+                                <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-mono">
+                                    <Clock className="w-3 h-3 text-amber-500" />
                                     Bản nháp lưu lúc {format(lastSaved, 'HH:mm:ss', { locale: vi })}
                                 </p>
                             )}
@@ -136,7 +138,7 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                 variant="outline"
                                 size="sm"
                                 onClick={restoreDraft}
-                                className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                                className="text-amber-400 border-amber-500/35 hover:bg-amber-950/20 bg-transparent rounded-xl"
                             >
                                 <RotateCcw className="w-4 h-4 mr-2" />
                                 Khôi phục nháp
@@ -154,7 +156,7 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gold-primary hover:bg-gold-dark min-w-[120px]"
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-955 text-slate-950 font-bold shadow-md shadow-amber-500/20 rounded-xl min-w-[120px]"
                         >
                             {loading ? (
                                 'Đang lưu...'
@@ -169,7 +171,10 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-6">
+                    {/* LEFT COLUMN: Media & Basic settings */}
+                    <div className="bg-slate-900/20 backdrop-blur-xl border border-white/[0.08] p-6 rounded-2xl shadow-2xl space-y-6">
+                        <h3 className="font-bold text-sm text-slate-300 uppercase tracking-wider">Cấu hình Cơ bản</h3>
+                        
                         <FormField
                             control={form.control}
                             name="image_url"
@@ -177,12 +182,12 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                 <FormItem>
                                     <FormControl>
                                         <ImageUpload
-                                            label="Hình ảnh (1920x1080px)"
+                                            label="Hình ảnh (Khuyên dùng 1920x1080px)"
                                             value={field.value}
                                             onChange={field.onChange}
                                         />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-red-400 text-xs" />
                                 </FormItem>
                             )}
                         />
@@ -191,11 +196,11 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                             control={form.control}
                             name="is_active"
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-slate-950/40 p-4 transition-all hover:bg-slate-950/60">
                                     <div className="space-y-0.5">
-                                        <FormLabel className="text-base">Hoạt động</FormLabel>
-                                        <FormDescription>
-                                            Hiển thị slide này trên trang chủ
+                                        <FormLabel className="text-sm font-bold text-slate-200">Kích hoạt Slide</FormLabel>
+                                        <FormDescription className="text-xs text-slate-400">
+                                            Hiển thị slide này trên banner trang chủ
                                         </FormDescription>
                                     </div>
                                     <FormControl>
@@ -212,36 +217,44 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                             control={form.control}
                             name="order_position"
                             render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Thứ tự hiển thị</FormLabel>
+                                <FormItem className="space-y-2">
+                                    <FormLabel className="text-xs font-bold text-slate-350 text-slate-350 text-slate-300 uppercase tracking-wider">Thứ tự hiển thị</FormLabel>
                                     <FormControl>
-                                        <Input type="number" {...field} onChange={e => field.onChange(Number(e.target.value))} />
+                                        <Input 
+                                            type="number" 
+                                            {...field} 
+                                            onChange={e => field.onChange(Number(e.target.value))} 
+                                            className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl"
+                                        />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-red-400 text-xs" />
                                 </FormItem>
                             )}
                         />
                     </div>
 
-                    <div className="space-y-6">
+                    {/* RIGHT COLUMN: Multi-language Texts & CTA Buttons */}
+                    <div className="bg-slate-900/20 backdrop-blur-xl border border-white/[0.08] p-6 rounded-2xl shadow-2xl space-y-6">
+                        <h3 className="font-bold text-sm text-slate-300 uppercase tracking-wider">Nội dung hiển thị & Kêu gọi (CTA)</h3>
+
                         <Tabs defaultValue="vi" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="vi">Tiếng Việt</TabsTrigger>
-                                <TabsTrigger value="km">Khmer</TabsTrigger>
-                                <TabsTrigger value="en">English (Tùy chọn)</TabsTrigger>
+                            <TabsList className="grid w-full grid-cols-3 bg-slate-955/40 bg-slate-950/40 border border-white/[0.08] p-1 gap-1 rounded-xl h-auto">
+                                <TabsTrigger value="vi" className="text-[10px] font-bold py-1.5 rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">Tiếng Việt</TabsTrigger>
+                                <TabsTrigger value="km" className="text-[10px] font-bold py-1.5 rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">Khmer</TabsTrigger>
+                                <TabsTrigger value="en" className="text-[10px] font-bold py-1.5 rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-slate-400">English (Tùy chọn)</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="vi" className="space-y-4">
+                            <TabsContent value="vi" className="space-y-4 pt-4">
                                 <FormField
                                     control={form.control}
                                     name="title_vi"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Tiêu đề (VI)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Tiêu đề (VI)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} />
+                                                <Input {...field} value={field.value || ''} className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
@@ -249,28 +262,28 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                     control={form.control}
                                     name="subtitle_vi"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Mô tả (VI)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Mô tả phụ (VI)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} />
+                                                <Input {...field} value={field.value || ''} className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
                             </TabsContent>
 
-                            <TabsContent value="km" className="space-y-4">
+                            <TabsContent value="km" className="space-y-4 pt-4">
                                 <FormField
                                     control={form.control}
                                     name="title_km"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Tiêu đề (KM)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Tiêu đề (KM)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} placeholder="បញ្ចូលចំណងជើងជាភាសាខ្មែរ..." />
+                                                <Input {...field} value={field.value || ''} placeholder="បញ្ចូលចំណងជើងជាភាសាខ្មែរ..." className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
@@ -278,28 +291,28 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                     control={form.control}
                                     name="subtitle_km"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Mô tả (KM)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Mô tả phụ (KM)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} placeholder="បញ្ចូលការពិពណ៌នាជាភាសាខ្មែរ..." />
+                                                <Input {...field} value={field.value || ''} placeholder="បញ្ចូលការពិពណ៌នាជាភាសាខ្មែរ..." className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
                             </TabsContent>
 
-                            <TabsContent value="en" className="space-y-4">
+                            <TabsContent value="en" className="space-y-4 pt-4">
                                 <FormField
                                     control={form.control}
                                     name="title_en"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Tiêu đề (EN)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Tiêu đề (EN)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} />
+                                                <Input {...field} value={field.value || ''} placeholder="Slide headline in English..." className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
@@ -307,28 +320,28 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                     control={form.control}
                                     name="subtitle_en"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Mô tả (EN)</FormLabel>
+                                        <FormItem className="space-y-2">
+                                            <FormLabel className="text-xs text-slate-300">Mô tả phụ (EN)</FormLabel>
                                             <FormControl>
-                                                <Input {...field} value={field.value || ''} />
+                                                <Input {...field} value={field.value || ''} placeholder="Slide sub-headline in English..." className="bg-slate-950/50 border-white/10 text-white placeholder:text-slate-500 focus:border-amber-500/50 rounded-xl" />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs" />
                                         </FormItem>
                                     )}
                                 />
                             </TabsContent>
                         </Tabs>
 
-                        <div className="space-y-6 pt-4 border-t border-gray-100">
+                        <div className="space-y-6 pt-6 border-t border-white/[0.08]">
                             {/* CTA 1 Group */}
                             <div className="space-y-4">
                                 <FormField
                                     control={form.control}
                                     name="cta1_enabled"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 bg-gray-50/50">
+                                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-slate-950/40 p-3 transition-all hover:bg-slate-950/60">
                                             <div className="space-y-0.5">
-                                                <FormLabel className="text-sm font-medium">Bật Nút kêu gọi 1 (CTA 1)</FormLabel>
+                                                <FormLabel className="text-xs font-bold text-slate-200">Kích hoạt nút CTA 1</FormLabel>
                                             </div>
                                             <FormControl>
                                                 <Switch
@@ -341,17 +354,17 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                 />
                                 
                                 {formValues.cta1_enabled && (
-                                    <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-gold-primary/30 animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-amber-500/30 animate-in fade-in slide-in-from-left-2 duration-300">
                                         <FormField
                                             control={form.control}
                                             name="cta1_text_key"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs">CTA 1 Text Key</FormLabel>
+                                                <FormItem className="space-y-1">
+                                                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400">Từ khóa nhãn (Text Key)</FormLabel>
                                                     <FormControl>
-                                                        <Input {...field} value={field.value || ''} placeholder="e.g. learnMore" className="h-9 px-3" />
+                                                        <Input {...field} value={field.value || ''} placeholder="Ví dụ: learnMore" className="h-9 px-3 bg-slate-950/50 border-white/10 text-white focus:border-amber-500/50 rounded-xl" />
                                                     </FormControl>
-                                                    <FormMessage />
+                                                    <FormMessage className="text-red-400 text-xs" />
                                                 </FormItem>
                                             )}
                                         />
@@ -359,12 +372,12 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                             control={form.control}
                                             name="cta1_link"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs">CTA 1 Link</FormLabel>
+                                                <FormItem className="space-y-1">
+                                                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400">Đường dẫn liên kết (Link)</FormLabel>
                                                     <FormControl>
-                                                        <Input {...field} value={field.value || ''} placeholder="/gioi-thieu" className="h-9 px-3" />
+                                                        <Input {...field} value={field.value || ''} placeholder="/gioi-thieu" className="h-9 px-3 bg-slate-950/50 border-white/10 text-white focus:border-amber-500/50 rounded-xl" />
                                                     </FormControl>
-                                                    <FormMessage />
+                                                    <FormMessage className="text-red-400 text-xs" />
                                                 </FormItem>
                                             )}
                                         />
@@ -378,9 +391,9 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                     control={form.control}
                                     name="cta2_enabled"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 bg-gray-50/50">
+                                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-slate-950/40 p-3 transition-all hover:bg-slate-950/60">
                                             <div className="space-y-0.5">
-                                                <FormLabel className="text-sm font-medium">Bật Nút kêu gọi 2 (CTA 2)</FormLabel>
+                                                <FormLabel className="text-xs font-bold text-slate-200">Kích hoạt nút CTA 2</FormLabel>
                                             </div>
                                             <FormControl>
                                                 <Switch
@@ -393,17 +406,17 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                 />
 
                                 {formValues.cta2_enabled && (
-                                    <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-gold-primary/30 animate-in fade-in slide-in-from-left-2 duration-300">
+                                    <div className="grid grid-cols-2 gap-4 pl-4 border-l-2 border-amber-500/30 animate-in fade-in slide-in-from-left-2 duration-300">
                                         <FormField
                                             control={form.control}
                                             name="cta2_text_key"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs">CTA 2 Text Key</FormLabel>
+                                                <FormItem className="space-y-1">
+                                                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400">Từ khóa nhãn (Text Key)</FormLabel>
                                                     <FormControl>
-                                                        <Input {...field} value={field.value || ''} placeholder="e.g. contactUs" className="h-9 px-3" />
+                                                        <Input {...field} value={field.value || ''} placeholder="Ví dụ: contactUs" className="h-9 px-3 bg-slate-950/50 border-white/10 text-white focus:border-amber-500/50 rounded-xl" />
                                                     </FormControl>
-                                                    <FormMessage />
+                                                    <FormMessage className="text-red-400 text-xs" />
                                                 </FormItem>
                                             )}
                                         />
@@ -411,12 +424,12 @@ export function HeroSlideForm({ tenantId, initialData, onSuccess, currentUserRol
                                             control={form.control}
                                             name="cta2_link"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs">CTA 2 Link</FormLabel>
+                                                <FormItem className="space-y-1">
+                                                    <FormLabel className="text-[10px] uppercase font-bold text-slate-400">Đường dẫn liên kết (Link)</FormLabel>
                                                     <FormControl>
-                                                        <Input {...field} value={field.value || ''} placeholder="/lien-he" className="h-9 px-3" />
+                                                        <Input {...field} value={field.value || ''} placeholder="/lien-he" className="h-9 px-3 bg-slate-950/50 border-white/10 text-white focus:border-amber-500/50 rounded-xl" />
                                                     </FormControl>
-                                                    <FormMessage />
+                                                    <FormMessage className="text-red-400 text-xs" />
                                                 </FormItem>
                                             )}
                                         />

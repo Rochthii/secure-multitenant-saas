@@ -9,6 +9,7 @@ import {
     Home, Info, Newspaper, BookOpen, FileText, Heart, Phone, Save, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
 
 interface NavItem {
     key: string;
@@ -115,40 +116,40 @@ export function NavVisibilitySettings({ tenantId, initialNavVisibility = {} }: N
 
     return (
         <div className="space-y-4">
-            <div className="text-sm text-gray-500 bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-2">
-                <span className="text-amber-600 font-medium">💡</span>
+            <div className="text-sm text-slate-300 bg-amber-950/20 border border-amber-500/20 rounded-2xl p-4 flex gap-3">
+                <span className="text-amber-400 font-bold">💡</span>
                 <span>
                     Cấu hình này kiểm soát các mục <strong>hiển thị trên thanh menu chính</strong> (Header) của trang web doanh nghiệp.
                     Tắt một mục sẽ ẩn nó hoàn toàn khỏi điều hướng, không ảnh hưởng đến nội dung trang chủ.
                 </span>
             </div>
 
-            <div className="divide-y divide-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+            <div className="divide-y divide-white/[0.05] rounded-2xl border border-white/[0.08] overflow-hidden bg-slate-900/40 backdrop-blur-xl">
                 {NAV_ITEMS.map((item) => {
                     const isOn = visibility[item.key] !== false;
                     return (
                         <div
                             key={item.key}
-                            className={`flex items-center justify-between px-5 py-4 transition-colors ${isOn ? 'bg-white' : 'bg-gray-50'}`}
+                            className={`flex items-center justify-between px-5 py-4 transition-colors ${isOn ? 'hover:bg-white/[0.02]' : 'bg-slate-950/10 text-slate-500'}`}
                         >
                              <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg ${isOn ? 'bg-amber-50 text-amber-600' : 'bg-gray-100 text-gray-400'}`}>
+                                <div className={`p-2 rounded-lg ${isOn ? 'bg-amber-500/10 text-amber-400' : 'bg-white/5 text-slate-500'}`}>
                                     {item.icon}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <p className={`font-semibold text-sm ${isOn ? 'text-gray-900' : 'text-gray-400'}`}>
+                                        <p className={`font-bold text-sm ${isOn ? 'text-white' : 'text-slate-500 line-through'}`}>
                                             {item.label}
                                         </p>
                                         {item.alwaysOn && (
-                                            <span className="text-[10px] font-normal text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+                                            <Badge className="text-[10px] font-bold text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
                                                 Bắt buộc
-                                            </span>
+                                            </Badge>
                                         )}
-                                        {item.manageHref && (
+                                        {item.manageHref && isOn && (
                                             <Link 
                                                 href={item.manageHref(tenantId)}
-                                                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 bg-primary/5 hover:bg-primary/10 px-2 py-0.5 rounded-full transition-colors ml-1"
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 px-2.5 py-0.5 rounded-full transition-colors ml-1"
                                                 target="_blank"
                                             >
                                                 <span>{item.manageLabel}</span>
@@ -156,11 +157,11 @@ export function NavVisibilitySettings({ tenantId, initialNavVisibility = {} }: N
                                             </Link>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400">{item.description}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{item.description}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className={`text-xs font-medium ${isOn ? 'text-green-600' : 'text-gray-400'}`}>
+                                <span className={`text-xs font-bold ${isOn ? 'text-emerald-400' : 'text-slate-500'}`}>
                                     {item.alwaysOn ? 'Luôn bật' : isOn ? 'Hiển thị' : 'Đã ẩn'}
                                 </span>
                                 <Switch
@@ -178,7 +179,7 @@ export function NavVisibilitySettings({ tenantId, initialNavVisibility = {} }: N
                 <Button
                     onClick={handleSave}
                     disabled={saving || !isDirty}
-                    className={`gap-2 ${isDirty ? 'bg-gold-primary hover:bg-gold-dark' : ''}`}
+                    className={`gap-2 rounded-xl px-5 font-bold shadow-lg transition-all ${isDirty ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20' : 'bg-white/5 border border-white/10 text-slate-500'}`}
                 >
                     {saving ? (
                         <span className="animate-spin">⏳</span>

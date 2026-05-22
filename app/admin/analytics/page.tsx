@@ -19,7 +19,6 @@ export default async function AnalyticsPage() {
     // Thực hiện truy vấn song song dữ liệu thực tế từ cơ sở dữ liệu
     const [
         tenantsRes,
-        transactionsRes,
         newsRes,
         eventsRes,
         regsRes,
@@ -27,7 +26,6 @@ export default async function AnalyticsPage() {
         auditLogsRes
     ] = await Promise.all([
         (supabase as any).from('tenants').select('id, name, domain, tenant_type, created_at'),
-        supabase.from('transactions').select('id, amount, tenant_id, created_at, status').in('status', ['completed', 'confirmed']),
         supabase.from('news').select('id, tenant_id, created_at'),
         supabase.from('events').select('id, tenant_id, created_at'),
         supabase.from('event_registrations').select('id, tenant_id, created_at'),
@@ -41,14 +39,6 @@ export default async function AnalyticsPage() {
         domain: t.domain || 'Chưa cấu hình',
         tenant_type: t.tenant_type || 'tenant',
         created_at: t.created_at || ''
-    }));
-
-    const transactions = (transactionsRes.data || []).map(t => ({
-        id: t.id,
-        amount: Number(t.amount) || 0,
-        tenant_id: t.tenant_id || '',
-        created_at: t.created_at || '',
-        status: t.status || ''
     }));
 
     const news = (newsRes.data || []).map(n => ({
@@ -96,7 +86,6 @@ export default async function AnalyticsPage() {
             {/* Client analytics client logic */}
             <AnalyticsClient
                 tenants={tenants}
-                transactions={transactions}
                 news={news}
                 events={events}
                 eventRegs={eventRegs}

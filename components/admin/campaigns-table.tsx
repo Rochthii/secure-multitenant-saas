@@ -25,9 +25,9 @@ const RichTextEditor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="min-h-[300px] w-full flex items-center justify-center bg-gray-50 border border-gray-200 rounded-md">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                <span className="ml-2 text-sm text-gray-500">Đang tải trình soạn thảo...</span>
+            <div className="min-h-[300px] w-full flex items-center justify-center bg-slate-950 border border-white/10 rounded-xl">
+                <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+                <span className="ml-2 text-sm text-slate-400">Đang tải trình soạn thảo...</span>
             </div>
         )
     }
@@ -88,101 +88,115 @@ export function ProjectsTable({ initialProjects, bankAccounts, canUpdate = false
     };
 
     const renderTable = (data: TransactionProjectUI[]) => (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>Tên hạng mục</TableHead>
-                    <TableHead>Loại</TableHead>
-                    <TableHead>Thực tế / Mục tiêu (VNĐ)</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Hiển thị</TableHead>
-                    <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {data.length === 0 ? (
-                    <TableRow>
-                        <TableCell colSpan={6} className="text-center text-slate-500 py-10">Chưa có dữ liệu.</TableCell>
-                    </TableRow>
-                ) : data.map((c) => (
-                    <TableRow key={c.id}>
-                        <TableCell className="font-medium">
-                            <div className="flex flex-col">
-                                <span>{c.title}</span>
-                                <span className="text-xs text-slate-400">{(c as any).tenants?.name || 'Hệ thống'}</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            {c.type === 'specific_project' ? (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><TrendingUp className="w-3 h-3 mr-1"/>Dự án</Badge>
-                            ) : (
-                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200"><Heart className="w-3 h-3 mr-1"/>Quỹ</Badge>
-                            )}
-                        </TableCell>
-                        <TableCell>
-                            {c.type === 'specific_project' && c.goal > 0 ? (
-                                <div className="flex flex-col gap-1 w-32">
-                                    <div className="text-xs flex justify-between">
-                                        <span>{Math.min(100, Math.round((c.current / c.goal) * 100))}%</span>
-                                        <span className="text-slate-400">{formatCurrency(c.goal)}</span>
+        <div className="overflow-x-auto">
+            <table className="w-full">
+                <thead>
+                    <tr className="border-b border-white/[0.08] bg-white/[0.02]">
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider w-[30%]">Tên hạng mục</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Loại</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thực tế / Mục tiêu (VNĐ)</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Trạng thái</th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hiển thị</th>
+                        <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.05]">
+                    {data.length === 0 ? (
+                        <tr>
+                            <td colSpan={6} className="text-center text-slate-500 py-16">
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="bg-slate-900/60 p-4 rounded-full border border-white/[0.08]">
+                                        <Landmark className="h-8 w-8 text-slate-500" />
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                        <div className="bg-gold-primary h-1.5 rounded-full" style={{ width: `${Math.min(100, (c.current / c.goal) * 100)}%` }}></div>
-                                    </div>
+                                    <p className="text-base font-bold text-white">Chưa có hạng mục đóng góp nào</p>
                                 </div>
-                            ) : (
-                                <span className="text-emerald-600 font-medium">{formatCurrency(c.current)}</span>
-                            )}
-                        </TableCell>
-                        <TableCell><StatusBadge status={c.status} /></TableCell>
-                        <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Switch checked={c.is_active} onCheckedChange={() => handleToggleActive(c.id, c.is_active)} disabled={!canUpdate} />
-                                <span className={`text-xs font-semibold ${c.is_active ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                    {c.is_active ? 'Hiển thị' : 'Ẩn'}
-                                </span>
-                            </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            {canUpdate && (
-                                <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
-                                    <Pencil className="h-4 w-4 text-slate-500" />
-                                </Button>
-                            )}
-                            {canDelete && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={confirmingDelete === c.id ? "text-red-700 bg-red-100" : "text-red-500"}
-                                    onClick={() => handleDelete(c.id)}
-                                    title={confirmingDelete === c.id ? "Click lần nữa để xóa" : "Xóa"}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </TableCell>
-                    </TableRow>
-                ))}
-            </TableBody>
-        </Table>
+                            </td>
+                        </tr>
+                    ) : data.map((c) => (
+                        <tr key={c.id} className="hover:bg-white/[0.02] group transition-colors">
+                            <td className="px-6 py-4 font-medium">
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-white group-hover:text-amber-400 transition-colors line-clamp-2">{c.title}</span>
+                                    <span className="text-xs text-slate-500 mt-1">{(c as any).tenants?.name || 'Hệ thống'}</span>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                {c.type === 'specific_project' ? (
+                                    <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><TrendingUp className="w-3.5 h-3.5 mr-1"/>Dự án</Badge>
+                                ) : (
+                                    <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold"><Heart className="w-3.5 h-3.5 mr-1"/>Quỹ chung</Badge>
+                                )}
+                            </td>
+                            <td className="px-6 py-4">
+                                {c.type === 'specific_project' && c.goal > 0 ? (
+                                    <div className="flex flex-col gap-1.5 w-40">
+                                        <div className="text-xs flex justify-between font-mono text-slate-400">
+                                            <span className="text-amber-400 font-bold">{Math.min(100, Math.round((c.current / c.goal) * 100))}%</span>
+                                            <span>{formatCurrency(c.current)} / {formatCurrency(c.goal)}</span>
+                                        </div>
+                                        <div className="w-full bg-white/10 rounded-full h-1.5 overflow-hidden">
+                                            <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (c.current / c.goal) * 100)}%` }}></div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <span className="text-emerald-400 font-bold font-mono">{formatCurrency(c.current)}</span>
+                                )}
+                            </td>
+                            <td className="px-6 py-4"><StatusBadge status={c.status} /></td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    <Switch checked={c.is_active} onCheckedChange={() => handleToggleActive(c.id, c.is_active)} disabled={!canUpdate} />
+                                    <span className={`text-xs font-semibold ${c.is_active ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                        {c.is_active ? 'Hiển thị' : 'Ẩn'}
+                                    </span>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                    {canUpdate && (
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-amber-400 hover:bg-white/5 rounded-xl transition-colors" onClick={() => handleEdit(c)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                    {canDelete && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className={`h-8 w-8 rounded-xl transition-colors ${confirmingDelete === c.id ? "text-red-400 bg-red-500/10 border border-red-500/20" : "text-slate-400 hover:text-red-400 hover:bg-white/5"}`}
+                                            onClick={() => handleDelete(c.id)}
+                                            title={confirmingDelete === c.id ? "Click lần nữa để xóa" : "Xóa"}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
     );
 
     return (
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2 border-b">
-                <CardTitle className="text-lg font-semibold">Danh sách</CardTitle>
+        <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-white/5 bg-white/[0.02]">
+                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                    <Landmark className="w-5 h-5 text-amber-400" />
+                    Danh sách hạng mục
+                </CardTitle>
                 {canUpdate && (
-                    <Button onClick={handleCreate} className="bg-gold-primary hover:bg-gold-dark text-white">
+                    <Button onClick={handleCreate} className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-5">
                         <Plus className="mr-2 h-4 w-4" /> Thêm Hạng mục
                     </Button>
                 )}
             </CardHeader>
             <CardContent className="p-0">
                 <Tabs defaultValue="all" className="w-full">
-                    <TabsList className="bg-transparent border-b w-full justify-start rounded-none p-0 h-12">
-                        <TabsTrigger value="all" className="data-[state=active]:border-b-2 data-[state=active]:border-gold-primary rounded-none h-full px-6">Tất cả</TabsTrigger>
-                        <TabsTrigger value="projects" className="data-[state=active]:border-b-2 data-[state=active]:border-gold-primary rounded-none h-full px-6">1. Các Dự án Cụ thể</TabsTrigger>
-                        <TabsTrigger value="general" className="data-[state=active]:border-b-2 data-[state=active]:border-gold-primary rounded-none h-full px-6">2. Quỹ Thanh toán Chung</TabsTrigger>
+                    <TabsList className="bg-slate-950/60 border-b border-white/[0.08] w-full justify-start rounded-none p-1 h-auto flex gap-1">
+                        <TabsTrigger value="all" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:font-bold text-slate-400 hover:text-white rounded-lg px-6 py-2.5 text-sm transition-all border-none shadow-none">Tất cả</TabsTrigger>
+                        <TabsTrigger value="projects" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:font-bold text-slate-400 hover:text-white rounded-lg px-6 py-2.5 text-sm transition-all border-none shadow-none">1. Các Dự án Cụ thể</TabsTrigger>
+                        <TabsTrigger value="general" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:font-bold text-slate-400 hover:text-white rounded-lg px-6 py-2.5 text-sm transition-all border-none shadow-none">2. Quỹ Thanh toán Chung</TabsTrigger>
                     </TabsList>
                     <TabsContent value="all" className="p-0 m-0">{renderTable(projects)}</TabsContent>
                     <TabsContent value="projects" className="p-0 m-0">{renderTable(projects.filter(c => c.type === 'specific_project'))}</TabsContent>
@@ -213,10 +227,10 @@ export function ProjectsTable({ initialProjects, bankAccounts, canUpdate = false
 
 function StatusBadge({ status }: { status: string }) {
     switch (status) {
-        case 'ongoing': return <Badge className="bg-emerald-100 text-emerald-700 border-none hover:bg-emerald-100">Đang nhận</Badge>;
-        case 'completed': return <Badge className="bg-blue-100 text-blue-700 border-none hover:bg-blue-100">Hoàn thành</Badge>;
-        case 'cancelled': return <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-none hover:bg-slate-100">Tạm dừng/Hủy</Badge>;
-        default: return <Badge variant="outline">{status}</Badge>;
+        case 'ongoing': return <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold">Đang nhận</Badge>;
+        case 'completed': return <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold">Hoàn thành</Badge>;
+        case 'cancelled': return <Badge className="bg-red-500/10 text-red-400 border border-red-500/20 gap-1 rounded-full px-2.5 py-0.5 font-bold">Tạm dừng/Hủy</Badge>;
+        default: return <Badge variant="outline" className="border-white/10 text-slate-400">{status}</Badge>;
     }
 }
 
@@ -303,7 +317,7 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
         setLoading(false);
 
         if (res.success) {
-            toast.success(isEditing ? 'Đã cập nhật' : 'Đã lưu Hạng mục');
+            toast.success(res.error ? 'Cảnh báo: ' + res.error : (isEditing ? 'Đã cập nhật' : 'Đã lưu Hạng mục'));
             const savedData = res.data ? {
                 ...res.data,
                 title: res.data.title_vi,
@@ -320,10 +334,11 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl w-full bg-white p-0 overflow-hidden flex flex-col max-h-[90vh]">
+            <DialogContent className="max-w-5xl w-full bg-slate-950 border border-white/[0.08] p-0 overflow-hidden flex flex-col max-h-[90vh] text-slate-300">
                 {/* ─── Header ─── */}
-                <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
-                    <DialogTitle className="text-xl font-bold text-gray-900">
+                <DialogHeader className="px-6 py-4 border-b border-white/5 flex-shrink-0 bg-white/[0.02]">
+                    <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+                        <Landmark className="w-5 h-5 text-amber-400" />
                         {isEditing ? 'Chỉnh sửa Hạng mục' : 'Thêm Hạng mục Đóng góp Quỹ mới'}
                     </DialogTitle>
                 </DialogHeader>
@@ -337,30 +352,30 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                             <div className="lg:col-span-2 space-y-5">
 
                                 {/* Type Toggle */}
-                                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-xl border border-purple-100">
+                                <div className="flex items-center gap-3 p-4 bg-purple-950/20 rounded-xl border border-purple-500/20">
                                     <Switch id="type_toggle" checked={isProject} onCheckedChange={setIsProject} />
                                     <div>
-                                        <Label htmlFor="type_toggle" className="font-bold text-purple-900 cursor-pointer">Đây là một Dự án cụ thể</Label>
-                                        <p className="text-xs text-purple-700 mt-0.5">Bật nếu cần đặt mục tiêu số tiền, theo dõi thanh tiến độ và viết bài giới thiệu chi tiết.</p>
+                                        <Label htmlFor="type_toggle" className="font-bold text-purple-300 cursor-pointer">Đây là một Dự án cụ thể</Label>
+                                        <p className="text-xs text-purple-400/80 mt-0.5">Bật nếu cần đặt mục tiêu số tiền, theo dõi thanh tiến độ và viết bài giới thiệu chi tiết.</p>
                                     </div>
                                 </div>
 
                                 {/* Bilingual Content */}
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-base">Nội dung Đa ngôn ngữ</CardTitle>
+                                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl">
+                                    <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                        <CardTitle className="text-base font-bold text-white">Nội dung Đa ngôn ngữ</CardTitle>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="pt-4">
                                         <Tabs defaultValue="vi" className="w-full">
-                                            <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-100">
-                                                <TabsTrigger value="vi">🇻🇳 Tiếng Việt</TabsTrigger>
-                                                <TabsTrigger value="km">🇰🇭 Khmer</TabsTrigger>
+                                            <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-950 border border-white/10 p-1 h-auto rounded-xl">
+                                                <TabsTrigger value="vi" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:font-bold text-slate-400 hover:text-white rounded-lg py-2 text-sm transition-all">🇻🇳 Tiếng Việt</TabsTrigger>
+                                                <TabsTrigger value="km" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white data-[state=active]:font-bold text-slate-400 hover:text-white rounded-lg py-2 text-sm transition-all">🇰🇭 Khmer</TabsTrigger>
                                             </TabsList>
 
                                             {/* ─── Tab VI ─── */}
                                             <TabsContent value="vi" className="space-y-4">
                                                 <div>
-                                                    <Label htmlFor="title_vi" className="mb-1.5 block">
+                                                    <Label htmlFor="title_vi" className="mb-1.5 block text-slate-200 font-bold">
                                                         Tên {isProject ? 'Dự án' : 'Quỹ chung'} (VI) <span className="text-red-500">*</span>
                                                     </Label>
                                                     <Input
@@ -369,16 +384,16 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                                         onChange={(e) => setTitleVi(e.target.value)}
                                                         placeholder="Tên bằng tiếng Việt..."
                                                         required
-                                                        className="bg-slate-50"
+                                                        className="bg-slate-900 border-white/10 text-white rounded-xl focus:border-amber-500"
                                                     />
                                                 </div>
 
                                                 <div>
                                                     <div className="flex justify-between items-center mb-1.5">
-                                                        <Label htmlFor="slug">Đường dẫn tĩnh (Slug)</Label>
+                                                        <Label htmlFor="slug" className="text-slate-200">Đường dẫn tĩnh (Slug)</Label>
                                                         <button
                                                             type="button"
-                                                            className="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 rounded px-2 py-0.5 hover:bg-blue-100 transition-colors"
+                                                            className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded px-2 py-0.5 hover:bg-blue-500/20 transition-colors"
                                                             onClick={() => {
                                                                 const el = document.getElementById('project-slug') as HTMLInputElement;
                                                                 if (el) el.value = generateSlug(titleVi);
@@ -392,26 +407,26 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                                         name="slug"
                                                         defaultValue={(project as any)?.slug || ''}
                                                         placeholder="vi-du-ten-du-an"
-                                                        className="bg-slate-50 font-mono text-sm"
+                                                        className="bg-slate-900 border-white/10 text-white rounded-xl font-mono text-sm focus:border-amber-500"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor="desc_vi" className="mb-1.5 block">Mô tả ngắn (VI)</Label>
+                                                    <Label htmlFor="desc_vi" className="mb-1.5 block text-slate-200">Mô tả ngắn (VI)</Label>
                                                     <Textarea
                                                         id="desc_vi"
                                                         value={descVi}
                                                         onChange={(e) => setDescVi(e.target.value)}
                                                         placeholder="Mô tả ngắn gọn, hiển thị ở thẻ tóm tắt..."
                                                         rows={3}
-                                                        className="bg-slate-50"
+                                                        className="bg-slate-900 border-white/10 text-white rounded-xl focus:border-amber-500"
                                                     />
                                                 </div>
 
                                                 {isProject && (
                                                     <div>
-                                                        <Label className="mb-1.5 block">Nội dung chi tiết dự án (VI)</Label>
-                                                        <div className="min-h-[300px]">
+                                                        <Label className="mb-1.5 block text-slate-200">Nội dung chi tiết dự án (VI)</Label>
+                                                        <div className="min-h-[300px] rounded-xl overflow-hidden border border-white/10 bg-slate-950">
                                                             <RichTextEditor
                                                                 content={contentVi}
                                                                 onChange={setContentVi}
@@ -425,7 +440,7 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                             {/* ─── Tab KM ─── */}
                                             <TabsContent value="km" className="space-y-4">
                                                 <div>
-                                                    <Label htmlFor="title_km" className="mb-1.5 block">
+                                                    <Label htmlFor="title_km" className="mb-1.5 block text-slate-200">
                                                         ឈ្មោះ{isProject ? 'គម្រោង' : 'មូលនិធិ'} (KM)
                                                     </Label>
                                                     <Input
@@ -433,26 +448,26 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                                         value={titleKm}
                                                         onChange={(e) => setTitleKm(e.target.value)}
                                                         placeholder="ឈ្មោះគម្រោង / មូលនិធិ..."
-                                                        className="bg-slate-50 font-khmer"
+                                                        className="bg-slate-900 border-white/10 text-white rounded-xl font-khmer focus:border-amber-500"
                                                     />
                                                 </div>
 
                                                 <div>
-                                                    <Label htmlFor="desc_km" className="mb-1.5 block">សេចក្តីសង្ខេប (KM)</Label>
+                                                    <Label htmlFor="desc_km" className="mb-1.5 block text-slate-200">សេចក្តីសង្ខេប (KM)</Label>
                                                     <Textarea
                                                         id="desc_km"
                                                         value={descKm}
                                                         onChange={(e) => setDescKm(e.target.value)}
                                                         placeholder="របៀបសង្ខេប..."
                                                         rows={3}
-                                                        className="bg-slate-50 font-khmer"
+                                                        className="bg-slate-900 border-white/10 text-white rounded-xl font-khmer focus:border-amber-500"
                                                     />
                                                 </div>
 
                                                 {isProject && (
                                                     <div>
-                                                        <Label className="mb-1.5 block">ខ្លឹមសារលម្អិត (KM)</Label>
-                                                        <div className="min-h-[300px]">
+                                                        <Label className="mb-1.5 block text-slate-200">ខ្លឹមសារលម្អិត (KM)</Label>
+                                                        <div className="min-h-[300px] rounded-xl overflow-hidden border border-white/10 bg-slate-950">
                                                             <RichTextEditor
                                                                 content={contentKm}
                                                                 onChange={setContentKm}
@@ -477,18 +492,18 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
 
                                 {/* Tenant selector for super admin */}
                                 {tenants.length > 0 && (
-                                    <Card>
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-sm flex items-center gap-2">
-                                                <Landmark className="w-4 h-4" />Cơ sở
+                                    <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                                        <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                            <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                                                <Landmark className="w-4 h-4 text-amber-400" />Cơ sở
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent>
+                                        <CardContent className="pt-4">
                                             <Select name="tenant_id" defaultValue={project?.tenant_id || companyTenantId || ''}>
-                                                <SelectTrigger className="bg-slate-50 rounded-xl">
+                                                <SelectTrigger className="bg-slate-900 border-white/10 text-white rounded-xl">
                                                     <SelectValue placeholder="Chọn cơ sở quản lý" />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="bg-slate-900 border-white/10 text-slate-300">
                                                     <SelectItem value={companyTenantId || 'none'}>-- Hệ thống chung --</SelectItem>
                                                     {tenants.map(t => (
                                                         <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
@@ -501,20 +516,20 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
 
                                 {/* Project Progress */}
                                 {isProject && (
-                                    <Card className="border-blue-100">
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-sm flex items-center gap-2">
-                                                <TrendingUp className="w-4 h-4 text-blue-600" />Tiến độ Dự án
+                                    <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                                        <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                            <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                                                <TrendingUp className="w-4 h-4 text-blue-400" />Tiến độ Dự án
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className="space-y-3">
+                                        <CardContent className="space-y-3 pt-4">
                                             <div>
-                                                <Label htmlFor="goal" className="text-xs">Mục tiêu đóng góp quỹ (VNĐ)</Label>
-                                                <Input id="goal" name="goal" type="number" defaultValue={project?.goal || 0} className="bg-white mt-1" />
+                                                <Label htmlFor="goal" className="text-xs text-slate-300">Mục tiêu đóng góp quỹ (VNĐ)</Label>
+                                                <Input id="goal" name="goal" type="number" defaultValue={project?.goal || 0} className="bg-slate-900 border-white/10 text-white mt-1 rounded-xl focus:border-amber-500" />
                                             </div>
                                             <div>
-                                                <Label htmlFor="current" className="text-xs">Hiện đã quyên được (VNĐ)</Label>
-                                                <Input id="current" name="current" type="number" defaultValue={project?.current || 0} className="bg-white mt-1" />
+                                                <Label htmlFor="current" className="text-xs text-slate-300">Hiện đã quyên được (VNĐ)</Label>
+                                                <Input id="current" name="current" type="number" defaultValue={project?.current || 0} className="bg-slate-900 border-white/10 text-white mt-1 rounded-xl focus:border-amber-500" />
                                                 <p className="text-[10px] text-slate-500 mt-1">Thường tự động tăng, nhưng có thể sửa tay.</p>
                                             </div>
                                         </CardContent>
@@ -523,32 +538,32 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
 
                                 {/* General fund amount */}
                                 {!isProject && (
-                                    <Card>
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-sm">Số tiền hiện có</CardTitle>
+                                    <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                                        <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                            <CardTitle className="text-sm font-bold text-white">Số tiền hiện có</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
-                                            <Input id="current" name="current" type="number" defaultValue={project?.current || 0} className="bg-slate-50" />
+                                        <CardContent className="pt-4">
+                                            <Input id="current" name="current" type="number" defaultValue={project?.current || 0} className="bg-slate-900 border-white/10 text-white rounded-xl focus:border-amber-500" />
                                             <p className="text-[10px] text-slate-500 mt-1">Hiển thị tượng trưng trên giao diện.</p>
                                         </CardContent>
                                     </Card>
                                 )}
 
                                 {/* Settings */}
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm flex items-center gap-2">
-                                            <Settings className="w-4 h-4" />Cài đặt
+                                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                                    <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                        <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                                            <Settings className="w-4 h-4 text-slate-400" />Cài đặt
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
+                                    <CardContent className="space-y-4 pt-4">
                                         <div>
-                                            <Label htmlFor="status" className="text-xs mb-1 block">Trạng thái</Label>
+                                            <Label htmlFor="status" className="text-xs mb-1 block text-slate-300">Trạng thái</Label>
                                             <Select name="status" defaultValue={project?.status || 'ongoing'}>
-                                                <SelectTrigger className="bg-slate-50 rounded-xl">
+                                                <SelectTrigger className="bg-slate-900 border-white/10 text-white rounded-xl">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="bg-slate-900 border-white/10 text-slate-300">
                                                     <SelectItem value="ongoing">Đang nhận đóng góp</SelectItem>
                                                     <SelectItem value="completed">Đã hoàn thành</SelectItem>
                                                     <SelectItem value="cancelled">Đã hủy bỏ/Trì hoãn</SelectItem>
@@ -556,33 +571,35 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                             </Select>
                                         </div>
                                         <div>
-                                            <Label htmlFor="icon" className="text-xs mb-1 block">Icon (Tên Lucide, VD: Heart)</Label>
-                                            <Input id="icon" name="icon" defaultValue={project?.icon || 'Heart'} className="bg-slate-50" />
+                                            <Label htmlFor="icon" className="text-xs mb-1 block text-slate-300">Icon (Tên Lucide, VD: Heart)</Label>
+                                            <Input id="icon" name="icon" defaultValue={project?.icon || 'Heart'} className="bg-slate-900 border-white/10 text-white rounded-xl focus:border-amber-500" />
                                         </div>
                                         <div>
-                                            <Label htmlFor="order_position" className="text-xs mb-1 block">Thứ tự hiển thị</Label>
-                                            <Input id="order_position" name="order_position" type="number" defaultValue={project?.order_position || 10} className="bg-slate-50" />
+                                            <Label htmlFor="order_position" className="text-xs mb-1 block text-slate-300">Thứ tự hiển thị</Label>
+                                            <Input id="order_position" name="order_position" type="number" defaultValue={project?.order_position || 10} className="bg-slate-900 border-white/10 text-white rounded-xl focus:border-amber-500" />
                                         </div>
-                                        <div className="flex items-center justify-between pt-2 border-t">
-                                            <Label htmlFor="is_active_switch" className="cursor-pointer">Hiển thị ra Client</Label>
+                                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                            <Label htmlFor="is_active_switch" className="cursor-pointer text-slate-300">Hiển thị ra Client</Label>
                                             <Switch id="is_active_switch" checked={isActive} onCheckedChange={setIsActive} />
                                         </div>
                                     </CardContent>
                                 </Card>
 
                                 {/* Bank Account */}
-                                <Card className="border-slate-200">
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-sm">Luồng Chuyển Tiền</CardTitle>
+                                <Card className="border-white/[0.08] bg-slate-900/40 backdrop-blur-xl overflow-hidden rounded-2xl shadow-none">
+                                    <CardHeader className="pb-2 border-b border-white/5 bg-white/[0.02]">
+                                        <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                                            <Landmark className="w-4 h-4 text-emerald-400" />Luồng Chuyển Tiền
+                                        </CardTitle>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
+                                    <CardContent className="space-y-4 pt-4">
                                         <div>
-                                            <Label className="text-xs font-bold text-slate-500 mb-1 block">Tài khoản thụ hưởng</Label>
+                                            <Label className="text-xs font-bold text-slate-400 mb-1 block">Tài khoản thụ hưởng</Label>
                                             <Select name="bank_account_id" defaultValue={project?.bank_account_id || 'none'}>
-                                                <SelectTrigger className="bg-white rounded-xl">
+                                                <SelectTrigger className="bg-slate-900 border-white/10 text-white rounded-xl">
                                                     <SelectValue placeholder="Chọn tài khoản ngân hàng" />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="bg-slate-900 border-white/10 text-slate-300">
                                                     <SelectItem value="none">Mặc định (Theo cấu hình hệ thống)</SelectItem>
                                                     {bankAccounts.map(acc => (
                                                         <SelectItem key={acc.id} value={acc.id}>
@@ -596,12 +613,12 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                                             </Select>
                                         </div>
                                         <div>
-                                            <Label className="text-xs font-bold text-slate-500 mb-1 block">Loại quỹ nhận</Label>
+                                            <Label className="text-xs font-bold text-slate-400 mb-1 block">Loại quỹ nhận</Label>
                                             <Select name="recipient_type" defaultValue={project?.recipient_type || 'tenant_fund'}>
-                                                <SelectTrigger className="bg-white rounded-xl">
+                                                <SelectTrigger className="bg-slate-900 border-white/10 text-white rounded-xl">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="bg-slate-900 border-white/10 text-slate-300">
                                                     <SelectItem value="tenant_fund">Quỹ Thanh toán Tam Bảo</SelectItem>
                                                     <SelectItem value="charity_fund">Quỹ Từ thiện Xã hội</SelectItem>
                                                 </SelectContent>
@@ -614,12 +631,12 @@ function ProjectFormDialog({ open, onOpenChange, project, bankAccounts, currentT
                     </div>
 
                     {/* ─── Footer Actions ─── */}
-                    <div className="flex justify-end gap-3 px-6 py-4 border-t bg-slate-50 flex-shrink-0">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Thoát</Button>
+                    <div className="flex justify-end gap-3 px-6 py-4 border-t border-white/5 bg-white/[0.02] flex-shrink-0">
+                        <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-slate-300 hover:text-white rounded-xl" onClick={() => onOpenChange(false)}>Thoát</Button>
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-gold-primary hover:bg-gold-dark text-white px-8 min-w-[140px]"
+                            className="bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow-lg shadow-amber-900/20 px-8 min-w-[140px]"
                         >
                             {loading
                                 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />

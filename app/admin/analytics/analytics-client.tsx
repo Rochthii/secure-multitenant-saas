@@ -2,10 +2,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/constants/transaction';
 import { 
-    BarChart, 
-    Bar, 
     LineChart, 
     Line, 
     XAxis, 
@@ -20,17 +17,16 @@ import {
 } from 'recharts';
 import { 
     Users, 
-    TrendingUp, 
-    Building2, 
-    ShieldAlert, 
+    Database, 
     Download, 
     Search, 
     ArrowUpDown, 
     Calendar,
     Newspaper,
-    CheckCircle,
     Activity,
-    FolderGit2
+    FolderGit2,
+    Layers,
+    ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -41,14 +37,6 @@ interface TenantData {
     domain: string;
     tenant_type: string;
     created_at: string;
-}
-
-interface TransactionData {
-    id: string;
-    amount: number;
-    tenant_id: string;
-    created_at: string;
-    status: string;
 }
 
 interface NewsData {
@@ -71,7 +59,6 @@ interface EventRegData {
 
 interface AnalyticsClientProps {
     tenants: TenantData[];
-    transactions: TransactionData[];
     news: NewsData[];
     events: EventData[];
     eventRegs: EventRegData[];
@@ -86,7 +73,7 @@ const COLORS = ['#6366f1', '#10b981', '#3b82f6', '#f43f5e', '#8b5cf6', '#06b6d4'
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl">
+            <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl text-left">
                 <p className="text-xs font-bold text-slate-400 mb-2">{label}</p>
                 <div className="space-y-1">
                     {payload.map((item: any, index: number) => (
@@ -97,9 +84,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                             />
                             <span className="text-xs font-medium text-slate-200">
                                 {item.name}: <strong className="text-white font-black">
-                                    {typeof item.value === 'number' && item.name.includes('Doanh thu') 
-                                        ? formatCurrency(item.value) 
-                                        : item.value}
+                                    {item.value}
                                 </strong>
                             </span>
                         </div>
@@ -113,7 +98,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function AnalyticsClient({
     tenants = [],
-    transactions = [],
     news = [],
     events = [],
     eventRegs = [],
@@ -123,7 +107,7 @@ export function AnalyticsClient({
     const [isMounted, setIsMounted] = React.useState(false);
     const [timeRange, setTimeRange] = React.useState<'7d' | '30d' | '90d' | 'all'>('all');
     const [searchQuery, setSearchQuery] = React.useState('');
-    const [sortField, setSortField] = React.useState<'name' | 'donations' | 'news' | 'events' | 'regs'>('donations');
+    const [sortField, setSortField] = React.useState<'name' | 'records' | 'news' | 'events' | 'regs'>('records');
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('desc');
 
     React.useEffect(() => {
@@ -133,7 +117,7 @@ export function AnalyticsClient({
     // ─── Lọc dữ liệu theo thời gian ───────────────────────────────────────────
     const getFilteredData = React.useCallback(() => {
         if (timeRange === 'all') {
-            return { transactions, news, events, eventRegs };
+            return { news, events, eventRegs };
         }
 
         const now = new Date();
@@ -145,24 +129,23 @@ export function AnalyticsClient({
         const limitTime = limitDate.getTime();
 
         return {
-            transactions: transactions.filter(t => new Date(t.created_at).getTime() >= limitTime),
             news: news.filter(n => new Date(n.created_at).getTime() >= limitTime),
             events: events.filter(e => new Date(e.created_at).getTime() >= limitTime),
             eventRegs: eventRegs.filter(r => new Date(r.created_at).getTime() >= limitTime),
         };
-    }, [timeRange, transactions, news, events, eventRegs]);
+    }, [timeRange, news, events, eventRegs]);
 
     const filtered = getFilteredData();
 
     // ─── Thống kê tổng hợp ───────────────────────────────────────────────────────
-    const totalDonationsSum = filtered.transactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
     const totalNewsCount = filtered.news.length;
     const totalEventsCount = filtered.events.length;
     const totalRegsCount = filtered.eventRegs.length;
+    const totalRecordsCount = totalNewsCount + totalEventsCount + totalRegsCount;
 
-    // ─── Chuẩn bị dữ liệu cho biểu đồ Doanh thu theo tháng (6 tháng qua) ─────────
+    // ─── Chuẩn bị dữ liệu cho biểu đồ Hoạt động hệ thống theo tháng (6 tháng qua) ─────────
     const getMonthlyChartData = React.useCallback(() => {
-        const monthsData: Record<string, { name: string; 'Doanh thu (VND)': number; 'Ấn phẩm số': number; dateObj: Date }> = {};
+        const monthsData: Record<string, { name: string; 'Lượt đăng ký': number; 'Ấn phẩm số': number; dateObj: Date }> = {};
         
         // Tạo 6 tháng gần nhất mặc định
         const now = new Date();
@@ -170,15 +153,15 @@ export function AnalyticsClient({
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             const label = `Tháng ${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`;
-            monthsData[key] = { name: label, 'Doanh thu (VND)': 0, 'Ấn phẩm số': 0, dateObj: d };
+            monthsData[key] = { name: label, 'Lượt đăng ký': 0, 'Ấn phẩm số': 0, dateObj: d };
         }
 
-        // Tích lũy tiền từ transactions
-        filtered.transactions.forEach(t => {
-            const date = new Date(t.created_at);
+        // Tích lũy lượt đăng ký từ eventRegs
+        filtered.eventRegs.forEach(r => {
+            const date = new Date(r.created_at);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             if (monthsData[key]) {
-                monthsData[key]['Doanh thu (VND)'] += (Number(t.amount) || 0);
+                monthsData[key]['Lượt đăng ký'] += 1;
             }
         });
 
@@ -216,19 +199,17 @@ export function AnalyticsClient({
     // ─── Dữ liệu tổng hợp từng chi nhánh (Tenants Metrics) ─────────────────────
     const tenantMetrics = React.useMemo(() => {
         return tenants.map(tenant => {
-            const tenantTransactions = filtered.transactions.filter(t => t.tenant_id === tenant.id);
             const tenantNews = filtered.news.filter(n => n.tenant_id === tenant.id);
             const tenantEvents = filtered.events.filter(e => e.tenant_id === tenant.id);
             const tenantRegs = filtered.eventRegs.filter(r => r.tenant_id === tenant.id);
-
-            const donationsSum = tenantTransactions.reduce((acc, t) => acc + (Number(t.amount) || 0), 0);
+            const recordsCount = tenantNews.length + tenantEvents.length + tenantRegs.length;
 
             return {
                 id: tenant.id,
                 name: tenant.name || 'Không tên',
                 domain: tenant.domain || 'Không cấu hình',
                 type: tenant.tenant_type !== 'tenant' ? 'Doanh nghiệp' : 'Di sản',
-                totalDonations: donationsSum,
+                totalRecords: recordsCount,
                 newsCount: tenantNews.length,
                 eventsCount: tenantEvents.length,
                 regsCount: tenantRegs.length,
@@ -247,9 +228,9 @@ export function AnalyticsClient({
         let valA: any = a.name;
         let valB: any = b.name;
 
-        if (sortField === 'donations') {
-            valA = a.totalDonations;
-            valB = b.totalDonations;
+        if (sortField === 'records') {
+            valA = a.totalRecords;
+            valB = b.totalRecords;
         } else if (sortField === 'news') {
             valA = a.newsCount;
             valB = b.newsCount;
@@ -277,9 +258,9 @@ export function AnalyticsClient({
 
     // ─── Xuất Báo Cáo CSV (Real Side-Effect) ────────────────────────────────────
     const handleExportCSV = () => {
-        const header = "Ten Chi Nhanh,Domain,Loai Hinh,Tong Dong Gop (VND),Tin Tuc,Su Kien,Luot Dang Ky\n";
+        const header = "Ten Chi Nhanh,Domain,Loai Hinh,Tong Ban Ghi,Tin Tuc,Su Kien,Luot Dang Ky\n";
         const rows = tenantMetrics.map(t => 
-            `"${t.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')}",${t.domain},${t.type},${t.totalDonations},${t.newsCount},${t.eventsCount},${t.regsCount}`
+            `"${t.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')}",${t.domain},${t.type},${t.totalRecords},${t.newsCount},${t.eventsCount},${t.regsCount}`
         ).join("\n");
 
         const csvContent = "data:text/csv;charset=utf-8," + header + rows;
@@ -329,21 +310,21 @@ export function AnalyticsClient({
 
             {/* Metrics Dashboard Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {/* Card 1: Revenue */}
+                {/* Card 1: Record Weight */}
                 <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-350 hover:shadow-[0_0_25px_rgba(99,102,241,0.15)] hover:border-indigo-500/40 group relative">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
                     <CardHeader className="pb-3">
                         <CardTitle className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                            <span>Ngân quỹ hệ thống</span>
-                            <TrendingUp className="w-4 h-4 text-indigo-500" />
+                            <span>Dung lượng Bản ghi (RLS Rows)</span>
+                            <Layers className="w-4 h-4 text-indigo-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-indigo-500 dark:group-hover:text-indigo-400">
-                            {formatCurrency(totalDonationsSum)}
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-indigo-500 dark:group-hover:text-indigo-400">
+                            {totalRecordsCount.toLocaleString()}
                         </h3>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                            Từ {filtered.transactions.length} lượt giao dịch
+                            Tổng tài nguyên phân bổ đa thuê bao
                         </p>
                     </CardContent>
                 </Card>
@@ -359,7 +340,7 @@ export function AnalyticsClient({
                     </CardHeader>
                     <CardContent>
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-emerald-500 dark:group-hover:text-emerald-400">
-                            {totalNewsCount}
+                            {totalNewsCount.toLocaleString()}
                         </h3>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                             Nội dung truyền thông đã đăng
@@ -378,10 +359,10 @@ export function AnalyticsClient({
                     </CardHeader>
                     <CardContent>
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-400">
-                            {totalEventsCount}
+                            {totalEventsCount.toLocaleString()}
                         </h3>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
-                            {totalRegsCount} lượt đăng ký tham gia
+                            {totalRegsCount.toLocaleString()} lượt đăng ký tham gia
                         </p>
                     </CardContent>
                 </Card>
@@ -397,7 +378,7 @@ export function AnalyticsClient({
                     </CardHeader>
                     <CardContent>
                         <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400">
-                            {totalUsers}
+                            {totalUsers.toLocaleString()}
                         </h3>
                         <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
                             Nhân viên đa hệ thống
@@ -408,13 +389,13 @@ export function AnalyticsClient({
 
             {/* Interactive Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* 1. Monthly Revenue & Analytics Chart */}
+                {/* 1. Monthly Activity Trend Chart */}
                 <Card className="lg:col-span-2 border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden relative">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
                     <CardHeader className="py-6 border-b border-slate-100 dark:border-slate-800/80 p-8 pb-5">
                         <CardTitle className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
                             <Activity className="w-4 h-4 text-indigo-500 animate-pulse" />
-                            Xu hướng Doanh thu & Hoạt động (6 Tháng Qua)
+                            Xu thái Tạo Bản ghi & Hoạt động Hệ thống (6 Tháng Qua)
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-8">
@@ -454,7 +435,7 @@ export function AnalyticsClient({
                                             wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} 
                                             iconType="circle"
                                         />
-                                        <Line yAxisId="left" type="monotone" dataKey="Doanh thu (VND)" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 6 }} />
+                                        <Line yAxisId="left" type="monotone" dataKey="Lượt đăng ký" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 6 }} />
                                         <Line yAxisId="right" type="monotone" dataKey="Ấn phẩm số" stroke="#10b981" strokeWidth={3} />
                                     </LineChart>
                                 </ResponsiveContainer>
@@ -539,9 +520,9 @@ export function AnalyticsClient({
                                 <th className="px-8 py-5">Tên chi nhánh</th>
                                 <th className="px-8 py-5">Domain / Tên miền</th>
                                 <th className="px-8 py-5">Loại hình</th>
-                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('donations')}>
+                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('records')}>
                                     <div className="flex items-center gap-1.5">
-                                        <span>Quỹ / Tổng đóng góp</span>
+                                        <span>Tổng số bản ghi</span>
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                                     </div>
                                 </th>
@@ -585,7 +566,7 @@ export function AnalyticsClient({
                                         </Badge>
                                     </td>
                                     <td className="px-8 py-5 font-black text-indigo-600 dark:text-indigo-400">
-                                        {formatCurrency(item.totalDonations)}
+                                        {item.totalRecords.toLocaleString()} bản ghi
                                     </td>
                                     <td className="px-8 py-5 font-bold text-slate-900 dark:text-white">
                                         {item.newsCount} bài viết

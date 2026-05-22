@@ -1,205 +1,78 @@
-# ✅ PROMPT 03 COMPLETED - DATABASE SETUP
+# 🗄️ CƠ SỞ DỮ LIỆU TOÀN DIỆN - PRODUCTION SAAS SCHEMA
 
-## 🎉 THÀNH CÔNG HOÀN TOÀN!
-
-Database schema đầy đủ đã được tạo và **SẴN SÀNG PUSH** lên Supabase!
+Tài liệu này tổng hợp toàn bộ cấu trúc cơ sở dữ liệu thực tế (Production-grade Schema) của dự án **Secure Multi-tenant SaaS** (Áp dụng RLS và Audit Log trong quản trị rủi ro thông tin).
 
 ---
 
-## 📊 KẾT QUẢ
-
-### ✅ Đã tạo Migration SQL
-- **9 tables** đầy đủ với multi-language support
-- **Row Level Security** (RLS) policies cho tất cả tables
-- **Performance indexes** cho queries tối ưu
-- **Triggers** cho auto-update `updated_at`
-- **UUID extension** và functions
-
-### ✅ Đã tạo Seed Data
-- 10 categories (News/Event/Media)
-- 4 sample pages (Giới thiệu, Lịch sử, Hoạt động, Thư viện)
-- 1 sample news
-- 1 sample event (Lễ Phật Đản 2026)
-
-### ✅ Đã tạo TypeScript Types
-- Full type definitions cho 9 tables
-- Row, Insert, Update types
-- Import sẵn vào Supabase clients
+## 📊 TỔNG QUAN HỆ THỐNG
+*   **Tổng số bảng:** 28 bảng nghiệp vụ và quản trị.
+*   **Kiến trúc Cô lập dữ liệu:** Shared Database — Shared Schema với cơ chế Row-Level Security (RLS) bắt buộc trên tất cả các bảng nghiệp vụ liên quan đến tenant.
+*   **Cơ chế ABAC bổ sung:** Kiểm soát truy cập dựa trên thuộc tính thời gian (Time-based), Blacklist IP, và IP trong giờ hành chính.
+*   **Kiểm toán Bảo mật:** Bảng `audit_logs` có tính chất **Bất biến (Immutable)** bằng cách chặn hoàn toàn các hành động UPDATE/DELETE ở tầng RLS.
 
 ---
 
-## 📁 FILES ĐÃ TẠO
+## 📁 DANH SÁCH BẢNG CƠ SỞ DỮ LIỆU
 
-| File | Mô tả | Lines |
-|------|-------|-------|
-| `supabase/migrations/20260127095431_initial_schema.sql` | Complete database schema | 364 |
-| `supabase/seed.sql` | Seed data | 59 |
-| `lib/supabase/database.types.ts` | TypeScript types | 535 |
-| `lib/supabase/client.ts` | Browser client (updated) | 9 |
-| `lib/supabase/server.ts` | Server client (updated) | 27 |
-| `DATABASE_SETUP_GUIDE.md` | Hướng dẫn push lên Supabase | - |
+### 1. Phân Hệ Đa Chi Nhánh (Tenancy)
+*   **provinces**: Quản lý tỉnh/thành phố hỗ trợ phân vùng địa lý.
+*   **tenants**: Bảng trung tâm quản lý các chi nhánh. Chứa thông tin tên, tên miền phụ (`subdomain`), tên miền chính, loại hình (`tenant_type` như `tenant`, `company`, `ngo`), và trạng thái vòng đời.
+*   **bank_accounts**: Danh sách tài khoản ngân hàng nhận quyên góp của từng chi nhánh. Đảm bảo quy tắc kinh doanh: tối đa chỉ 1 tài khoản mặc định được kích hoạt trên một tenant thông qua chỉ mục lọc `bank_accounts_tenant_default_idx`.
 
----
+### 2. Phân Hệ Xác Thực & Quyền (Auth & RBAC)
+*   **user_profiles**: Thông tin hồ sơ chi tiết của người dùng liên kết với bảng `auth.users` của Supabase.
+*   **user_roles**: Gán vai trò cho người dùng trên từng chi nhánh. Được thiết kế với ràng buộc unique phức hợp `UNIQUE(user_id, tenant_id)` để hỗ trợ một tài khoản có thể có các quyền khác nhau (như Admin, Editor, Accountant) trên các chi nhánh khác nhau.
+*   **role_permissions**: Cấu hình chi tiết các hành động (Create/Read/Update/Delete) được phép cho từng vai trò trên từng tài nguyên.
 
-## 🗄️ 9 TABLES SCHEMA
+### 3. Phân Hệ Quản Trị Nội Dung (CMS Multi-language)
+*   **categories**: Danh mục nội dung (tin tức, sự kiện, media). Hỗ trợ phân cấp cha-con (`parent_id`) và chia sẻ chéo (`published_to uuid[]`).
+*   **news**: Các bài viết tin tức hỗ trợ 3 ngôn ngữ (vi, km, en), trạng thái xuất bản, tác giả, người kiểm duyệt và cơ chế phát sóng đa chi nhánh.
+*   **events**: Các sự kiện, lịch trình lễ hội, hỗ trợ cấu hình lặp lại (`recurrence_pattern`) và yêu cầu đăng ký.
+*   **event_registrations**: Danh sách phật tử/khách hàng đăng ký tham gia sự kiện.
+*   **dharma_talks**: Các bài thuyết pháp, bài giảng Phật giáo dưới dạng âm thanh hoặc video.
+*   **media**: Thư viện hình ảnh, tài liệu và video, được tối ưu hóa tìm kiếm với mảng thẻ `tags text[]`.
+*   **about_sections**: Các phần giới thiệu về lịch sử, kiến trúc, chư tăng của chi nhánh.
+*   **faqs**: Các câu hỏi thường gặp của từng chi nhánh.
+*   **hero_slides**: Các banner động trình chiếu trên trang chủ của từng chi nhánh.
+*   **layout_blocks**: Các khối nội dung động trên trang chủ cho phép quản trị viên tùy biến giao diện.
 
-### Core Content Tables
-1. **categories** - Danh mục (news/event/media) với slug
-2. **news** - Tin tức 3 ngôn ngữ + excerpt + thumbnail
-3. **events** - Sự kiện với recurring pattern support
-4. **media** - Thư viện multimedia với tags
+### 4. Phân Hệ Tài Chính (Finances & Donations)
+*   **donation_campaigns**: Chiến dịch quyên góp (như xây chùa, cứu trợ thiên tai). Có mục tiêu tài chính, số tiền hiện tại và liên kết tài khoản ngân hàng nhận tiền. Được chuẩn hóa khoá chính kiểu `UUID`.
+*   **donations**: Bản ghi chi tiết từng giao dịch quyên góp thực tế từ các nhà hảo tâm. Liên kết trực tiếp với chiến dịch (`campaign_id` dạng `UUID`) và tài khoản ngân hàng nhận tiền, hỗ trợ tính năng ẩn danh.
 
-### Static & Info Tables  
-5. **pages** - Trang tĩnh 3 ngôn ngữ + SEO meta
-6. **contact_messages** - Form liên hệ + status tracking
+### 5. Phân Hệ Vận Hành & Khách Hàng
+*   **contact_messages**: Tin nhắn liên hệ từ biểu mẫu gửi về ban quản trị, hỗ trợ theo dõi trạng thái phản hồi.
+*   **newsletter_subscribers**: Danh sách đăng ký nhận bản tin qua email. Chứa ràng buộc unique phức hợp `UNIQUE(tenant_id, email)` giúp một email đăng ký nhận tin ở nhiều chi nhánh khác nhau mà không xung đột dữ liệu.
 
-### User Actions Tables
-7. **event_registrations** - Đăng ký sự kiện + số người
-8. **transactions** - Thanh toán với payment tracking
+### 6. Phân Hệ Nhật Ký & Đo Lường Hệ Thống
+*   **audit_logs**: Nhật ký kiểm toán bảo mật bất biến. Ghi lại mọi hành động quan trọng (AI thực hiện, IP, trình duyệt, dữ liệu cũ và dữ liệu mới trước/sau khi sửa đổi). `record_id` lưu trữ dạng `TEXT` để tương thích với tất cả loại khóa chính.
+*   **content_revisions**: Lưu lịch sử các phiên bản sửa đổi nội dung của các bảng tĩnh để hỗ trợ tính năng khôi phục (rollback).
+*   **cron_job_logs**: Lưu nhật ký chạy các tác vụ nền tự động (cron jobs) như dọn dẹp session, kiểm tra bảo mật.
+*   **rls_benchmark_results**: Nhật ký đo lường và đánh giá hiệu năng truy vấn có RLS phục vụ nghiên cứu thực nghiệm đề tài tốt nghiệp.
 
-### System Table
-9. **audit_logs** - Nhật ký hệ thống (ai làm gì khi nào)
-
----
-
-## 🔒 RLS POLICIES
-
-### Public Access (không cần login):
-- ✅ **Read:** Published news, events, pages, media, categories
-- ✅ **Insert:** Event registrations, transactions, contact messages
-
-### Admin Only (requires role='admin'):
-- ✅ **Full CRUD:** News, events, categories, media, pages
-- ✅ **View + Update:** Event registrations, transactions, contact messages
-- ✅ **View:** Audit logs
+### 7. Phân Hệ Bảo Mật & Giám Sát SOC
+*   **active_visitors**: Theo dõi số người dùng trực tuyến theo thời gian thực trên từng chi nhánh.
+*   **ip_blacklist**: Danh sách các IP bị chặn truy cập do phát hiện dấu hiệu tấn công hoặc spam.
+*   **rate_limit_events**: Ghi nhận các sự kiện vi phạm giới hạn tần suất yêu cầu (Rate Limit) để hệ thống tự động kích hoạt chế độ khóa IP tạm thời.
 
 ---
 
-## 🚀 PERFORMANCE FEATURES
+## 🔒 CHÍNH SÁCH BẢO MẬT ROW-LEVEL SECURITY (RLS)
 
-### Indexes Created:
-```sql
-- idx_news_status
-- idx_news_published_at (DESC)
-- idx_news_category
-- idx_events_start_date
-- idx_events_status
-- idx_media_type
-- idx_media_event
-- idx_transactions_status
-- idx_transactions_created_at (DESC)
-```
+Hệ thống thiết lập nguyên tắc **Deny by Default** ở mức cơ sở dữ liệu. Chỉ các truy vấn được định nghĩa rõ ràng thông qua Policies mới được phép thực hiện:
 
-### Triggers:
-- `update_news_updated_at`
-- `update_events_updated_at`
-- `update_event_registrations_updated_at`
-- `update_pages_updated_at`
+1.  **Public Read Access**: Cho phép người dùng không cần đăng nhập đọc các bài viết `news` đã xuất bản (`status = 'published'`), các sự kiện `events` đang diễn ra, thư viện `media`, các trang tĩnh `pages` và danh mục `categories` thuộc chi nhánh hiện tại hoặc được phát sóng tới chi nhánh này (`published_to`).
+2.  **Public Insert Access**: Khách vãng lai được phép thêm bản ghi vào `event_registrations`, `donations`, và `contact_messages` để gửi thông tin biểu mẫu.
+3.  **Tenant Isolation**: Nhân viên chi nhánh chỉ có quyền thao tác trên dữ liệu có `tenant_id = public.get_current_tenant_id()`.
+4.  **Global Admin Control**: Thành viên ban quản trị cấp cao (`super_admin`) được cấp quyền truy cập toàn bộ dữ liệu của tất cả các chi nhánh qua chính sách bỏ qua lọc tenant.
+5.  **Immutability**: Bảng `audit_logs` và `cron_job_logs` chỉ có policy `INSERT` cho ứng dụng và policy `SELECT` cho admin. Tuyệt đối không có policy `UPDATE` hay `DELETE`.
 
 ---
 
-## 💡 TYPESCRIPT USAGE
+## 🚀 HIỆU NĂNG TRUY VẤN & CHỈ MỤC (INDEXES)
 
-```typescript
-// Type-safe queries
-import { createClient } from '@/lib/supabase/server';
-import type { Database } from '@/lib/supabase/database.types';
-
-const supabase = await createClient();
-
-// Auto-completion & type checking!
-const { data } = await supabase
-  .from('news')  // ✅ Autocomplete!
-  .select('*')
-  .eq('status', 'published'); // ✅ Type-safe!
-
-// Types
-type News = Database['public']['Tables']['news']['Row'];
-```
-
----
-
-## 📈 PROGRESS UPDATE
-
-**CHECKLIST:**
-```
-✅ FOUNDATION COMPLETE!  [x] [x] [x]  3/3 (100%)
-TOTAL:                               3/13 (23%)
-```
-
-**Phase 1 DONE:**
-- ✅ Prompt 01: Project Setup
-- ✅ Prompt 02: Design System
-- ✅ Prompt 03: Database Setup
-
-**Next: Phase 2 - PAGES**
-
----
-
-## 🎯 GIỜ BẠN CẦN LÀM
-
-```bash
-# 1. Login Supabase
-npx supabase login
-
-# 2. Link project
-npx supabase link --project-ref YOUR_PROJECT_REF
-
-# 3. Push migration
-npx supabase db push
-
-# 4. Apply seed (optional)
-npx supabase db reset
-
-# 5. Update .env.local
-# Get URL + ANON_KEY from Supabase Dashboard
-
-# 6. Restart dev server
-npm run dev
-```
-
-**Chi tiết:** Xem file `DATABASE_SETUP_GUIDE.md`
-
----
-
-## ✅ ACCEPTANCE CRITERIA
-
-- [x] All 9 tables created successfully
-- [x] RLS policies enabled on all tables  
-- [x] Public read policies work
-- [x] Admin policies configured
-- [x] Indexes created for performance
-- [x] Triggers for updated_at
-- [x] Seed data ready
-- [x] TypeScript types generated
-- [x] Clients typed correctly
-- [ ] **USER CẦN:** Push lên Supabase + test connection
-
----
-
-## 🐛 KNOWN ISSUES
-
-**None!** Schema đã được review kỹ.
-
----
-
-## 🚀 NEXT STEPS
-
-Sau khi bạn push database xong:
-
-### Option 1: Tiếp tục Prompt 04 (Homepage)
-Build trang chủ đẹp với hero section, features, events
-
-### Option 2: Test Database
-Query data thử, tạo admin user
-
-### Option 3: Hỏi tôi
-Nếu gặp lỗi khi push database!
-
----
-
-**Prompt 03 hoàn thành 100%!** 🗄️✨
-
-**Foundation Phase DONE! Ready for Pages!** 🎊
-
-Bạn muốn tôi tiếp tục Prompt 04 ngay, hay bạn push database trước? 🚀
+Để giảm thiểu chi phí hiệu năng khi áp dụng RLS (do PostgreSQL phải thực hiện phép lọc lặp qua các hàm bảo mật), hệ thống đã triển khai các chỉ mục tối ưu:
+*   Composite Index trên các cột khoá ngoại kết hợp với `tenant_id`.
+*   Index tối ưu tìm kiếm mảng GIN trên trường `published_to` của các bảng CMS để tối ưu hóa tính năng chia sẻ chéo (Broadcast).
+*   Index DESC trên trường thời gian như `audit_logs.created_at DESC` và `donations.created_at DESC` phục vụ các trang danh sách thời gian thực.
+*   Partial Unique Index `bank_accounts_tenant_default_idx` trên trường `tenant_id` có điều kiện `WHERE (is_active = true AND is_default = true)` đảm bảo tính toàn vẹn nghiệp vụ ở tầng lưu trữ.

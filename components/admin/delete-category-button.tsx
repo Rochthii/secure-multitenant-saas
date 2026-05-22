@@ -40,10 +40,10 @@ export function DeleteCategoryButton({ id, hasChildren }: { id: string, hasChild
     return (
         <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={handleDelete}
             disabled={loading || hasChildren}
-            className={`transition-colors ${confirm ? 'text-red-700 bg-red-50 font-semibold' : 'text-red-600 hover:text-red-700 hover:bg-red-50'}`}
+            className={`h-8 w-8 rounded-xl transition-colors ${confirm ? 'text-red-400 bg-red-500/10 border border-red-500/20' : 'text-slate-400 hover:text-red-400 hover:bg-white/5'}`}
             title={hasChildren ? 'Không thể xoá vì có danh mục con' : confirm ? 'Nhấn lần nữa để xác nhận xóa' : 'Xoá'}
         >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
