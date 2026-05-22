@@ -129,7 +129,16 @@ export function TenantForm({ mode, tenant, role, formMode }: TenantFormProps) {
             : await updateTenant(tenant!.id, formData);
 
         if (result.success) {
-            toast.success(mode === 'create' ? 'Đã khởi tạo Workspace mới thành công!' : 'Đã cập nhật thông tin Workspace!');
+            // @ts-ignore
+            if (result.warning) {
+                // @ts-ignore
+                toast.warning(result.warning, {
+                    duration: 10000,
+                    description: 'Thông tin Workspace đã được lưu, nhưng phần ánh xạ Edge Vercel cần được liên kết thủ công.'
+                });
+            } else {
+                toast.success(mode === 'create' ? 'Đã khởi tạo Workspace mới thành công!' : 'Đã cập nhật thông tin Workspace!');
+            }
             router.push('/admin/tenants');
             router.refresh();
         } else {

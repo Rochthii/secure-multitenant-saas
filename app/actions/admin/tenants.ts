@@ -41,7 +41,7 @@ export async function getTenants(): Promise<{ tenants: Tenant[]; error?: string 
 
     let query = supabase
         .from('tenants')
-        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, plan_type, modules_config');
+        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, plan_type, lifecycle_status, modules_config');
 
     // Filter for agency_admin and company_editor: only see tenants with web frontend
     if (role === 'agency_admin' || role === 'company_editor') {
@@ -61,7 +61,7 @@ export async function getTenant(id: string): Promise<{ tenant: Tenant | null; er
 
     const { data, error } = await supabase
         .from('tenants')
-        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, modules_config')
+        .select('id, name, domain, subdomain, layout_style, layout_blocks, theme_colors, logo_url, contact_info, tenant_type, has_web_frontend, latitude, longitude, created_at, plan_type, lifecycle_status, modules_config')
         .eq('id', id)
         .single();
 
@@ -84,9 +84,13 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
             }
         }
 
+        let cleanDomain = (formData.get('domain') as string || '').trim().toLowerCase();
+        cleanDomain = cleanDomain.replace(/^(https?:\/\/)/, '');
+        cleanDomain = cleanDomain.replace(/\/.*$/, '');
+
         const raw = {
             name: formData.get('name') as string,
-            domain: formData.get('domain') as string,
+            domain: cleanDomain,
             subdomain: (formData.get('subdomain') as string) || null,
             layout_style: (formData.get('layout_style') as string) || 'saas_violet',
             logo_url: (formData.get('logo_url') as string) || null,
@@ -163,16 +167,17 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
             newData: data,
         });
         
+        let warningMessage: string | undefined = undefined;
         // --- VERCEL API: AUTO MAP CUSTOM DOMAIN ---
         const vercelResult = await addDomainToVercel(data.domain);
         if (!vercelResult.success) {
             console.warn(`[VercelAPI] Cảnh báo: Không thể tự động gắn domain lên Vercel: ${vercelResult.error}`);
-            // Chúng ta không lỗi toàn bộ quá trình, chỉ cảnh báo để user biết cấu hình DNS có thể chưa sẵn sàng.
+            warningMessage = `Tên miền đã lưu vào database, nhưng không thể tự động cấu hình định tuyến Edge trên Vercel: ${vercelResult.error}. Bạn cần trỏ bản ghi DNS của tên miền về Vercel để Edge có thể xác minh thành công.`;
         }
 
         revalidatePath('/admin/tenants');
         revalidatePath('/admin/users');
-        return { success: true };
+        return { success: true, ...(warningMessage ? { warning: warningMessage } : {}) };
     } catch (err: any) {
         return { success: false, error: err.message || 'Lỗi server khi tạo Workspace' };
     }
@@ -193,9 +198,13 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
             }
         }
 
+        let cleanDomain = (formData.get('domain') as string || '').trim().toLowerCase();
+        cleanDomain = cleanDomain.replace(/^(https?:\/\/)/, '');
+        cleanDomain = cleanDomain.replace(/\/.*$/, '');
+
         const raw = {
             name: formData.get('name') as string,
-            domain: formData.get('domain') as string,
+            domain: cleanDomain,
             subdomain: (formData.get('subdomain') as string) || null,
             layout_style: (formData.get('layout_style') as string) || 'saas_violet',
             logo_url: (formData.get('logo_url') as string) || null,
@@ -279,15 +288,22 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
             newData: parsed.data,
         });
 
+        let warningMessage: string | undefined = undefined;
         // --- VERCEL API: AUTO MAP CUSTOM DOMAIN IF CHANGED ---
         if (oldData?.domain !== parsed.data.domain) {
             const vercelResult = await addDomainToVercel(parsed.data.domain);
             if (!vercelResult.success) {
-                console.warn(`[VercelAPI] Cảnh báo: Không thể tự động cập nhật domain lên Vercel: ${vercelResult.error}`);
+                console.warn(`[VercelAPI] Cảnh báo: Không thể tự động cập nhật domain mới lên Vercel: ${vercelResult.error}`);
+                warningMessage = `Tên miền đã lưu vào database, nhưng không thể tự động cấu hình định tuyến Edge trên Vercel: ${vercelResult.error}. Hãy đảm bảo bạn đã cấu hình DNS trỏ về Vercel để hệ thống xác minh thành công.`;
             }
         }
 
-        // Revalidate tenant-config cache trên frontend (layout_style, theme, v.v.)
+        // Revalidate tenant-config cache trên frontend cho cả domain cũ và mới
+        if (oldData?.domain) {
+            // @ts-ignore
+            revalidateTag(CACHE_TAGS.system.tenantConfig(oldData.domain));
+        }
+
         // Query domain để có đúng cache tag key
         const { data: tenantData } = await supabase.from('tenants').select('domain').eq('id', id).single();
         if (tenantData?.domain) {
@@ -300,7 +316,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         revalidatePath('/admin/tenants');
         revalidatePath(`/admin/tenants/${id}`);
         revalidatePath('/admin/users');
-        return { success: true };
+        return { success: true, ...(warningMessage ? { warning: warningMessage } : {}) };
     } catch (err: any) {
         return { success: false, error: err.message || 'Lỗi server khi cập nhật Workspace' };
     }
