@@ -74,17 +74,17 @@ export default async function AnalyticsPage() {
 
     return (
         <div className="space-y-8 pb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            {/* Premium Header */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 shadow-2xl">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-3xl -mr-64 -mt-64 mix-blend-screen pointer-events-none" />
+            {/* Premium Command Center Header */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 border border-slate-800 shadow-2xl">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-3xl -mr-64 -mt-64 mix-blend-screen pointer-events-none" />
                 
                 <div className="relative z-10 p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-amber-500/20 rounded-xl border border-amber-500/30 text-amber-400">
+                        <div className="p-3 bg-indigo-500/20 rounded-xl border border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                             <ShieldAlert className="w-8 h-8" />
                         </div>
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent tracking-tight">Analytics Hệ thống</h1>
+                            <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-indigo-200 via-indigo-400 to-indigo-200 bg-clip-text text-transparent tracking-tight">Analytics Hệ thống</h1>
                             <p className="text-slate-400 mt-2 text-xs italic">
                                 * Số liệu thống kê lưu lượng và tương tác trực quan thời gian thực từ các chi nhánh và cơ sở dữ liệu.
                             </p>

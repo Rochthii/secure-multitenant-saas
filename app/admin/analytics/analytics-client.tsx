@@ -28,8 +28,12 @@ import {
     ArrowUpDown, 
     Calendar,
     Newspaper,
-    CheckCircle
+    CheckCircle,
+    Activity,
+    FolderGit2
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 interface TenantData {
     id: string;
@@ -75,7 +79,37 @@ interface AnalyticsClientProps {
     auditCount: number;
 }
 
-const COLORS = ['#F59E0B', '#D4AF37', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'];
+// Curated Harmonic Colors for charts
+const COLORS = ['#6366f1', '#10b981', '#3b82f6', '#f43f5e', '#8b5cf6', '#06b6d4'];
+
+// Glassmorphism Custom Tooltip for Recharts
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl">
+                <p className="text-xs font-bold text-slate-400 mb-2">{label}</p>
+                <div className="space-y-1">
+                    {payload.map((item: any, index: number) => (
+                        <div key={index} className="flex items-center gap-3">
+                            <span 
+                                className="w-2.5 h-2.5 rounded-full" 
+                                style={{ backgroundColor: item.color || item.fill }} 
+                            />
+                            <span className="text-xs font-medium text-slate-200">
+                                {item.name}: <strong className="text-white font-black">
+                                    {typeof item.value === 'number' && item.name.includes('Doanh thu') 
+                                        ? formatCurrency(item.value) 
+                                        : item.value}
+                                </strong>
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
 
 export function AnalyticsClient({
     tenants = [],
@@ -128,7 +162,7 @@ export function AnalyticsClient({
 
     // ─── Chuẩn bị dữ liệu cho biểu đồ Doanh thu theo tháng (6 tháng qua) ─────────
     const getMonthlyChartData = React.useCallback(() => {
-        const monthsData: Record<string, { name: string; revenue: number; posts: number; dateObj: Date }> = {};
+        const monthsData: Record<string, { name: string; 'Doanh thu (VND)': number; 'Ấn phẩm số': number; dateObj: Date }> = {};
         
         // Tạo 6 tháng gần nhất mặc định
         const now = new Date();
@@ -136,7 +170,7 @@ export function AnalyticsClient({
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             const label = `Tháng ${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`;
-            monthsData[key] = { name: label, revenue: 0, posts: 0, dateObj: d };
+            monthsData[key] = { name: label, 'Doanh thu (VND)': 0, 'Ấn phẩm số': 0, dateObj: d };
         }
 
         // Tích lũy tiền từ transactions
@@ -144,7 +178,7 @@ export function AnalyticsClient({
             const date = new Date(t.created_at);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             if (monthsData[key]) {
-                monthsData[key].revenue += (Number(t.amount) || 0);
+                monthsData[key]['Doanh thu (VND)'] += (Number(t.amount) || 0);
             }
         });
 
@@ -153,14 +187,14 @@ export function AnalyticsClient({
             const date = new Date(n.created_at);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             if (monthsData[key]) {
-                monthsData[key].posts += 1;
+                monthsData[key]['Ấn phẩm số'] += 1;
             }
         });
         filtered.events.forEach(e => {
             const date = new Date(e.created_at);
             const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
             if (monthsData[key]) {
-                monthsData[key].posts += 1;
+                monthsData[key]['Ấn phẩm số'] += 1;
             }
         });
 
@@ -169,11 +203,11 @@ export function AnalyticsClient({
 
     const monthlyChartData = getMonthlyChartData();
 
-    // ─── Dữ liệu phân bổ loại hình chi nhánh ───────────────────────────
+    // ─── Dữ liệu phân bổ loại hình chi nhánh (SaaS vs Legacy) ───────────────────────────
     const tenantTypeChartData = React.useMemo(() => {
         const types: Record<string, number> = {};
         tenants.forEach(t => {
-            const typeLabel = t.tenant_type === 'company' ? 'Tập đoàn' : t.tenant_type === 'ngo' ? 'Tổ chức phi lợi nhuận' : 'Chi nhánh chùa';
+            const typeLabel = t.tenant_type !== 'tenant' ? 'Doanh nghiệp SaaS' : 'Tổ chức Di sản';
             types[typeLabel] = (types[typeLabel] || 0) + 1;
         });
         return Object.entries(types).map(([name, value]) => ({ name, value }));
@@ -193,7 +227,7 @@ export function AnalyticsClient({
                 id: tenant.id,
                 name: tenant.name || 'Không tên',
                 domain: tenant.domain || 'Không cấu hình',
-                type: tenant.tenant_type === 'company' ? 'Doanh nghiệp' : tenant.tenant_type === 'ngo' ? 'NGO' : 'Chùa',
+                type: tenant.tenant_type !== 'tenant' ? 'Doanh nghiệp' : 'Di sản',
                 totalDonations: donationsSum,
                 newsCount: tenantNews.length,
                 eventsCount: tenantEvents.length,
@@ -261,19 +295,22 @@ export function AnalyticsClient({
     return (
         <div className="space-y-8 pb-10">
             {/* Control Panel / Filter & Action */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 p-4 rounded-3xl backdrop-blur-md">
-                <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phạm vi thời gian:</span>
-                    <div className="flex rounded-xl bg-slate-100 dark:bg-slate-850 p-1 border border-slate-200/50 dark:border-slate-800">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white/80 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 p-6 rounded-[2rem] shadow-2xl backdrop-blur-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                
+                <div className="flex items-center gap-3 relative z-10">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Lọc thời gian:</span>
+                    <div className="flex rounded-xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200/50 dark:border-slate-800/80">
                         {(['all', '90d', '30d', '7d'] as const).map((r) => (
                             <button
                                 key={r}
                                 onClick={() => setTimeRange(r)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                className={cn(
+                                    "px-4 py-2 rounded-lg text-xs font-bold transition-all",
                                     timeRange === r 
-                                        ? 'bg-amber-500 text-[#1C1008] shadow-sm' 
+                                        ? 'bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
                                         : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                                }`}
+                                )}
                             >
                                 {r === 'all' ? 'Tất cả' : r === '90d' ? '90 ngày' : r === '30d' ? '30 ngày' : '7 ngày'}
                             </button>
@@ -283,115 +320,142 @@ export function AnalyticsClient({
 
                 <button
                     onClick={handleExportCSV}
-                    className="flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-2xl shadow-lg shadow-amber-500/10 hover:shadow-amber-500/20 active:scale-95 transition-all text-xs border border-amber-500/30"
+                    className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all text-xs border border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] relative z-10"
                 >
                     <Download className="w-4 h-4" />
                     <span>Xuất báo cáo hệ thống (CSV)</span>
                 </button>
             </div>
 
-            {/* Metrics Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-amber-500/5 hover:border-amber-500/30 group">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                            <span>Tổng ngân quỹ toàn hệ thống</span>
-                            <TrendingUp className="w-4 h-4 text-emerald-500" />
+            {/* Metrics Dashboard Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {/* Card 1: Revenue */}
+                <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-350 hover:shadow-[0_0_25px_rgba(99,102,241,0.15)] hover:border-indigo-500/40 group relative">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                            <span>Ngân quỹ hệ thống</span>
+                            <TrendingUp className="w-4 h-4 text-indigo-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-3xl font-black text-amber-500 dark:text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+                        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-indigo-500 dark:group-hover:text-indigo-400">
                             {formatCurrency(totalDonationsSum)}
-                        </p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold uppercase tracking-wider">
-                            Từ {filtered.transactions.length} giao dịch thành công
+                        </h3>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                            Từ {filtered.transactions.length} lượt giao dịch
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-amber-500/5 hover:border-amber-500/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                            <span>Tin tức & Truyền thông</span>
-                            <Newspaper className="w-4 h-4 text-amber-550" />
+                {/* Card 2: News */}
+                <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-350 hover:shadow-[0_0_25px_rgba(16,185,129,0.15)] hover:border-emerald-500/40 group relative">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                            <span>Bài viết & Ấn phẩm</span>
+                            <Newspaper className="w-4 h-4 text-emerald-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-black text-amber-500 dark:text-amber-400">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-emerald-500 dark:group-hover:text-emerald-400">
                             {totalNewsCount}
-                        </p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold uppercase tracking-wider">
-                            Bài viết truyền thông đã tạo
+                        </h3>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                            Nội dung truyền thông đã đăng
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-amber-500/5 hover:border-amber-500/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                            <span>Sự kiện & Hội thảo</span>
+                {/* Card 3: Events */}
+                <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-350 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)] hover:border-blue-500/40 group relative">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                            <span>Sự kiện chi nhánh</span>
                             <Calendar className="w-4 h-4 text-blue-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-black text-amber-500 dark:text-amber-400">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-400">
                             {totalEventsCount}
-                        </p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold uppercase tracking-wider">
-                            {totalRegsCount} lượt đăng ký tham gia thực tế
+                        </h3>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                            {totalRegsCount} lượt đăng ký tham gia
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-300 hover:shadow-amber-500/5 hover:border-amber-500/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
-                            <span>Quy mô quản trị</span>
+                {/* Card 4: Collaborators */}
+                <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden transition-all duration-350 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] hover:border-purple-500/40 group relative">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                            <span>Nhân sự điều hành</span>
                             <Users className="w-4 h-4 text-purple-500" />
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-4xl font-black text-amber-500 dark:text-amber-400">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-1.5 transition-colors group-hover:text-purple-500 dark:group-hover:text-purple-400">
                             {totalUsers}
-                        </p>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 font-bold uppercase tracking-wider">
-                            Nhân viên & Sư thầy đang quản trị
+                        </h3>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+                            Nhân viên đa hệ thống
                         </p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Interactive Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* 1. Monthly Revenue Chart */}
-                <Card className="lg:col-span-2 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden">
-                    <CardHeader className="py-5 border-b border-slate-200 dark:border-slate-800">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Xu hướng doanh thu & Hoạt động (6 Tháng Qua)</CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* 1. Monthly Revenue & Analytics Chart */}
+                <Card className="lg:col-span-2 border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <CardHeader className="py-6 border-b border-slate-100 dark:border-slate-800/80 p-8 pb-5">
+                        <CardTitle className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-indigo-500 animate-pulse" />
+                            Xu hướng Doanh thu & Hoạt động (6 Tháng Qua)
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6">
+                    <CardContent className="p-8">
                         <div className="h-80 w-full">
                             {!isMounted ? (
-                                <div className="w-full h-full bg-slate-100 dark:bg-slate-850 animate-pulse rounded-xl" />
+                                <div className="w-full h-full bg-slate-150 dark:bg-slate-850 animate-pulse rounded-2xl" />
                             ) : (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={monthlyChartData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:hidden" />
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" className="hidden dark:block" />
-                                        <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} fontWeight="bold" />
-                                        <YAxis yAxisId="left" stroke="#F59E0B" fontSize={11} fontWeight="bold" />
-                                        <YAxis yAxisId="right" orientation="right" stroke="#10B981" fontSize={11} fontWeight="bold" />
-                                        <Tooltip 
-                                            contentStyle={{ 
-                                                backgroundColor: '#0f172a', 
-                                                borderColor: '#334155',
-                                                borderRadius: '12px',
-                                                color: '#f8fafc'
-                                            }}
-                                            labelClassName="font-black text-slate-200 text-xs"
+                                    <LineChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.15} />
+                                        <XAxis 
+                                            dataKey="name" 
+                                            stroke="#64748b" 
+                                            fontSize={10} 
+                                            fontWeight="bold" 
+                                            tickLine={false}
                                         />
-                                        <Legend wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                                        <Line yAxisId="left" type="monotone" dataKey="revenue" name="Doanh thu (VND)" stroke="#F59E0B" strokeWidth={3} activeDot={{ r: 8 }} />
-                                        <Line yAxisId="right" type="monotone" dataKey="posts" name="Bài viết & Sự kiện" stroke="#10B981" strokeWidth={2} />
+                                        <YAxis 
+                                            yAxisId="left" 
+                                            stroke="#6366f1" 
+                                            fontSize={10} 
+                                            fontWeight="bold" 
+                                            tickLine={false} 
+                                            axisLine={false}
+                                        />
+                                        <YAxis 
+                                            yAxisId="right" 
+                                            orientation="right" 
+                                            stroke="#10b981" 
+                                            fontSize={10} 
+                                            fontWeight="bold" 
+                                            tickLine={false} 
+                                            axisLine={false}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Legend 
+                                            wrapperStyle={{ fontSize: '11px', fontWeight: 'bold', paddingTop: '10px' }} 
+                                            iconType="circle"
+                                        />
+                                        <Line yAxisId="left" type="monotone" dataKey="Doanh thu (VND)" stroke="#6366f1" strokeWidth={3} activeDot={{ r: 6 }} />
+                                        <Line yAxisId="right" type="monotone" dataKey="Ấn phẩm số" stroke="#10b981" strokeWidth={3} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             )}
@@ -399,48 +463,45 @@ export function AnalyticsClient({
                     </CardContent>
                 </Card>
 
-                {/* 2. Tenant Type Pie Chart */}
-                <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden">
-                    <CardHeader className="py-5 border-b border-slate-200 dark:border-slate-800">
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Phân bổ loại hình tổ chức</CardTitle>
+                {/* 2. Tenant Type Distribution (SaaS vs Legacy) */}
+                <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <CardHeader className="py-6 border-b border-slate-100 dark:border-slate-800/80 p-8 pb-5">
+                        <CardTitle className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                            <FolderGit2 className="w-4 h-4 text-emerald-500" />
+                            Phân loại Không gian làm việc
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-6 flex flex-col justify-center items-center h-80">
+                    <CardContent className="p-8 flex flex-col justify-center items-center h-80">
                         {!isMounted ? (
-                            <div className="w-48 h-48 rounded-full bg-slate-100 dark:bg-slate-850 animate-pulse" />
+                            <div className="w-44 h-44 rounded-full bg-slate-150 dark:bg-slate-850 animate-pulse" />
                         ) : tenantTypeChartData.length > 0 ? (
-                            <div className="relative w-full h-full flex flex-col justify-center items-center">
-                                <div className="h-56 w-full">
+                            <div className="relative w-full h-full flex flex-col justify-center items-center gap-4">
+                                <div className="h-52 w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={tenantTypeChartData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
-                                                paddingAngle={5}
+                                                innerRadius={55}
+                                                outerRadius={75}
+                                                paddingAngle={4}
                                                 dataKey="value"
                                             >
                                                 {tenantTypeChartData.map((entry, index) => (
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
                                             </Pie>
-                                            <Tooltip 
-                                                contentStyle={{ 
-                                                    backgroundColor: '#0f172a', 
-                                                    borderColor: '#334155',
-                                                    borderRadius: '12px',
-                                                    color: '#f8fafc'
-                                                }}
-                                            />
+                                            <Tooltip content={<CustomTooltip />} />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 </div>
-                                <div className="flex flex-wrap gap-x-4 gap-y-1 justify-center text-xs font-bold text-slate-500 dark:text-slate-400">
+                                <div className="flex flex-wrap gap-x-4 gap-y-1.5 justify-center text-xs font-bold text-slate-500 dark:text-slate-400">
                                     {tenantTypeChartData.map((entry, index) => (
-                                        <div key={entry.name} className="flex items-center gap-1">
+                                        <div key={entry.name} className="flex items-center gap-1.5">
                                             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                            <span>{entry.name}: {entry.value}</span>
+                                            <span>{entry.name}: <strong className="text-slate-900 dark:text-white font-black">{entry.value}</strong></span>
                                         </div>
                                     ))}
                                 </div>
@@ -453,93 +514,92 @@ export function AnalyticsClient({
             </div>
 
             {/* Tenant-by-Tenant Activity Breakdown Table */}
-            <Card className="border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] overflow-hidden">
-                <CardHeader className="py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <Card className="border border-slate-200 dark:border-slate-800/60 shadow-2xl bg-white dark:bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 border-b border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
                     <div>
-                        <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Báo cáo hoạt động chi tiết từng chi nhánh</CardTitle>
-                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-bold">Thống kê chi tiết tài chính và ấn phẩm truyền thông toàn hệ thống SaaS</p>
+                        <CardTitle className="text-base font-black text-slate-900 dark:text-white">Báo cáo hoạt động chi tiết từng chi nhánh</CardTitle>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Giám sát số lượng bài viết tin tức, sự kiện và đăng ký tham gia</p>
                     </div>
 
-                    <div className="relative w-full sm:w-64">
+                    <div className="relative w-full sm:w-80">
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
                             placeholder="Tìm kiếm chi nhánh..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs font-medium focus:ring-1 focus:ring-amber-500 focus:border-amber-500 focus:outline-none placeholder-slate-400 dark:placeholder-slate-650"
+                            className="w-full bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 py-3 pl-10 pr-4 text-xs font-semibold focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none placeholder-slate-400 dark:placeholder-slate-500 rounded-xl"
                         />
                     </div>
                 </CardHeader>
                 <CardContent className="p-0 overflow-x-auto">
-                    <table className="w-full min-w-[700px] border-collapse text-left text-xs text-slate-600 dark:text-slate-400">
-                        <thead className="bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                    <table className="w-full min-w-[800px] text-left text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                             <tr>
-                                <th className="px-6 py-4">Tên chi nhánh</th>
-                                <th className="px-6 py-4">Domain/Tên miền</th>
-                                <th className="px-6 py-4">Loại hình</th>
-                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors" onClick={() => handleSort('donations')}>
+                                <th className="px-8 py-5">Tên chi nhánh</th>
+                                <th className="px-8 py-5">Domain / Tên miền</th>
+                                <th className="px-8 py-5">Loại hình</th>
+                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('donations')}>
                                     <div className="flex items-center gap-1.5">
-                                        <span>Quỹ/Tổng đóng góp</span>
+                                        <span>Quỹ / Tổng đóng góp</span>
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors" onClick={() => handleSort('news')}>
+                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('news')}>
                                     <div className="flex items-center gap-1.5">
                                         <span>Tin tức</span>
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors" onClick={() => handleSort('events')}>
+                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('events')}>
                                     <div className="flex items-center gap-1.5">
                                         <span>Sự kiện</span>
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                                     </div>
                                 </th>
-                                <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900/60 transition-colors" onClick={() => handleSort('regs')}>
+                                <th className="px-8 py-5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-850/60 transition-colors" onClick={() => handleSort('regs')}>
                                     <div className="flex items-center gap-1.5">
-                                        <span>Đăng ký tham gia</span>
+                                        <span>Lượt đăng ký</span>
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
                                     </div>
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-semibold text-slate-700 dark:text-slate-350">
                             {sortedTenants.length > 0 ? sortedTenants.map((item) => (
-                                <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition-colors">
-                                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-200">
+                                <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-850/30 transition-colors group">
+                                    <td className="px-8 py-5 font-bold text-slate-900 dark:text-white group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">
                                         {item.name}
                                     </td>
-                                    <td className="px-6 py-4 font-mono text-slate-500">
+                                    <td className="px-8 py-5 font-mono text-slate-500 text-xs">
                                         {item.domain}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                    <td className="px-8 py-5">
+                                        <Badge variant="outline" className={cn(
+                                            "text-[10px] px-2 py-0.5 font-bold uppercase tracking-wider",
                                             item.type === 'Doanh nghiệp' 
-                                                ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
-                                                : item.type === 'NGO' 
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                        }`}>
-                                            {item.type}
-                                        </span>
+                                                ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25' 
+                                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25'
+                                        )}>
+                                            {item.type === 'Doanh nghiệp' ? 'Doanh nghiệp' : 'Legacy Space'}
+                                        </Badge>
                                     </td>
-                                    <td className="px-6 py-4 font-black text-amber-500 dark:text-amber-400">
+                                    <td className="px-8 py-5 font-black text-indigo-600 dark:text-indigo-400">
                                         {formatCurrency(item.totalDonations)}
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
-                                        {item.newsCount}
+                                    <td className="px-8 py-5 font-bold text-slate-900 dark:text-white">
+                                        {item.newsCount} bài viết
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
-                                        {item.eventsCount}
+                                    <td className="px-8 py-5 font-bold text-slate-900 dark:text-white">
+                                        {item.eventsCount} sự kiện
                                     </td>
-                                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">
-                                        {item.regsCount}
+                                    <td className="px-8 py-5 font-bold text-indigo-500 dark:text-indigo-300">
+                                        {item.regsCount} lượt
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-10 text-center text-slate-400 italic">
+                                    <td colSpan={7} className="px-8 py-12 text-center text-slate-400 italic">
                                         Không tìm thấy chi nhánh nào trùng khớp.
                                     </td>
                                 </tr>
@@ -550,20 +610,22 @@ export function AnalyticsClient({
             </Card>
 
             {/* Intranet SOC Monitoring Activity Overview */}
-            <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between shadow-2xl border border-slate-800 gap-6 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="bg-slate-950 text-white rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between shadow-2xl border border-slate-800/80 gap-6 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none opacity-20" />
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+                
                 <div className="relative z-10 flex items-center gap-4">
-                    <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20 text-red-400">
-                        <ShieldAlert className="w-8 h-8 animate-pulse" />
+                    <div className="p-3.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+                        <ShieldAlert className="w-7 h-7 animate-pulse text-indigo-400" />
                     </div>
                     <div>
-                        <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest mb-1">Màn hình giám sát SOC & An ninh hệ thống</h3>
-                        <p className="text-lg font-black text-slate-100">Đã kiểm toán và ghi nhận {auditCount.toLocaleString()} hành động bảo mật</p>
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Màn hình giám sát SOC & An ninh hệ thống</h4>
+                        <p className="text-lg font-black text-slate-100">Đã kiểm toán và ghi nhận {auditCount.toLocaleString()} hành động bảo mật RLS</p>
                     </div>
                 </div>
-                <div className="relative z-10 flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Hệ thống bảo vệ RLS đang hoạt động thực tế</span>
+                <div className="relative z-10 flex items-center gap-2.5 px-4.5 py-2.5 bg-white/5 rounded-xl border border-white/10 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Hệ thống bảo vệ RLS đang hoạt động thực tế</span>
                 </div>
             </div>
         </div>
