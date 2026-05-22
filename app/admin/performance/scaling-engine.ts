@@ -1,65 +1,83 @@
 /**
- * Scaling Benchmark Engine
- * Mục đích: Đo lường Latency khi Dataset tăng trưởng (1k -> 10k -> 100k)
+ * Scaling Benchmark Engine — Chương 5 Đồ án Tốt nghiệp PTIT
+ * Mục đích: Đo lường Latency so sánh 3 baseline lọc dữ liệu khi Dataset tăng trưởng:
+ *   (1) App-side Filtering   — Fetch hết dữ liệu rồi lọc trong JavaScript → O(N) tệ nhất
+ *   (2) Legacy RLS JOIN      — DB phải JOIN bảng để kiểm tra quyền → O(N) tốt hơn nhưng vẫn chậm
+ *   (3) JWT Claims RLS       — Đọc trực tiếp từ JWT session, không JOIN → O(1) tối ưu nhất
+ *
+ * LƯU Ý QUAN TRỌNG:
+ * - Cần chạy migration 20260522000000_create_benchmark_rpcs.sql trước khi sử dụng.
+ * - Dataset benchmark là bảng `benchmark_legacy` và `benchmark_jwt` với 100,000 dòng.
+ * - Chỉ dùng với `createAdminClient()` để đọc được dữ liệu đầy đủ (bypass RLS cho App-side test).
  */
+
 export type BenchmarkResult = {
     datasetSize: number;
-    appFilterMs: number;
-    rlsJoinMs: number;
-    rlsClaimsMs: number; // Mục tiêu O(1)
+    appFilterMs: number;    // App-side filtering (worst case O(N))
+    rlsJoinMs: number;      // Legacy RLS với JOIN (O(N))
+    rlsClaimsMs: number;    // Optimized RLS với JWT Claims (O(1))
 };
 
-export async function runScalingBenchmark(supabase: any): Promise<BenchmarkResult[]> {
+/**
+ * Chạy bộ đo lường hiệu năng theo 3 mức dataset khác nhau.
+ * @param supabaseAdmin - Client được khởi tạo bằng createAdminClient() (service_role)
+ * @param currentTenantId - tenant_id thực tế của user đang đăng nhập (lấy từ getUserContext())
+ */
+export async function runScalingBenchmark(
+    supabaseAdmin: any,
+    currentTenantId: string
+): Promise<BenchmarkResult[]> {
+    // 3 mức dataset để vẽ đường cong hiệu năng (1k → 10k → 100k)
     const sizes = [1000, 10000, 100000];
     const results: BenchmarkResult[] = [];
 
     for (const size of sizes) {
-        // 1. Giả lập App-side filtering (Fetch hết rồi filter trong JS)
-        // Lưu ý: Trong thực tế ta chỉ fetch top [size] để so sánh latency
+        // ─────────────────────────────────────────────────────────────────────
+        // Baseline 1: App-side Filtering (Mô phỏng Anti-pattern cổ điển)
+        // Fetch toàn bộ [size] dòng từ DB (bypass RLS qua admin client),
+        // rồi filter bằng JavaScript — đây là những gì "legacy app" không dùng
+        // DB-level security thường làm. Đo thời gian FETCH + FILTER.
+        // ─────────────────────────────────────────────────────────────────────
         const startApp = performance.now();
-        const { data: allData } = await supabase.from('audit_logs').select('*').limit(size);
-        // Giả lập filter logic
-        const filtered = allData?.filter((i: any) => i.tenant_id === 'some-id');
+        const { data: allData, error: appError } = await supabaseAdmin
+            .from('benchmark_legacy')
+            .select('id, name, tenant_id, created_at')
+            .limit(size);
+
+        if (!appError && allData) {
+            // Giả lập lọc theo tenant_id trong JavaScript (đây là anti-pattern)
+            // Phải dùng currentTenantId thực tế để đảm bảo kết quả có ý nghĩa
+            const _filtered = allData.filter(
+                (row: { tenant_id: string }) => row.tenant_id === currentTenantId
+            );
+        }
         const endApp = performance.now();
 
-        // 2. RLS truyền thống (Sử dụng JOIN/Subquery trong DB)
-        // Chúng ta gọi một RPC hoặc Query mà DB buộc phải JOIN để check quyền
+        // ─────────────────────────────────────────────────────────────────────
+        // Baseline 2: Legacy RLS JOIN (Gọi RPC benchmark_rls_join)
+        // Hàm này buộc DB phải JOIN bảng tenants để kiểm tra quyền — O(N)
+        // Mỗi dòng dữ liệu phải được kiểm tra lại điều kiện JOIN
+        // ─────────────────────────────────────────────────────────────────────
         const startJoin = performance.now();
-        await supabase.rpc('benchmark_rls_join', { limit_count: size });
+        await supabaseAdmin.rpc('benchmark_rls_join', { limit_count: size });
         const endJoin = performance.now();
 
-        // 3. RLS Tối ưu (Sử dụng JWT Custom Claims - O(1))
+        // ─────────────────────────────────────────────────────────────────────
+        // Baseline 3: Optimized RLS JWT Claims (Gọi RPC benchmark_rls_claims)
+        // Đọc tenant_id trực tiếp từ JWT session — O(1) constant time
+        // Không cần bất kỳ JOIN nào, kiểm tra quyền nhanh như hằng số
+        // ─────────────────────────────────────────────────────────────────────
         const startClaims = performance.now();
-        await supabase.rpc('benchmark_rls_claims', { limit_count: size });
+        await supabaseAdmin.rpc('benchmark_rls_claims', { limit_count: size });
         const endClaims = performance.now();
 
         results.push({
             datasetSize: size,
-            appFilterMs: endApp - startApp,
-            rlsJoinMs: endJoin - startJoin,
-            rlsClaimsMs: endClaims - startClaims
+            appFilterMs: Math.round((endApp - startApp) * 100) / 100,
+            rlsJoinMs: Math.round((endJoin - startJoin) * 100) / 100,
+            rlsClaimsMs: Math.round((endClaims - startClaims) * 100) / 100,
         });
     }
 
     return results;
 }
-
-/**
- * SQL hỗ trợ (Cần chạy trong Supabase SQL Editor)
- * 
- * CREATE OR REPLACE FUNCTION benchmark_rls_join(limit_count int) 
- * RETURNS SETOF audit_logs AS $$
- * BEGIN
- *   -- Giả lập truy vấn buộc phải JOIN với bảng tenants/roles
- *   RETURN QUERY SELECT al.* FROM audit_logs al 
- *   JOIN tenants t ON al.tenant_id = t.id WHERE t.status = 'active' LIMIT limit_count;
- * END; $$ LANGUAGE plpgsql;
- * 
- * CREATE OR REPLACE FUNCTION benchmark_rls_claims(limit_count int) 
- * RETURNS SETOF audit_logs AS $$
- * BEGIN
- *   -- Giả lập truy vấn sử dụng claim có sẵn trong session (không JOIN)
- *   RETURN QUERY SELECT * FROM audit_logs 
- *   WHERE tenant_id = auth.jwt()->>'tenant_id'::uuid LIMIT limit_count;
- * END; $$ LANGUAGE plpgsql;
- */

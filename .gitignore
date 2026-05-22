@@ -110,3 +110,7 @@ scripts/ingest_*.*
 scripts/mass_ingest_*.mjs
 scripts/test_*.mjs
 
+# Loại bỏ toàn bộ thư mục scripts cục bộ chứa thông tin nhạy cảm (Mật khẩu DB, Tokens)
+/scripts/
+
+

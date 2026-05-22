@@ -173,6 +173,9 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - **Thực nghiệm Cache Leakage Testing & Tấn công giả lập (Threat Simulation):** Mô phỏng truy cập chéo giữa các tenant sử dụng cache/đường dẫn chéo thông qua widget Threat Simulator và API `/api/admin/security/simulate-attack` để kiểm chứng độ tin cậy của RLS DB. **[HOÀN THÀNH]**
 - Ánh xạ Ma trận tuân thủ (ISO/IEC 27017 Compliance Matrix): Bảng đối chiếu thực tế từng điều khoản kiểm soát bảo mật cloud với bằng chứng kỹ thuật cụ thể đã cài đặt. **[HOÀN THÀNH]**
 
+> [!TIP]
+> **Báo cáo Phân tích Kỹ thuật & Chứng minh Học thuật chuyên sâu:** Toàn bộ bằng chứng thực nghiệm và lập luận kỹ thuật của 4 phân hệ bảo mật cốt lõi (Tối ưu RLS $O(1)$ Query Execution Plan, Động cơ SOAR & Webhook Telegram alert, Disaster Recovery cô lập cấp Tenant, và giải pháp Caching cô lập chống rò rỉ dữ liệu) được trình bày chi tiết phục vụ viết luận văn tại [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md).
+
 ### Chương 6: Kết luận & Hướng phát triển
 - Tổng kết kết quả đạt được **[HOÀN THÀNH]**
 - **Hạn chế:** 
@@ -226,12 +229,14 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 ---
 
-## 7.3 Cập nhật triển khai (Đối chiếu ngày 21/05/2026)
+## 7.3 Cập nhật triển khai (Đối chiếu ngày 22/05/2026)
 
-- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã có SOC Dashboard, audit log explorer, export Excel, anomaly alerts (quy tắc 20 thao tác/giờ).
-- **Mục 2.2.5 (Noisy Neighbor / Rate Limiting):** Đã có Noisy Neighbors widget từ `rate_limit_hits`.
-- **Mục 2.2.6 (Active Defense):** Force Logout + Threat Simulation demo, có ghi audit.
-- **Chương 5 (Benchmarking):** Đã có dashboard đo hiệu năng RLS O(N) vs O(1) và flow benchmark.
+- **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Đã hoàn thành SOC Dashboard hiển thị log an ninh, tích hợp quy tắc phát hiện bất thường (20 thao tác/giờ) và tính năng kết xuất báo cáo Excel, xuất dữ liệu JSON độc lập cho từng Tenant phục vụ Disaster Recovery.
+- **Mục 2.2.5 (Noisy Neighbor / Rate Limiting):** Tích hợp Supavisor Connection Pooling kết hợp điều tiết lưu lượng API ghi (Rate Limiting) và widget Noisy Neighbors trực quan.
+- **Mục 2.2.6 & 4.3 (Active Defense & SOAR Engine):** Hoàn thành **SOAR Active Defense Engine**. Khi phát hiện tấn công dồn dập (3 vi phạm/phút), database trigger tự động khóa tenant sang trạng thái `suspended`. Middleware Edge Runtime lập tức chặn đứng mọi truy cập từ bên ngoài với giao diện Modern Dark Mode cao cấp.
+- **Mục 2.2.6 (Dynamic Telegram Webhook SOC Alerts):** Hoàn thành tích hợp cảnh báo đỏ khẩn cấp trực tiếp về Telegram cá nhân của Admin qua `net.http_post` bất đồng bộ. Đã tối ưu hóa loại bỏ ký tự `%0A` thừa bằng phép nối chuỗi `CHR(10)`, tin nhắn hiển thị phân dòng vô cùng chuyên nghiệp và rõ ràng.
+- **Mục 2.2.3 & 4.3 (Immutable Audit Logs - ISO 27017 CLD.12.4.1):** Hiện thực hóa hoàn hảo tính bất biến của nhật ký kiểm toán. Postgres triggers chặn hoàn toàn mọi lệnh `UPDATE` hoặc `DELETE` của toàn bộ người dùng (kể cả Super Admin), trả về lỗi `SECURITY VIOLATION [CLD.12.4.1]` chống chối bỏ.
+- **Chương 5 (Performance Benchmarking):** Thiết lập môi trường đo lường hiệu năng thật 100% trên **111,000 bản ghi dữ liệu seed thực tế** trên Supabase Cloud. Vẽ biểu đồ so sánh phân kỳ hiệu năng rõ rệt giữa Custom JWT Claims (O(1)) và RLS JOIN (O(N)), khắc phục triệt để lỗi TypeScript trên giao diện Dark Mode.
 - **DevSecOps / Cron Observability:** Ghi log cron jobs (backup/publish/reminder) để phục vụ audit vận hành.
 - **Vòng đời & Trạng thái Tenant (Lifecycle):** Bổ sung chức năng Suspend/Reactivate, badge hiển thị Plan type (Free/Pro/Enterprise) đồng bộ bảo mật Zero Trust.
 

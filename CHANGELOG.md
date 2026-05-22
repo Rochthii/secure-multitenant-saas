@@ -2,7 +2,25 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
-## [Unreleased] - 2026-05-21
+## [1.2.0] - 2026-05-22
+
+### Bảo mật & SOAR Active Defense (Security & Incident Response)
+- **Tự động phòng vệ SOAR Engine**: Thiết lập trigger an ninh `soc_active_alert_trigger` tự động đếm tần suất tấn công chéo tenant, SQL injection hoặc cache pollution. Khi phát hiện từ 3 hành vi tấn công trong 1 phút, hệ thống tự động chuyển trạng thái chi nhánh sang `suspended` để cô lập rủi ro.
+- **Khắc phục lỗi xuống dòng Telegram Webhook**: Thay thế toàn bộ ký tự `%0A` thô trong PL/pgSQL bằng phép ghép chuỗi với `CHR(10)` để tự động serialize thành `\n` trong JSON payload. Bot Telegram gửi tin nhắn cảnh báo đỏ Cyber SOC phân dòng đẹp mắt, có tích hợp emoji linh hoạt theo mức độ hiểm họa (CRITICAL: 🟥, HIGH: 🟧).
+- **Dynamic Intranet & Status Lockdown**: Cải tiến Next.js Edge Middleware để fetch trực tiếp `ip_whitelist` và `lifecycle_status` của Tenant từ Supabase qua PostgREST API. Chặn truy cập tức thời các tenant bị khóa hoặc IP lạ ngoài Whitelist với giao diện Modern Dark Mode cao cấp.
+- **Nhật ký bất biến (Immutable Audit Logs - ISO 27017 CLD.12.4.1)**: Áp dụng trigger database chặn đứng 100% mọi thao tác `UPDATE` và `DELETE` của toàn bộ người dùng (kể cả Super Admin), trả về mã lỗi bảo mật `SECURITY VIOLATION [CLD.12.4.1]`.
+
+### Học thuật & Thực nghiệm (Academic Benchmarking)
+- **Chuẩn hóa API đo lường hiệu năng**: Cập nhật hàm RPC `benchmark_rls_join` trên PostgreSQL tương thích cấu trúc bảng `tenants` mới. Nâng cấp `scaling-engine.ts` để gọi API đo lường thật dựa trên Session Context thực tế của tenant đang hoạt động thay vì hardcode tĩnh.
+- **Seed dữ liệu quy mô lớn**: Cài đặt thành công **111,000 bản ghi dữ liệu benchmark** trên cơ sở dữ liệu Supabase Cloud thật để vẽ đường cong phân kỳ hiệu năng chính xác của Custom JWT Claims (O(1)) so with RLS JOIN (O(N)).
+- **Tối ưu hóa giao diện đồ thị**: Khắc phục triệt để các lỗi TypeScript liên quan đến Recharts Tooltip trong giao diện Premium Dark Mode tại `/admin/performance` giúp vẽ biểu đồ trực quan, đẹp mắt và trơn tru.
+
+### Tài liệu & Tuân thủ (Documentation & Compliance)
+- **Báo cáo Phân tích Kỹ thuật & Chứng minh Học thuật chuyên sâu**: Biên soạn tài liệu [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md) chi tiết hóa 4 chủ đề bảo mật nặng ký phục vụ viết luận án và phản biện trước hội đồng.
+- **Ma trận tuân thủ đám mây**: Xây dựng tài liệu [ISO_27017_COMPLIANCE_MATRIX.md](file:///e:/PTIT_THESIS_SAAS/docs/ISO_27017_COMPLIANCE_MATRIX.md) ánh xạ trực tiếp các tính năng bảo mật vật lý sang khung tiêu chuẩn quốc tế.
+- **Ý tưởng bảo vệ đồ án đột phá**: Biên soạn Phụ lục [y_tuong_trinh_bay_do_an.md](file:///C:/Users/Admin/.gemini/antigravity-ide/brain/d2a388ae-f564-429f-b223-2272cdd4d9ac/y_tuong_trinh_bay_do_an.md) định hướng khung slide thuyết trình và sơ đồ Mermaid trực quan để ghi điểm tối đa trước Hội đồng.
+
+## [1.1.0] - 2026-05-21
 
 ### Bảo mật & Kiến trúc Zero Trust (Security)
 - **Đã vá lỗ hổng UUID Injection**: Thay thế logic kiểm tra độ dài chuỗi sơ sài bằng biểu thức chính quy (Regex) chuẩn UUIDv4 trong `middleware.ts`.

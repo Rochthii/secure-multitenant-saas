@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShieldCheck, Network, Save, Loader2, Lock } from 'lucide-react';
+import { ShieldCheck, Network, Save, Loader2, Lock, Send } from 'lucide-react';
 import { updateTenantSecuritySettings } from '@/app/actions/admin/tenants';
 import { toast } from 'sonner';
 
@@ -15,12 +15,14 @@ interface Props {
     initialConfig: {
         require_2fa?: boolean;
         ip_whitelist?: string;
+        telegram_chat_id?: string;
     };
 }
 
 export function SecuritySettingsForm({ tenantId, initialConfig }: Props) {
     const [require2FA, setRequire2FA] = useState(initialConfig.require_2fa || false);
     const [ipWhitelist, setIpWhitelist] = useState(initialConfig.ip_whitelist || '');
+    const [telegramChatId, setTelegramChatId] = useState(initialConfig.telegram_chat_id || '');
     const [loading, setLoading] = useState(false);
 
     const handleSave = async () => {
@@ -29,6 +31,7 @@ export function SecuritySettingsForm({ tenantId, initialConfig }: Props) {
             const result = await updateTenantSecuritySettings(tenantId, {
                 require_2fa: require2FA,
                 ip_whitelist: ipWhitelist.trim(),
+                telegram_chat_id: telegramChatId.trim(),
             });
 
             if (result.success) {
@@ -97,6 +100,30 @@ export function SecuritySettingsForm({ tenantId, initialConfig }: Props) {
                                 placeholder="Ví dụ: 192.168.1.1, 203.113.120.4"
                                 value={ipWhitelist}
                                 onChange={(e) => setIpWhitelist(e.target.value)}
+                                className="font-mono text-sm bg-white dark:bg-slate-950"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Telegram Chat ID */}
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="mt-1 w-10 h-10 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0">
+                            <Send className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                        </div>
+                        <div className="flex-1">
+                            <Label htmlFor="telegram-chat-id" className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                                Telegram Chat ID (Cảnh báo SOC Khẩn cấp)
+                            </Label>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3 max-w-md">
+                                Hệ thống SOC sẽ gửi cảnh báo an ninh thời gian thực và mã xác thực bảo mật khẩn cấp đến Chat ID này khi phát hiện sự cố.
+                            </p>
+                            <Input
+                                id="telegram-chat-id"
+                                placeholder="Ví dụ: -1002187654321 hoặc 540987654"
+                                value={telegramChatId}
+                                onChange={(e) => setTelegramChatId(e.target.value)}
                                 className="font-mono text-sm bg-white dark:bg-slate-950"
                             />
                         </div>

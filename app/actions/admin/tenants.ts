@@ -675,7 +675,7 @@ export async function reactivateTenant(id: string): Promise<{ success: boolean; 
  */
 export async function updateTenantSecuritySettings(
     tenantId: string,
-    settings: { require_2fa: boolean; ip_whitelist?: string }
+    settings: { require_2fa: boolean; ip_whitelist?: string; telegram_chat_id?: string }
 ): Promise<{ success: boolean; error?: string }> {
     try {
         // Chốt chặn bảo mật cô lập đa tenant
@@ -702,6 +702,7 @@ export async function updateTenantSecuritySettings(
         const securitySettings = {
             require_2fa: settings.require_2fa,
             ip_whitelist: settings.ip_whitelist || '',
+            telegram_chat_id: settings.telegram_chat_id || '',
             last_updated: new Date().toISOString(),
             updated_by: ctx.email,
         };

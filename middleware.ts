@@ -45,6 +45,9 @@ export default async function middleware(request: NextRequest) {
         } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
             // Sử dụng Regex chuẩn UUIDv4 (8-4-4-4-12 hex chars)
             hostname = tenantParam;
+        } else if (tenantParam.includes('.')) {
+            // Cho phép override bằng domain trực tiếp khi debug
+            hostname = tenantParam;
         }
     }
 
@@ -58,13 +61,90 @@ export default async function middleware(request: NextRequest) {
         hostname = 'khleang.vercel.app';
     }
 
-    // 1.5 Thực thi Intranet Lockdown (IP-based Access Control)
-    // Fix: Bỏ thuộc tính request.ip (đã bị deprecate trong Next.js mới), thay bằng việc đọc từ Header chuẩn
+    // 1.5 Thực thi Intranet Lockdown & Incident Response (SOAR) động
     const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '127.0.0.1';
-    const allowedIps = TENANT_IP_WHITELIST[hostname];
     
-    if (allowedIps && !allowedIps.includes(clientIp)) {
-        return new NextResponse('Forbidden: Intranet Lockdown restricted access', { status: 403 });
+    let allowedIps: string[] | null = null;
+    let isSuspended = false;
+    
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    // Chỉ fetch nếu không phải localhost:3000 gốc mà đã được override thành tenant thật
+    if (supabaseUrl && supabaseAnonKey && hostname !== 'localhost:3000') {
+        try {
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
+            const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
+            
+            const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=modules_config,lifecycle_status`;
+            const dbRes = await fetch(fetchUrl, {
+                headers: {
+                    'apikey': supabaseAnonKey,
+                    'Authorization': `Bearer ${supabaseAnonKey}`
+                },
+                next: { revalidate: 30 } // Cache 30 giây để tránh làm nghẽn cổ chai
+            });
+            
+            if (dbRes.ok) {
+                const data = await dbRes.json();
+                if (data && data.length > 0) {
+                    const tenant = data[0];
+                    if (tenant.lifecycle_status === 'suspended') {
+                        isSuspended = true;
+                    }
+                    const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist;
+                    if (ipWhitelistStr) {
+                        allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('[Middleware] Lỗi fetch cấu hình Tenant:', err);
+        }
+    }
+    
+    if (isSuspended) {
+        return new NextResponse(
+            `<html>
+                <body style="background-color:#0b0f19; color:#f3f4f6; font-family:system-ui,sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; text-align:center; padding: 20px;">
+                    <div style="border: 1px solid #ef4444; background-color: rgba(239,68,68,0.1); padding: 40px; border-radius: 20px; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <h1 style="color:#ef4444; font-size: 22px; margin-top: 0; font-weight: 800; letter-spacing: -0.5px; font-family: system-ui, sans-serif;">🚨 HỆ THỐNG ĐÃ PHONG TỎA (SOAR LOCKDOWN)</h1>
+                        <p style="color:#9ca3af; font-size: 14px; line-height: 1.6; margin: 20px 0 30px 0;">
+                            Tổ chức này tạm thời bị đình chỉ hoạt động do hệ thống SOAR tự động phát hiện hành vi tấn công mạng dồn dập hoặc theo lệnh khẩn cấp từ Super Admin để bảo toàn dữ liệu.
+                        </p>
+                        <div style="font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; padding-top: 15px; font-family: monospace;">
+                            STATUS: TENANT_SUSPENDED | IP: ${clientIp}
+                        </div>
+                    </div>
+                </body>
+            </html>`,
+            { 
+                status: 403,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+        );
+    }
+    
+    if (allowedIps && allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
+        return new NextResponse(
+            `<html>
+                <body style="background-color:#0b0f19; color:#f3f4f6; font-family:system-ui,sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; text-align:center; padding: 20px;">
+                    <div style="border: 1px solid #3b82f6; background-color: rgba(59,130,246,0.1); padding: 40px; border-radius: 20px; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <h1 style="color:#3b82f6; font-size: 22px; margin-top: 0; font-weight: 800; letter-spacing: -0.5px; font-family: system-ui, sans-serif;">🔒 TRUY CẬP BỊ GIỚI HẠN (INTRANET LOCKDOWN)</h1>
+                        <p style="color:#9ca3af; font-size: 14px; line-height: 1.6; margin: 20px 0 30px 0;">
+                            Chi nhánh này đã thiết lập chính sách giới hạn dải IP mạng nội bộ. Địa chỉ IP hiện tại của bạn không nằm trong danh sách được phép truy cập.
+                        </p>
+                        <div style="font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; padding-top: 15px; font-family: monospace;">
+                            STATUS: IP_NOT_WHITELISTED | YOUR IP: ${clientIp}
+                        </div>
+                    </div>
+                </body>
+            </html>`,
+            { 
+                status: 403,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+        );
     }
 
     // 2. Phân tích Locale (Dùng startsWith thay cho Regex match)
