@@ -126,7 +126,7 @@ Khi phát triển ứng dụng Next.js App Router hiệu năng cao, việc sử 
 
 ---
 
-## 🚀 HƯỚNG PHÁT TRIỂN & TỐI ƯU KIẾN TRÚC BẢO MẬT TƯƠNG LAI
+## 🚀 HƯỚNG PHÁT TRIỂN & TỐI ƯU KIẾN TRÚC BẢO MẬT (v1.4.0 — ĐÃ TRIỂN KHAI)
 
 Để nâng cấp hệ thống đạt tiêu chuẩn quốc tế dành cho môi trường doanh nghiệp quy mô lớn (Enterprise SaaS), đồ án vạch ra 3 hướng nghiên cứu và phát triển chiến lược dưới đây:
 

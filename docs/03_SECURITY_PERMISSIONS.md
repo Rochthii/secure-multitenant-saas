@@ -2,7 +2,7 @@
 
 > **Tài liệu chuẩn bảo mật/phân quyền — Đồ Án Tốt Nghiệp PTIT**  
 > **Đề tài:** Secure Multi-tenant SaaS: Áp dụng RLS và Audit Log trong quản trị rủi ro thông tin.  
-> **Cập nhật:** 2026-05-16  
+> **Cập nhật:** 2026-05-23  
 > **Tham chiếu:** ISO/IEC 27017 §CLD.9.5.1 — Kiểm soát truy cập đặc quyền
 
 ---
@@ -33,9 +33,14 @@ Lớp 4: Database-Level RLS (PostgreSQL)
 ├── SECURITY DEFINER functions → context resolution
 ├── ABAC policies → time-based, operation-type constraints
 └── Triggers → auto_set_tenant_id, audit_before_delete
+
+Lớp 5: Post-Storage Integrity (v1.4.0)
+├── WORM Vault → SHA-256 hash-chaining bất biến trên file ledger
+├── Tenant Connection Pooler → cô lập connection slot theo tier
+└── Threat Simulator → kiểm thử 4 kịch bản tấn công tự động
 ```
 
-> **Điểm mấu chốt của đề tài:** Lớp 4 (Database RLS) là lớp bảo mật **không thể bypass** từ application code. Ngay cả khi developer viết sai query hoặc quên guard ở Lớp 2-3, RLS vẫn chặn truy cập cross-tenant.
+> **Điểm mấu chốt của đề tài:** Lớp 4 (Database RLS) là lớp bảo mật **không thể bypass** từ application code. Ngay cả khi developer viết sai query hoặc quên guard ở Lớp 2-3, RLS vẫn chặn truy cập cross-tenant. Lớp 5 (Post-Storage) bổ sung tính bất biến cho audit log và bảo vệ tài nguyên DB khỏi Noisy Neighbor attack.
 
 ---
 
@@ -232,8 +237,10 @@ Thiết lập tại `next.config.ts`:
 | **CLD.9.5.1** | Privileged Access Control | RBAC 6 roles + ABAC time constraint |
 | **CLD.9.5.2** | Management of Privileged Utilities | `SECURITY DEFINER` functions, service_role restriction |
 | **CLD.12.4.1** | Event Logging | Immutable audit_logs + auto DELETE trigger |
+| **CLD.12.4.2** | Protection of Log Information | **WORM Vault** SHA-256 hash-chaining — phát hiện tamper |
 | **CLD.12.4.3** | Administrator & Operator Logs | SOC Dashboard: Top Users, Activity Timeline |
 | **CLD.16.1.2** | Notification of Security Events | Cross-tenant breach notification (§10 Runbook) |
+| **CLD.17.1.1** | Availability of Security Resources | **Tenant Pooler** giới hạn connection tránh Noisy Neighbor DoS |
 
 ---
 
@@ -247,3 +254,62 @@ Thiết lập tại `next.config.ts`:
 6. ☐ Có RLS policy trên bảng mới chưa?
 7. ☐ Bảng mới có `tenant_id` FK chưa? Nếu không, có lý do ghi rõ?
 8. ☐ Đã kiểm tra cross-tenant access chưa?
+9. ☐ Audit log có được đẩy vào WORM Vault (`/api/admin/security/worm-vault` POST) chưa?
+10. ☐ Hành động tạo tải cao có kiểm tra tenant connection slot chưa?
+
+---
+
+## 11) WORM Audit Vault — Tính bất biến mật mã học (v1.4.0)
+
+### 11.1 Cơ chế hoạt động
+
+Hệ thống sử dụng **SHA-256 Hash Chaining** để đảm bảo tính bất biến của audit log ngay cả khi kẻ tấn công có quyền ghi vào file system:
+
+```
+Entry[0]: { data, hash: SHA256(data + "GENESIS") }
+Entry[1]: { data, hash: SHA256(data + entry[0].hash) }   ← prev_hash
+Entry[N]: { data, hash: SHA256(data + entry[N-1].hash) } ← chuỗi không thể giả mạo
+```
+
+- File ledger: `storage/worm_vault/immutable_ledger.json`
+- Quyền file: `0o444` (read-only sau khi ghi)
+- Kiểm tra tính toàn vẹn: `GET /api/admin/security/worm-vault` → `{ integrity: "VERIFIED" | "CORRUPTED" }`
+
+### 11.2 Giới hạn (để ghi nhận học thuật)
+
+| Cơ chế | Bảo vệ chống | Không bảo vệ chống |
+|---|---|---|
+| Hash chaining | Sửa/xóa 1 entry bất kỳ | Root access xóa cả file ledger |
+| `chmod 0o444` | Ghi đè ngẫu nhiên từ app | Người dùng root OS |
+| **Mục tiêu tương lai** | AWS S3 Object Lock (WORM thực) | — |
+
+---
+
+## 12) Tenant Connection Pooler — Noisy Neighbor Protection (v1.4.0)
+
+### 12.1 Cơ chế hoạt động
+
+```typescript
+// Tier-based connection limits
+const TIER_LIMITS = { free: 3, pro: 10, enterprise: 25 }
+
+// Khi tenant request DB connection:
+await pooler.acquireSlot(tenantId, tier)  // Throw nếu quá limit
+// ... thực hiện query ...
+await pooler.releaseSlot(tenantId)        // Giải phóng slot
+```
+
+### 12.2 Phân bổ tài nguyên theo tier
+
+| Plan | Max Connections | Hành vi khi vượt ngưỡng |
+|---|---|---|
+| Free | 3 | 429 Too Many Requests |
+| Pro | 10 | 429 Too Many Requests |
+| Enterprise | 25 | 429 Too Many Requests |
+| **Super Admin** | ∞ | Không giới hạn |
+
+### 12.3 API kiểm soát
+
+- `GET /api/admin/security/tenant-pooler` — trả về stats tất cả tenant
+- `POST { action: "simulate_flood" }` — kiểm thử DDoS simulation
+- `POST { action: "release", tenantId }` — giải phóng thủ công

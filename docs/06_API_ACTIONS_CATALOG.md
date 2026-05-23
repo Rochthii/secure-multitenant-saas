@@ -1,7 +1,7 @@
 # 06 — API & Server Actions Catalog
 
 **Catalog chuẩn endpoint/action (Canonical v2)**  
-**Cập nhật:** 2026-03-14
+**Cập nhật:** 2026-05-23
 
 ---
 
@@ -101,6 +101,32 @@
 - Mục đích: seed dữ liệu tenant mẫu.
 - Auth: secret query (`REVALIDATE_SECRET`/`SEED_SECRET`).
 - Lưu ý: route công cụ vận hành, không dùng cho public traffic.
+
+### 2.7 Admin Security APIs (v1.4.0)
+
+#### `GET /api/admin/security/worm-vault`
+- Mục đích: Kiểm tra tính toàn vẹn của WORM Audit Ledger (SHA-256 hash-chaining).
+- Auth: `requireSuperAdmin`.
+- Output: `{ ledger_size, last_hash, integrity: "VERIFIED" | "CORRUPTED", verified_at }`.
+
+#### `POST /api/admin/security/worm-vault`
+- Mục đích: Ghi một audit entry mới vào ledger bất biến.
+- Auth: `requireSuperAdmin`.
+- Input: `{ actor, action, resource, tenant_id?, metadata? }`.
+- Side-effects: Append entry vào `storage/worm_vault/immutable_ledger.json` với hash-chaining, set file `0o444`.
+
+#### `GET /api/admin/security/tenant-pooler`
+- Mục đích: Trả về thống kê connection slot hiện tại của tất cả tenant.
+- Auth: `requireSuperAdmin`.
+- Output: `{ stats: [{ tenantId, tier, active, limit, utilization_pct }]... }`.
+
+#### `POST /api/admin/security/tenant-pooler`
+- Mục đích: Thực hiện hành động kiểm thử hoặc quản trị pool.
+- Auth: `requireSuperAdmin`.
+- Actions:
+  - `simulate_flood`: Kích hoạt DDoS simulation (tất cả tenant Free đầy slot).
+  - `release`: Giải phóng slot theo `tenantId`.
+- Side-effects: Thay đổi in-memory pool state, ghi audit log.
 
 ---
 

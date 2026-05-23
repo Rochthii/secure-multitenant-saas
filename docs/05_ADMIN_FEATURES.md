@@ -2,7 +2,7 @@
 
 > **Tài liệu chuẩn chức năng admin — Đồ Án Tốt Nghiệp PTIT**  
 > **Đề tài:** Secure Multi-tenant SaaS: Áp dụng RLS và Audit Log trong quản trị rủi ro thông tin.  
-> **Cập nhật:** 2026-05-16
+> **Cập nhật:** 2026-05-23
 
 ---
 
@@ -180,6 +180,18 @@ Actions: `updateSettings`, tenant CRUD actions.
   - **Kết quả thực nghiệm**: Minh chứng hiệu năng RLS Custom Claims giảm tối đa latency so với RLS JOIN truyền thống.
 - **Threat Simulator (Tấn công giả lập)**:
   - **Component**: Màn hình giả lập truy cập chéo tenant `/admin/threat-simulator` kết hợp API `/api/admin/security/simulate-attack` để chứng minh độ bền bỉ của RLS.
+- **WORM Audit Vault (Mới v1.4.0)**:
+  - **Component**: Widget `WormVaultWidget` trong `/admin/security-center`.
+  - **Backend**: `lib/security/worm-vault.ts` + API `GET/POST /api/admin/security/worm-vault`.
+  - **Chức năng**: Ghi audit log vào ledger bất biến với cơ chế SHA-256 hash-chaining. Mỗi entry liên kết mật mã với entry trước — nếu bị sửa bất kỳ entry nào, hệ thống phát hiện ngay.
+  - **Trạng thái hiển thị**: `VERIFIED` (xanh) hoặc `CORRUPTED` (cam cảnh báo).
+  - **ISO mapping**: CLD.12.4.2 — Protection of Log Information.
+- **Tenant Connection Pooler (Mới v1.4.0)**:
+  - **Component**: Widget `TenantPoolerWidget` trong `/admin/security-center`.
+  - **Backend**: `lib/security/tenant-pooler.ts` + API `GET/POST /api/admin/security/tenant-pooler`.
+  - **Chức năng**: Giới hạn kết nối DB đồng thời theo tier (Free=3, Pro=10, Enterprise=25) — bảo vệ tenant lành mạnh khỏi Noisy Neighbor DDoS.
+  - **Simulation**: Nút "Simulate Flood" phân tích heuristic và đánh dấu tenant vi phạm.
+  - **ISO mapping**: CLD.17.1.1 — Availability of Security Resources.
 
 ---
 
