@@ -7,10 +7,10 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React & ReactDOM -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
   <!-- Babel to transpile JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
   <style>
     body {
       background-color: #080c14;
@@ -47,6 +47,22 @@
 </head>
 <body>
   <div id="root"></div>
+  <div id="error-fallback" style="display: none; padding: 20px; background: #1a0f0f; color: #f87171; font-family: monospace; border: 1px solid #ef4444; margin: 20px; border-radius: 8px; z-index: 9999; position: relative;">
+    <h3 style="margin-top: 0; font-weight: bold;">🚨 Đã xảy ra lỗi khi tải Sơ đồ ERD:</h3>
+    <pre id="error-message" style="white-space: pre-wrap; word-break: break-all;"></pre>
+    <p style="margin-bottom: 0; font-size: 12px; color: #9ca3af; margin-top: 10px;">Gợi ý: Vui lòng kiểm tra kết nối mạng (CDN có thể bị chặn) hoặc xem lỗi chi tiết trong Console (F12).</p>
+  </div>
+
+  <script>
+    window.addEventListener('error', function(event) {
+      document.getElementById('error-fallback').style.display = 'block';
+      document.getElementById('error-message').textContent += event.message + '\nại ' + event.filename + ':' + event.lineno + ':' + event.colno + '\n\n';
+    });
+    window.addEventListener('unhandledrejection', function(event) {
+      document.getElementById('error-fallback').style.display = 'block';
+      document.getElementById('error-message').textContent += 'Unhandled Promise Rejection: ' + event.reason + '\n\n';
+    });
+  </script>
 
   <script type="text/babel">
     const { useState, useEffect, useRef, useMemo } = React;
@@ -67,6 +83,35 @@
       ChevronRight: () => <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/></svg>,
       Filter: () => <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" strokeLinecap="round" strokeLinejoin="round"/></svg>
     };
+
+    const PATHWAYS = [
+      { id: "all", name: "Tất cả các luồng nghiệp vụ", highlight: [] },
+      { 
+        id: "rbac", 
+        name: "Luồng Xác thực & Phân quyền (RBAC)", 
+        highlight: ["auth.users", "auth.sessions", "public.user_roles", "public.tenants"] 
+      },
+      { 
+        id: "cms", 
+        name: "Luồng CMS & Quản trị Nội dung", 
+        highlight: ["public.news", "public.categories", "public.about_sections", "public.faq", "public.homepage_slides", "public.pages", "public.tenants"] 
+      },
+      { 
+        id: "events", 
+        name: "Luồng Sự kiện & Đăng ký", 
+        highlight: ["public.events", "public.event_registrations", "public.tenants"] 
+      },
+      { 
+        id: "donations", 
+        name: "Luồng Chiến dịch & Quyên góp", 
+        highlight: ["public.donations", "public.donation_campaigns", "public.bank_accounts", "public.tenants"] 
+      },
+      { 
+        id: "audit", 
+        name: "Luồng Giám sát & Nhật ký Bảo mật (Audit)", 
+        highlight: ["public.audit_logs", "public.active_visitors", "public.tenants"] 
+      }
+    ];
 
     const COMPREHENSIVE_TABLES = [
   {
