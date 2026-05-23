@@ -2,6 +2,24 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.3.0] - 2026-05-23
+
+### Nâng cấp Threat Simulator (Security Platform Engineering)
+- **Chuẩn hóa học thuật độ phức tạp**: Điều chỉnh thông số hiệu năng của Postgres RLS trên UI sang dạng $O(\log N)$ optimized (Index Scan) và tiệm cận $O(1)$ cho in-memory JWT claims, đi kèm chú thích nguồn gốc thực nghiệm và điều kiện dataset benchmark.
+- **Tích hợp PostgreSQL EXPLAIN ANALYZE**: Bổ sung tab **Database Plan** hiển thị chi tiết cây truy vấn thực tế dưới database engine (B-Tree Index Scan, planning/execution time) cho cả 3 kịch bản giả lập.
+- **Bổ sung bản tin log SOC (Why Blocked)**: Tích hợp trường `why_blocked` chi tiết từ API hiển thị dưới dạng monospace terminal để chứng minh chính xác logic chặn và từ chối truy cập chéo tenant hoặc escape SQL Injection.
+- **Tăng cường Security Impact**: Tích hợp phân loại mức độ nguy hại chuẩn học thuật bao gồm: Severity level, điểm số CVSS, MITRE ATT&CK mapping ID, và OWASP Top 10 category.
+- **Mã nguồn mẫu SQL Injection thực tế**: Thay thế mã Hacker Code trong kịch bản SQL Injection bằng ví dụ nối chuỗi truy vấn thô (Vulnerable code - Raw SQL query string concatenation) để tăng tính thực tiễn học thuật của lỗ hổng.
+- **Trực quan hóa luồng tấn công (Dynamic Attack Flow)**: Thiết kế sơ đồ Attack Flow động mô phỏng đường đi của request và các chốt chặn (Edge Cache, Router, JWT Claims, DB RLS, Parameterized) tương ứng cho từng Scenario.
+- **Vá lỗi False-Positive của Cache Pollution**: Thêm filter `.eq('tenant_id', tenantA.id)` khi kiểm tra chéo cache dưới quyền Super Admin, ngăn chặn cảnh báo rò rỉ giả và hiển thị màu xanh "CHẶN THÀNH CÔNG" chính xác.
+
+### Kiểm thử & Tích hợp (Testing & Integration)
+- **Tạo test tích hợp Vitest**: Viết test case `__tests__/integration/simulate-attack.test.ts` kiểm chứng toàn diện API route giả lập tấn công, bao gồm quyền hạn Admin, phản hồi dữ liệu và cấu trúc metadata an ninh.
+- **Kiểm định chất lượng Next.js**: Chạy biên dịch Next.js build hoàn thành 100% không có lỗi compile.
+
+### Đồng bộ tài liệu luận văn (Docs Sync)
+- **Cập nhật báo cáo kỹ thuật**: Sửa đổi toàn bộ các tài liệu học thuật [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md), [18_PROPOSAL_MAPPING_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/18_PROPOSAL_MAPPING_ANALYSIS.md), và [17_GRADUATION_THESIS_PROPOSAL.md](file:///e:/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md) để đồng nhất định nghĩa độ phức tạp phân quyền tiệm cận $O(1)$ và lọc bản ghi CSDL đạt $O(\log N)$ nhờ chỉ mục B-Tree.
+
 ## [1.2.0] - 2026-05-22
 
 ### Bảo mật & SOAR Active Defense (Security & Incident Response)

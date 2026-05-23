@@ -76,9 +76,9 @@ Tốt — kết hợp cả hai là hướng mạnh nhất, nhưng cần một "s
 
 Viết lại "Đóng góp khoa học" thành một câu duy nhất:
 
-> **"Đề tài chứng minh rằng kiến trúc RLS+JWT Claims đạt O(1) authorization complexity — không chỉ trên giấy mà dưới điều kiện tấn công thực tế — và đo lường được cost of security ở từng lớp Defense-in-depth."**
+> **"Đề tài chứng minh rằng kiến trúc RLS+JWT Claims đạt độ phức tạp phân quyền tiệm cận O(1) (RAM lookup) và lọc dữ liệu đạt O(log N) optimized (Index Scan) — không chỉ trên giấy mà dưới điều kiện tấn công thực tế — và đo lường được cost of security ở từng lớp Defense-in-depth."**
 
-Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng minh O(1). Threat Simulation chứng minh "dưới tấn công thực tế". ISO 27017 matrix chứng minh "từng lớp".
+Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng minh O(log N). Threat Simulation chứng minh "dưới tấn công thực tế". ISO 27017 matrix chứng minh "từng lớp".
 
 ---
 
@@ -137,7 +137,7 @@ Không cần AI, không cần Isolation Forest. Đây là **rule-based incident 
 | Security Layer | Latency Added | Attack Vector Blocked |
 |---|---|---|
 | Middleware JWT check | +2ms | Unauthenticated access |
-| RLS tenant isolation | +X ms (O(1)) | Cross-tenant read/write |
+| RLS tenant isolation | +X ms (O(log N)) | Cross-tenant read/write |
 | ABAC time-based | +Y ms | Off-hours privilege abuse |
 | Audit trigger | +Z ms | Non-repudiation |
 | Rate limiting | +W ms | Brute force, Noisy Neighbor |
@@ -152,7 +152,7 @@ Bạn đã có data để fill vào bảng này từ benchmark. Chỉ cần đo 
 
 ```
 Chương 1: Vấn đề — Cross-tenant data leakage xảy ra như thế nào
-Chương 2: Lý thuyết — Tại sao O(1) RLS là giải pháp đúng
+Chương 2: Lý thuyết — Tại sao O(log N) RLS là giải pháp đúng
 Chương 3: Thiết kế — Kiến trúc Defense-in-depth 4 lớp
 Chương 4: Triển khai — Evidence từng lớp
 Chương 5: Chứng minh — Benchmark + Threat Simulation + ISO Matrix
@@ -169,7 +169,7 @@ Chương 6: Kết luận — Bài học và giới hạn trung thực
 1. Mở SOC Dashboard → Security Score 100%, ISO Compliant
 2. Chạy Threat Simulation → show 0 rows returned, audit log nhảy
 3. Trigger Auto-suspend → tenant bị khóa, Telegram nhận alert
-4. Mở Performance Dashboard → show đường cong O(1) vs O(N)
+4. Mở Performance Dashboard → show đường cong O(log N) vs O(N)
 5. Mở ISO 27017 Matrix → show từng control có evidence
 ```
 

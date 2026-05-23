@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface Props {
     userEmail: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function AnomalyActionButtons({ userEmail, userId }: Props) {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
 
     const handleForceLogout = async () => {
@@ -28,6 +30,9 @@ export function AnomalyActionButtons({ userEmail, userId }: Props) {
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Failed to force logout');
+
+            // Làm mới các Server Component trên trang
+            router.refresh();
 
             toast.success(data.message || `Đã đăng xuất ${userEmail}`);
         } catch (error: any) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { isGlobalAdmin, getUserContext } from '@/lib/permissions';
+import { revalidatePath } from 'next/cache';
 
 export async function POST(req: NextRequest) {
     const globalAccess = await isGlobalAdmin();
@@ -97,6 +98,18 @@ export async function POST(req: NextRequest) {
             table_name: 'auth.users',
             new_data: { targetUserId, userEmail, timestamp: new Date().toISOString(), forced_by: ctx.email }
         });
+
+        try {
+            revalidatePath('/admin/security-center');
+            revalidatePath('/admin/audit-logs');
+            if (tenantId) {
+                revalidatePath(`/admin/t/${tenantId}/security`);
+                revalidatePath(`/admin/t/${tenantId}/audit-logs`);
+                revalidatePath(`/admin/t/${tenantId}/dashboard`);
+            }
+        } catch (e) {
+            console.error('[Revalidate Error]:', e);
+        }
 
         return NextResponse.json({ success: true, message: `Đã buộc đăng xuất tài khoản ${userEmail || targetUserId}` });
     } catch (err: any) {
