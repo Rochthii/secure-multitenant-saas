@@ -2597,6 +2597,8 @@ function App() {
       const [expandedTables, setExpandedTables] = useState({});
 
       const canvasRef = useRef(null);
+      const dragStartRef = useRef({ x: 0, y: 0 });
+      const tableStartPosRef = useRef({ x: 0, y: 0 });
 
       useEffect(() => {
         const checkMobile = () => {
@@ -2685,10 +2687,9 @@ function App() {
         if (isDraggingCanvas) {
           setPan({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
         } else if (draggedTableId) {
-          const dx = (e.clientX - dragStart.x) / zoom;
-          const dy = (e.clientY - dragStart.y) / zoom;
-          setTables(prev => prev.map(t => t.id === draggedTableId ? { ...t, x: t.x + dx, y: t.y + dy } : t));
-          setDragStart({ x: e.clientX, y: e.clientY });
+          const dx = (e.clientX - dragStartRef.current.x) / zoom;
+          const dy = (e.clientY - dragStartRef.current.y) / zoom;
+          setTables(prev => prev.map(t => t.id === draggedTableId ? { ...t, x: tableStartPosRef.current.x + dx, y: tableStartPosRef.current.y + dy } : t));
         }
       };
 
@@ -2700,7 +2701,11 @@ function App() {
       const handleTableDragStart = (e, tableId) => {
         e.stopPropagation();
         setDraggedTableId(tableId);
-        setDragStart({ x: e.clientX, y: e.clientY });
+        const table = tables.find(t => t.id === tableId);
+        if (table) {
+          dragStartRef.current = { x: e.clientX, y: e.clientY };
+          tableStartPosRef.current = { x: table.x, y: table.y };
+        }
       };
 
       const focusOnTable = (table) => {
