@@ -25,7 +25,6 @@ import {
     XCircle,
 } from 'lucide-react';
 import Link from 'next/link';
-import { UnreadMessagesWidget } from '@/components/admin/unread-messages-widget';
 import { formatDate } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -33,6 +32,7 @@ interface EnterpriseDashboardUIProps {
     tenantId: string;
     tenantName: string;
     tenantType?: string;
+    unreadCount: number;
     newsCount: number;
     eventsCount: number;
     pendingRegistrations: number;
@@ -53,6 +53,7 @@ export function EnterpriseDashboardUI({
     recentNews,
     recentRegistrations,
     recentAuditLogs,
+    unreadCount,
 }: EnterpriseDashboardUIProps) {
     const base = `/admin/t/${tenantId}`;
 
@@ -189,8 +190,26 @@ export function EnterpriseDashboardUI({
 
             {/* ── KPI Cards ─────────────────────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {/* Unread Messages */}
-                <UnreadMessagesWidget tenantId={tenantId} />
+                {/* Unread Messages Card */}
+                <div className="group relative overflow-hidden rounded-2xl bg-slate-900/60 backdrop-blur-md border p-5 hover:shadow-xl transition-all duration-500 border-indigo-500/30 hover:shadow-indigo-500/10">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none" />
+                    <div className="relative z-10">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 border bg-indigo-500/10 border-indigo-500/30">
+                            <Mail className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Tin nhắn chưa đọc</p>
+                        <h3 className="text-3xl font-black text-indigo-400 tracking-tight">{unreadCount}</h3>
+                        <p className="text-[11px] mt-1.5 text-indigo-400 opacity-70">
+                            {unreadCount > 0 ? (
+                                <Link href={`${base}/messages?status=unread`} className="hover:underline font-bold">
+                                    Xem {unreadCount} tin nhắn mới
+                                </Link>
+                            ) : (
+                                'Không có tin nhắn mới'
+                            )}
+                        </p>
+                    </div>
+                </div>
 
                 {kpiCards.map((card) => {
                     const Icon = card.icon;

@@ -9,6 +9,7 @@ import { requireTenantAccess } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import { getTenantConfig } from '@/lib/tenant';
 import { EnterpriseDashboardUI } from '@/components/admin/enterprise-dashboard';
+import { getContactMessages } from '@/app/actions/admin/contact-messages';
 
 
 export default async function AdminDashboard({ params }: { params: Promise<{ tenant_id: string }> }) {
@@ -36,11 +37,15 @@ export default async function AdminDashboard({ params }: { params: Promise<{ ten
 
     // ── Enterprise / Company Route: dedicated premium UI ─────────────────────
     if (tenantType === 'company' || tenantType === 'ngo') {
+        const unreadMessages = await getContactMessages(tenant_id, 'unread').catch(() => []);
+        const unreadCount = unreadMessages.length;
+
         return (
             <EnterpriseDashboardUI
                 tenantId={tenant_id}
                 tenantName={tenantName}
                 tenantType={tenantType}
+                unreadCount={unreadCount}
                 newsCount={newsCount}
                 eventsCount={eventsCount}
                 pendingRegistrations={pendingRegistrations}
