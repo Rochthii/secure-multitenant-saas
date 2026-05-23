@@ -2,6 +2,23 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.5.0] - 2026-05-23
+
+### Tích hợp & Refactor hoàn chỉnh AI Security Copilot & GraphRAG (SecOps Alignment)
+- **Tái thiết lập CSDL RAG & GraphRAG**: Áp dụng migrations khởi tạo schema và 10 PostgreSQL RPCs nâng cao cho tìm kiếm lai (hybrid search) và duyệt đồ thị tri thức (GraphRAG traversal) cô lập an toàn giữa các tenant.
+- **Dữ liệu mẫu Chính sách ISO 27001 thực tế**: Nạp dữ liệu mẫu chính sách doanh nghiệp chuyên sâu qua 4 chuyên đề tương ứng với các phòng ban cốt lõi (`THERAVADA` -> HR & NDA, `MAHAYANA` -> IT Security & ISO 27001, `VAJRAYANA` -> Finance Audit, `KHATTSI` -> Executive Board).
+- **Refactor Edge Function**: Chuyển đổi system prompt, classifier, expander và các nhãn UX của Edge Function `rag-chat` sang vai trò Sĩ quan An ninh (SecOps Officer), loại bỏ sạch sẽ các từ ngữ tôn giáo/chùa chiền cũ để tương thích hoàn toàn với đồ án PTIT.
+- **AI Đàm thoại An ninh & Phòng thủ chủ động**: 
+  - Phát triển Widget đàm thoại AI floating widget cao cấp (Premium Dark Mode, Glassmorphism, Neon LED status) nhúng toàn cục vào Admin layout.
+  - Tích hợp tính năng AI tự động phòng vệ (Active Defense): AI tự động phân tích logs an ninh và bóp cò API Force Logout tài khoản nghi vấn chỉ trong 2 giây mà không cần phê duyệt thủ công khi bật "Auto Defense".
+  - Tích hợp nút xuất báo cáo an ninh Markdown (.md) chuẩn ISO 27001 chỉ với 1 click tải về máy.
+- **Kiểm thử liên thông Vitest**: Viết test suite `__tests__/integration/ai-copilot-context.test.ts` kiểm định API an toàn, đạt 100% PASS kiểm soát phân quyền.
+
+### Đồng bộ & Dọn dẹp hệ thống Tài liệu Đồ án PTIT (Docs Synchronization)
+- **Refactor 6 Tài liệu RAG chuyên sâu**: Cập nhật toàn diện các tệp tin trong `/docs/ai-rag/` (`INGESTION_GUIDE.md`, `DECOUPLING_GUIDE.md`, `IP_MANIFESTO.md`, `TECHNICAL_ARCHITECTURE.md`, `NCKH_LONG_FORM_STRUCTURE.md`, `NCKH_GRAPHRAG_RESEARCH_GUIDE.md`) chuyển dịch hoàn toàn sang ngữ cảnh doanh nghiệp, quản trị rủi ro an ninh thông tin.
+- **Loại bỏ từ khóa cũ**: Sửa đổi tệp tin đề cương tốt nghiệp `docs/17_GRADUATION_THESIS_PROPOSAL.md` loại bỏ hoàn toàn từ khóa "tự viện" sót lại tại dòng 71.
+- **Dọn dẹp không gian Workspace**: Di chuyển các tài liệu lịch sử sprint cũ (`docs/sprint` và `docs/sprints`) sang `/docs/_legacy_archive` để giữ cho thư mục `/docs/` hoạt động hoàn toàn nhất quán, thuần túy SecOps/ISO 27001.
+
 ## [1.4.0] - 2026-05-23
 
 ### Bảo mật cấp Doanh nghiệp (Enterprise-grade Security Hardening)

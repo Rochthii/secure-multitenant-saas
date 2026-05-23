@@ -68,7 +68,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 ### 2.3 Đóng góp khoa học & thực tiễn
 
 - **Về lý thuyết:** Hệ thống hóa cách tiếp cận bảo mật "Defense-in-depth" cho kiến trúc Multi-tenant, chuyển dịch trọng tâm thực thi từ tầng ứng dụng xuống tầng dữ liệu (Data-centric Security).
-- **Về thực tiễn:** Cung cấp một bộ khung (framework) SaaS an toàn có khả năng tùy biến cao, giúp các doanh nghiệp vừa và nhỏ hoặc các tổ chức phi lợi nhuận (ví dụ: các tổ chức xã hội, tự viện) dễ dàng triển khai nền tảng quản trị an toàn với chi phí hạ tầng thấp nhưng đảm bảo mức độ bảo mật tương đương cấp doanh nghiệp lớn (Enterprise security tier).
+- **Về thực tiễn:** Cung cấp một bộ khung (framework) SaaS an toàn có khả năng tùy biến cao, giúp các doanh nghiệp vừa và nhỏ hoặc các tổ chức phi lợi nhuận (ví dụ: các tổ chức xã hội, các đơn vị hành chính công) dễ dàng triển khai nền tảng quản trị an toàn với chi phí hạ tầng thấp nhưng đảm bảo mức độ bảo mật tương đương cấp doanh nghiệp lớn (Enterprise security tier).
 
 ---
 

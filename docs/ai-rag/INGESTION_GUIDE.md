@@ -1,124 +1,111 @@
-# Hướng Dẫn Nạp Kinh Sách Đa Hệ Phái
+# Hướng Dẫn Nạp Chính Sách An Ninh & Kiểm Toán Đa Bộ Phận (Enterprise Policy Ingestion)
 
 ## Tổng quan
 
-Hệ thống Dharma Chat RAG đã hỗ trợ **5 hệ phái Phật giáo**. Mỗi tài liệu nạp vào cần được gắn đúng `tradition_id` để AI có thể lọc và sinh câu hỏi trắc nghiệm chính xác.
+Hệ thống **Security Policy & IT Audit Copilot RAG** hỗ trợ quản trị và phân tích chính sách bảo mật cho **4 bộ phận chuyên môn cốt lõi** trong doanh nghiệp. Mỗi tài liệu chính sách khi nạp vào hệ thống cần được phân loại đúng mã định danh bộ phận (`department_id` - tương đương với mã `tradition_id` vật lý của cơ sở dữ liệu nhằm tương thích ngược) để AI có thể phân loại ngữ cảnh và sinh câu hỏi kiểm tra tuân thủ bảo mật chính xác cho nhân viên.
 
 ---
 
-## Danh sách Hệ Phái (tradition_id)
+## Danh sách Bộ Phận & Phân loại Chính sách (`tradition_id` mapping)
 
-| ID | Tên Việt | Ví dụ Kinh sách |
+| Mã Database | Tên Bộ Phận | Tài liệu Chính sách tiêu biểu |
 |:---|:---|:---|
-| `THERAVADA` | Nam Tông Theravāda | Tam Tạng Pāli, Thanh Tịnh Đạo |
-| `MAHAYANA` | Bắc Tông Đại Thừa | Kinh Pháp Hoa, Kim Cang, Hoa Nghiêm |
-| `VAJRAYANA` | Kim Cang Thừa Mật Tông | Mật điển Tây Tạng |
-| `KHATTSI` | Hệ Phái Khất Sĩ | Chơn Lý (69 bài) |
-| `GENERAL` | Phật Học Phổ Thông | Lịch sử PG, So sánh tông phái |
+| `THERAVADA` | **Nhân sự & Pháp lý (HR & Legal)** | Thỏa thuận bảo mật thông tin (NDA), Quy tắc ứng xử nhân viên, Chính sách bảo vệ dữ liệu cá nhân (NĐ 13/2023/NĐ-CP). |
+| `MAHAYANA` | **An toàn thông tin (IT Security)** | Tiêu chuẩn ISO/IEC 27001:2013, Quy trình ứng phó sự cố an ninh (SOAR), RLS & Rủi ro cô lập dữ liệu Cloud. |
+| `VAJRAYANA` | **Kiểm toán Tài chính (Finance Audit)** | Quy chế kiểm toán nội bộ, Quy trình quản lý ngân sách, Kiểm soát giao dịch đa chi nhánh. |
+| `KHATTSI` | **Ban Điều hành (Executive Board)** | Nghị quyết chiến lược, Quy định phân cấp đặc quyền quản trị tập đoàn. |
+| `GENERAL` | **Nội quy chung (General Policies)** | Quy chế vận hành doanh nghiệp, Chính sách làm việc hybrid. |
 
 ---
 
-## Cách nạp kinh sách mới (Web Admin)
+## Cách nạp chính sách mới (Web Admin)
 
-### Bước 1: Quyền truy cập & Bảo mật
+### Bước 1: Quyền truy cập & Bảo mật (RBAC)
 > [!IMPORTANT]
-> Toàn bộ các API nạp liệu hiện đã được bảo vệ bởi lớp `requireAdmin`. Người dùng phải có quyền Admin hệ thống mới có thể kích hoạt tiến trình nạp.
+> Toàn bộ các API nạp tài liệu hiện đã được bảo vệ chặt chẽ bởi lớp phân quyền kiểm soát `requireAdmin`. Người dùng bắt buộc phải có vai trò **Super Admin** hoặc **Compliance Officer** của hệ thống mới có thể kích hoạt tiến trình nạp chính sách.
 
-### Bước 2: Upload file PDF + Điền metadata
-Vào **Admin → Tab "AI Dharma" → Nạp Kinh sách**. PDF sẽ được xử lý qua API `/api/admin/ai/parse-pdf`. 
+### Bước 2: Tải lên tài liệu PDF & Cung cấp Metadata
+Truy cập vào **Admin → Security Center → AI Policy Management → Nạp tài liệu**. 
+PDF sẽ được phân tích, cắt đoạn (chunking), trích xuất thực thể bảo mật và đẩy sang API xử lý `/api/admin/ai/parse-pdf`.
 
 ---
 
 ## Nạp liệu nâng cao (Sử dụng Script)
 
-Đối với các bộ kinh đồ sộ hoặc cần nạp số lượng lớn, khuyến khích sử dụng Script Node.js để kiểm soát tốt tiến trình và tránh timeout trình duyệt.
+Đối với các tài liệu quy chuẩn kỹ thuật đồ sộ (ví dụ: toàn văn tài liệu ISO 27001 gồm hàng trăm trang), khuyến khích sử dụng Script Node.js để chạy ngầm qua terminal nhằm kiểm soát tiến trình, tránh bị timeout trình duyệt và xử lý rate limit API.
 
-### Script mẫu: `scripts/ingest_psychology.mjs`
-Script này đã được tối ưu hóa cho:
-- **ESM Compatibility**: Xử lý lỗi nạp thư viện `pdf-parse` trong môi trường Node hiện đại.
-- **Rate Limiting**: Tự động trì hoãn 1s/đoạn để tránh bị Google chặn API.
-- **Environment Aware**: Tự động lấy cấu hình từ `.env.local`.
+### Script mẫu: `scripts/ingest_policies.mjs`
+Script được tối ưu hóa cho:
+- **ESM Compatibility**: Nhập thư viện xử lý tài liệu PDF trong môi trường Node.js hiện đại.
+- **Rate Limiting Guard**: Tự động trì hoãn (sleep 1000ms) sau mỗi phân đoạn nhúng (embedding chunk) để tránh cạn kiệt hạn ngạch (Rate Limit Exceeded) của Google Cloud API.
+- **Environment Aware**: Tự động đọc thông tin xác thực từ tệp cấu hình `.env.local`.
 
-**Cách chạy:**
+**Cách thực thi:**
 ```powershell
-node scripts/ingest_psychology.mjs
+node scripts/ingest_policies.mjs
 ```
 
 ---
 
-## Quy chuẩn Metadata theo từng Hệ phái
+## Quy chuẩn Cấu trúc Metadata theo từng Bộ phận
 
-### Theravāda (Nam Tông)
+### 1. Nhân sự & Pháp lý (HR & Legal)
 ```json
 {
-  "author":      "Tên Ngài / Thượng Tọa",
-  "translator":  "Tỳ Kheo Bodhi / Tỳ Kheo Nguyệt Thiên",
-  "canon":       "Tipiṭaka (Tam Tạng Pāli)",
-  "pali_ref":    "MN 22 / DN 2 / SN 22.59",
-  "language":    "vi"
+  "author":            "Trưởng phòng Nhân sự / Pháp lý",
+  "effective_date":    "2026-01-01",
+  "classification":    "CONFIDENTIAL (Bảo mật nội bộ)",
+  "legal_framework":   "Nghị định 13/2023/NĐ-CP về Bảo vệ dữ liệu cá nhân",
+  "language":          "vi"
 }
 ```
 
-### Đại Thừa (Mahayana)
+### 2. An toàn thông tin (IT Security)
 ```json
 {
-  "author":      "Đức Phật / Long Thọ / Thế Thân",
-  "translator":  "HT. Thích Trí Tịnh / HT. Thích Thanh Từ",
-  "canon":       "Đại Chánh Tân Tu Đại Tạng Kinh (Taishō Tripiṭaka)",
-  "taisho_number": "T0235",
-  "language":    "vi"
+  "author":            "Chief Information Security Officer (CISO)",
+  "framework":         "ISO/IEC 27001 Annex A",
+  "iso_control":       "A.12.4.1 (Nhật ký sự kiện)",
+  "target_systems":    "PostgreSQL RLS, Supabase Cloud, Next.js Serverless Edge",
+  "language":          "vi"
 }
 ```
 
-### Khất Sĩ
+### 3. Kiểm toán Tài chính (Finance Audit)
 ```json
 {
-  "author":      "Tổ sư Minh Đăng Quang",
-  "canon":       "Chơn Lý — 69 bài",
-  "volume":      "Quyển 1 / Quyển 2",
-  "language":    "vi"
+  "author":            "Trưởng Ban Kiểm soát Tài chính",
+  "auditor":           "Internal Audit Team",
+  "regulation":        "Quy chế quản lý tài chính doanh nghiệp",
+  "scope":             "Toàn tập đoàn và các chi nhánh (Tenants)",
+  "language":          "vi"
 }
 ```
 
 ---
 
-## Danh sách Kinh sách Đại Thừa ưu tiên nạp (Sprint 6)
+## Quy trình Phê duyệt Câu hỏi Kiểm tra Tuân thủ (Compliance Assessment)
 
-Giao nội dung cho **Content Lead (Học viện Phật giáo)**:
+Sau khi tài liệu chính sách được nhúng thành công vào Vector Database, AI Copilot sẽ tự động biên soạn các câu hỏi trắc nghiệm kiểm tra tuân thủ. Các câu hỏi này phải qua **Ban Kiểm soát Tuân thủ (Compliance Team)** duyệt trước khi phân phối cho nhân viên:
 
-| Thứ tự | Tên Kinh | Taishō | Người dịch đề nghị |
-|:---:|:---|:---|:---|
-| 1 | Kinh Kim Cang | T0235 | HT. Thích Thanh Từ |
-| 2 | Bát Nhã Tâm Kinh | T0251 | Thích Thiện Châu |
-| 3 | Kinh A Di Đà | T0366 | HT. Thích Trí Tịnh |
-| 4 | Kinh Duy Ma Cật | T0475 | Tuệ Sỹ |
-| 5 | Kinh Pháp Hoa (trích) | T0262 | HT. Thích Trí Tịnh |
-| 6 | Lục Tổ Đàn Kinh | T2008 | HT. Thích Thanh Từ |
-
----
-
-## Quy trình Duyệt Câu Hỏi Trắc Nghiệm
-
-Sau khi AI sinh câu hỏi, **Ban Tu Thư phải duyệt** trước khi câu hỏi vào ngân hàng:
-
-1. Vào **Admin → Tab "Trắc Nghiệm" → Chờ Duyệt**
-2. Mở từng câu, kiểm tra:
-   - Nội dung có đúng giáo lý không?
-   - Đáp án có chắc chắn đúng không?  
-   - Giải thích có trích dẫn kinh điển không?
-3. Click **"Duyệt câu hỏi"** hoặc **"Từ chối"**
-4. Câu hỏi được duyệt sẽ tự động vào ngân hàng phục vụ sinh viên
+1. Truy cập **Admin → Security Center → Assessment Panel → Chờ Duyệt**.
+2. Kiểm tra kỹ lưỡng từng câu hỏi:
+   - Nội dung câu hỏi có bám sát chính sách doanh nghiệp không?
+   - Đáp án trắc nghiệm có chuẩn xác 100% không?  
+   - Phần giải thích có dẫn chiếu cụ thể đến mục/điều khoản chính sách an ninh nào không?
+3. Nhấp **"Phê duyệt câu hỏi"** hoặc **"Từ chối / Yêu cầu AI sinh lại"**.
+4. Câu hỏi được duyệt sẽ tự động đưa vào ngân hàng đề kiểm tra định kỳ của doanh nghiệp.
 
 ---
 
-## Lưu ý Kỹ thuật (Troubleshooting)
+## Xử lý Sự cố Kỹ thuật khi Nạp liệu (Troubleshooting)
 
-| Lỗi thường gặp | Nguyên nhân | Cách xử lý |
+| Sự cố thường gặp | Nguyên nhân phổ biến | Phương án xử lý |
 | :--- | :--- | :--- |
-| **500 Internal Server Error** | Lỗi nạp thư viện PDF | Kiểm tra file đã được gỡ bỏ `import` tĩnh và dùng `dynamic import`. |
-| **403 Forbidden / Unauthorized** | Chưa đăng nhập Admin | Đăng xuất và đăng nhập lại bằng tài khoản Admin hệ thống. |
-| **429 Too Many Requests** | Vượt mức API Key | Chờ 1 phút hoặc chuyển sang dùng API Key dự phòng trong `.env.local`. |
+| **500 Internal Server Error** | Lỗi phân tách tài liệu PDF phức tạp chứa bảng biểu quét scan | Đảm bảo tệp PDF đã được xử lý OCR hoặc kiểm tra cấu hình `dynamic import` của parser trong Edge runtime. |
+| **403 Forbidden / Unauthorized** | JWT Token của người dùng hết hạn hoặc thiếu vai trò kiểm soát | Đăng xuất, thực hiện đăng nhập lại bằng tài khoản được cấp quyền Super Admin. |
+| **429 Too Many Requests** | Vượt ngưỡng giới hạn gọi API nhúng của Google Gemini | Chờ 60 giây để khôi phục quota hoặc cấu hình khóa API dự phòng (Gemini Failover Key) trong `.env.local`. |
 
 ---
 
-*Tài liệu cập nhật: 17/04/2026 — Dharma Chat AI Core v2.2 (Enterprise Grade)*
+*Tài liệu kỹ thuật cập nhật: 23/05/2026 — Enterprise Security Copilot RAG Core v2.2.0 (Academic & Production Grade)*

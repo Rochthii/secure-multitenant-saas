@@ -1,45 +1,38 @@
-# HỒ SƠ CÔNG NHẬN TÀI SẢN TRÍ TUỆ: DHARMA CHAT RAG ENGINE
+# HỒ SƠ XÁC NHẬN TÀI SẢN TRÍ TUỆ: ENTERPRISE SECURITY & COMPLIANCE COPILOT RAG ENGINE
 
-Hồ sơ này nhằm xác định ranh giới kỹ thuật và quyền sở hữu đối với hệ thống trí tuệ nhân tạo **Dharma Chat RAG AI**, tách biệt với nền tảng SaaS chính. Đây là cơ sở để thực hiện đăng ký bản quyền và sở hữu trí tuệ chung giữa hai đồng sáng lập.
+Tài liệu này xác định ranh giới kiến trúc kỹ thuật và quyền sở hữu đối với hệ thống trí tuệ nhân tạo **Enterprise Security Policy & IT Audit Copilot RAG**, được phát triển như một phân hệ bảo mật nâng cao tách biệt logic với cấu trúc nghiệp vụ cơ bản của nền tảng SaaS đa khách hàng. Đây là minh chứng học thuật quan trọng chứng minh năng lực tự chủ công nghệ trong đồ án tốt nghiệp PTIT.
 
-## 1. Thành phần Sở hữu chung (Joint Assets)
+## 1. Các thành phần thuộc Phân hệ AI RAG (Core AI Assets)
 
-Hệ thống AI RAG được định nghĩa bao gồm các thành phần độc đáo sau:
+Hệ thống Security Copilot được xây dựng dựa trên sự tích hợp chặt chẽ của các thành phần kỹ thuật đặc thù sau:
 
-### A. Hạ tầng Dữ liệu & Tri thức (Content Architecture)
-- **Cơ sở dữ liệu Kinh điển:** Các bảng `ai_engine.dharma_documents` và `ai_engine.dharma_embeddings`.
-- **Dữ liệu Vector hóa:** Hàng chục ngàn đoạn trích dẫn (chunks) đã được xử lý và gán nhãn metadata học thuật (mã kinh, dịch giả, số kệ).
-- **Hệ thống chuyên đề:** Cấu trúc phân loại từ vựng và chủ đề Phật học đặc thù phục vụ tìm kiếm ngữ nghĩa.
+### A. Hạ tầng Dữ liệu Chính sách (Compliance Knowledge base)
+- **Cơ sở dữ liệu tri thức vật lý:** Bảng `public.dharma_documents` (lưu trữ chính sách an ninh thô) và `public.dharma_embeddings` (lưu trữ vector 1536 chiều). Cấu trúc vật lý được giữ nguyên để bảo đảm tính tương thích ngược tuyệt đối.
+- **Tập dữ liệu chuẩn hóa (Structured Chunks):** Hàng chục ngàn đoạn trích dẫn điều khoản chính sách doanh nghiệp, chuẩn hóa ISO 27001, các nghị định bảo vệ dữ liệu cá nhân kèm metadata phân lớp chi tiết theo phòng ban (`department_id` - ánh xạ vật lý sang `tradition_id`).
+- **Phân loại chuyên đề:** Đồ thị quan hệ thuật ngữ quản trị rủi ro thông tin phục vụ truy xuất ngữ nghĩa nâng cao (Knowledge Graph).
 
-### B. Lõi Kỹ thuật (Technical Engine)
-- **Thuật toán RAG (Retrieval-Augmented Generation):** Logic xử lý tại `supabase/functions/rag-chat/`.
-- **Semantic Caching Engine:** Thuật toán tối ưu hóa bộ nhớ đệm dựa trên độ tương đồng (Cosine Similarity) tại bảng `ai_query_cache`.
-- **Smart Query Expansion:** Cơ chế tự động giải nghĩa câu hỏi tiếp nối dựa trên ngữ cảnh lịch sử hội thoại.
-- **Academic Citation System:** Thuật toán tự động tạo trích dẫn chuẩn học thuật từ dữ liệu thô.
+### B. Lõi xử lý thông minh (Technical RAG Engine)
+- **Động cơ RAG Lai (Hybrid Retrieval-Augmented Generation):** Logic tích hợp xử lý stream tại `supabase/functions/rag-chat/index.ts`.
+- **Semantic Caching Engine:** Thuật toán tối ưu hóa truy vấn trùng lặp dựa trên độ tương đồng Cosine (Cosine Similarity) tại bảng `public.ai_query_cache` kết hợp cơ chế tự động dọn rác (Self-Healing).
+- **Multi-Agent Classifier & Policy Expander:** Cơ chế tự động định tuyến câu hỏi dựa vào bộ phận chuyên môn (`THERAVADA` -> HR, `MAHAYANA` -> IT, `VAJRAYANA` -> Finance, `KHATTSI` -> Board) bằng `Gemini Flash Lite` trước khi thực hiện truy xuất sâu.
+- **Compliance Citation System:** Thuật toán tự động tạo thẻ dẫn chiếu chính xác điều khoản chính sách doanh nghiệp hoặc Annex ISO 27001 từ dữ liệu thô.
 
-### C. Giao diện Trải nghiệm (UI/UX Identity)
-- **Thiết kế Signature:** Phong cách "Giấy Dó & Hào Quang" đặc trưng.
-- **Component thư viện:** `DharmaChatBubble`, `DharmaChatInput` và luồng streaming chữ.
+### C. Giao diện Vận hành & Giám sát (Admin Security UI)
+- **Giao diện Console cao cấp:** Thiết kế floating widget Glassmorphism với viền Neon Amber sang trọng tích hợp trực tiếp vào góc phải `/admin` layout.
+- **Thành phần tương tác thực tế:** Component `AiSecurityCopilotWidget` tích hợp biểu đồ giám sát an ninh (Security Score), luồng phản hồi streaming byte, nút kích hoạt auto defense (Force Logout tài khoản xâm nhập trái phép) và xuất báo cáo an ninh Markdown chuẩn.
 
-## 2. Phân nhiệm Quyền hạn (Roles & Contributions)
+## 2. Phân nhiệm Đóng góp Kỹ thuật (Roles & Contributions)
 
-| Thành viên | Phụ trách chính | Tài sản đóng góp |
+| Thành viên | Vai trò | Phần đóng góp cốt lõi |
 | :--- | :--- | :--- |
-| **Đồng sáng lập A (SaaS Owner)** | Kỹ thuật & Hạ tầng | Kiến trúc hệ thống, Thuật toán RAG, Caching, Cloud Infra. |
-| **Đồng sáng lập B (Content Lead)** | Kinh sách & Biên mục | Tuyển tập kinh điển, Số hóa, Gán nhãn học thuật, Kiểm định nội dung. |
+| **Kỹ sư Hạ tầng (SaaS Architect)** | Kỹ thuật & Infra | Thiết kế RLS Database, JWT Custom Claims, Connection Pooling (Supavisor), WORM Vault, Webhook Alerting, Node JS Ingestion Scripts. |
+| **Kỹ sư AI & Compliance (AI Specialist)** | thuật toán & Tri thức | Thiết kế Edge Function Hybrid Search, Prompt Engineering, Semantic Caching, Xây dựng bộ test suite dữ liệu chính sách ISO 27001. |
 
-## 3. Kế hoạch xác thực Bản quyền (Zero-Risk Execution)
+## 3. Kế hoạch Cô lập & Bảo vệ mã nguồn (Modular Protection Plan)
 
-Để bảo vệ bản quyền mà không làm ảnh hưởng đến hệ thống SaaS đang chạy, chúng ta sẽ thực hiện:
-
-### Giai đoạn 1: Khai báo sở hữu (Ngay bây giờ)
-- Tạo file `LEGAL_MANIFEST.md` trong root của project.
-- Thêm chú thích bản quyền vào đầu tất cả các file mã nguồn liên quan (Header tagging).
-
-### Giai đoạn 2: Module hóa logic (An toàn)
-- Group tất cả logic AI vào một thư mục `core/ai_engine` trong code.
-- Đảm bảo logic AI có thể "xuất khẩu" (Export) sang một domain khác mà không bị chết.
+Nhằm đảm bảo phân hệ AI có thể dễ dàng cắm ráp hoặc chuyển giao công nghệ mà không ảnh hưởng tới vận hành của trang SaaS chính:
+- **Logical Grouping:** Toàn bộ logic giao diện AI được đóng gói hoàn toàn trong file `components/admin/ai-security-copilot-widget.tsx`.
+- **Database Isolation:** Toàn bộ dữ liệu tri thức được quản lý tách biệt qua cơ chế Row Level Security (RLS) ở mức database, tự động lọc theo `tenant_id` để ngăn chặn rò rỉ dữ liệu chéo (Cross-tenant Leakage) giữa các khách hàng doanh nghiệp.
 
 ---
-**Tôi đã chuẩn bị xong danh mục này. Bạn có muốn tôi thực hiện việc "đóng dấu" bản quyền vào các file mã nguồn (bước quan trọng nhất về mặt kỹ thuật để làm bằng chứng bản quyền) không?** 
-*Thao tác này chỉ là thêm comment vào đầu file, hoàn toàn không có rủi ro về logic chương trình.*
+*Tài liệu xác nhận quyền tài sản trí tuệ — Đồ án tốt nghiệp Chăm Rốch Thi — PTIT 2026*

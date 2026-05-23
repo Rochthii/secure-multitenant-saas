@@ -143,7 +143,7 @@ Việc phân tích hàng triệu bản ghi Audit Log thô bằng mắt thường
 
 #### A. Trực quan hóa và truy vấn bằng AI RAG (Retrieval-Augmented Generation)
 *   **Cơ chế:** Mã hóa (Vectorize) các dòng nhật ký audit logs dưới dạng Vector Embeddings và lưu trữ vào Postgres Vector Store (`pgvector`).
-*   **Ứng dụng:** Cho phép các kỹ sư SOC truy vấn nhật ký an ninh bằng ngôn ngữ tự nhiên. Ví dụ: *"Tài khoản admin chi nhánh chùa Pháp Hoa hôm qua có hành vi cấu hình nào đáng ngờ không?"*. Hệ thống RLS tự động lọc các dòng vector logs tương ứng với tenant đó, sau đó gửi ngữ cảnh sạch này cho mô hình ngôn ngữ lớn (LLM) để phân tích, tóm tắt và đưa ra câu trả lời chi tiết.
+*   **Ứng dụng:** Cho phép các kỹ sư SOC truy vấn nhật ký an ninh bằng ngôn ngữ tự nhiên. Ví dụ: *"Tài khoản admin chi nhánh Tenant-A (Standard Plan) hôm qua có hành vi cấu hình nào đáng ngờ hoặc vượt cấp không?"*. Hệ thống RLS tự động lọc các dòng vector logs tương ứng với tenant đó, sau đó gửi ngữ cảnh sạch này cho mô hình ngôn ngữ lớn (LLM) để phân tích, tóm tắt và đưa ra câu trả lời chi tiết.
 
 #### B. Phát hiện chuỗi tấn công tinh vi bằng GraphRAG (Knowledge Graph RAG)
 *   **Cơ chế:** RAG truyền thống dựa trên độ tương đồng ngữ nghĩa thường bỏ qua các mối quan hệ cấu trúc phức tạp. **GraphRAG** giải quyết bằng cách xây dựng một Đồ thị Tri thức An ninh (Security Knowledge Graph) từ Audit Logs, biểu diễn mối liên kết đa chiều giữa các thực thể:
@@ -152,4 +152,3 @@ Việc phân tích hàng triệu bản ghi Audit Log thô bằng mắt thường
     1.  **Phát hiện tấn công dò thông tin đăng nhập (Credential Stuffing):** Nếu đồ thị tri thức chỉ ra 1 IP Address duy nhất đang cố đăng nhập thành công vào 5 tài khoản thuộc 5 Tenant khác nhau trong 2 phút $\rightarrow$ GraphRAG lập tức phát hiện liên kết bất thường này (điều mà RLS hay local tenant log không nhìn thấy vì bị cô lập cục bộ) và phát lệnh cảnh báo.
     2.  **Phát hiện mối đe dọa nội bộ (Insider Threats):** Phân tích đồ thị liên kết hành vi để nhận diện một nhân viên đang tải lượng lớn tài liệu đột biến từ các bảng tin tức/dự án khác nhau, vẽ ra con đường di chuyển dữ liệu (Data Exfiltration Path).
     3.  **Điều tra Attack Path (Chuỗi tấn công):** Khi phát hiện sự cố, GraphRAG giúp tự động truy vết ngược lại đồ thị quan hệ để chỉ ra điểm xâm nhập ban đầu (Patient Zero) của kẻ tấn công là từ tài khoản nào, IP nào, và thiết bị nào.
-
