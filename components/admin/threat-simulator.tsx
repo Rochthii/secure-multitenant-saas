@@ -7,7 +7,7 @@ import { ShieldAlert, ShieldX, CheckCircle2, Loader2, AlertTriangle, Zap, Lock, 
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-type Scenario = 'cross_tenant_read' | 'cache_pollution' | 'sql_injection';
+type Scenario = 'cross_tenant_read' | 'cache_pollution' | 'sql_injection' | 'noisy_neighbor';
 
 interface SimulationResult {
     scenario: Scenario;
@@ -54,6 +54,13 @@ const ATTACK_FLOWS: Record<Scenario, string[]> = {
         'Supabase Driver (Parameterized: $1)',
         'PostgreSQL DB Engine (String literal escape)',
         'BLOCKED ❌ (Parsed as literal string)'
+    ],
+    noisy_neighbor: [
+        'Hacker Request Flood (8 concurrent queries)',
+        'Next.js Route Handler',
+        'Application Slot Pooler (Check slot availability)',
+        'DB Connection Pool slots full (3/3 free tier slots)',
+        'BLOCKED ❌ (429 Too Many Requests - Protected DB resource)'
     ]
 };
 
@@ -88,6 +95,14 @@ const SCENARIOS: Record<Scenario, {
         color: 'violet',
         phase1: 'Gửi SQL Injection payload vào query parameter...',
         phase2: 'Parameterized Query đang xử lý escape input...',
+    },
+    noisy_neighbor: {
+        label: 'Noisy Neighbor connection limits',
+        description: 'Gửi dồn dập truy vấn chiếm dụng DB connection pool',
+        icon: <Zap className="w-4 h-4" />,
+        color: 'rose',
+        phase1: 'Tenant A (Free) gửi dồn dập 8 truy vấn đồng thời...',
+        phase2: 'Kiểm tra connection slot limits bảo vệ tài nguyên chi nhánh khác...',
     },
 };
 
@@ -143,6 +158,21 @@ const CODE_TEMPLATES: Record<Scenario, {
             cache: { latency: 'N/A (Bypassed)', complexity: 'N/A', security: 'N/A' },
             rls: { latency: '15 - 35 ms', complexity: 'O(log N) optimized', security: 'SQL Parameter Sanitization' },
             app: { latency: '110 - 280 ms', complexity: 'O(N)', security: 'Manual replace (Rất nguy hiểm)' }
+        }
+    },
+    noisy_neighbor: {
+        attack: {
+            title: '🥷 Hacker Code (Parallel Query Exhaustion)',
+            code: `// Gửi dồn dập hàng loạt query ghi/đọc đồng thời để vắt kiệt connection pool\nconst requests = Array(8).fill(0).map(() => \n  supabase.from('news').select('id, title')\n);\nawait Promise.all(requests);`
+        },
+        defense: {
+            title: '🛡️ Connection Slot Pooler (Supavisor Sandbox)',
+            code: `// Cấu hình Connection Limit động theo từng phân cấp Tenant\nconst poolLimits = { free: 3, pro: 10, enterprise: 40 };\nconst currentActive = await activeConnectionRegistry.get(tenantId);\nif (currentActive >= poolLimits[plan]) {\n  return rejectRequest(429, "Noisy Neighbor protection slot limit exceeded");\n}`
+        },
+        performance: {
+            cache: { latency: 'N/A (Bypassed)', complexity: 'N/A', security: 'N/A' },
+            rls: { latency: '12 - 25 ms', complexity: 'O(log N) optimized', security: 'Slot Containment (Bảo toàn DB)' },
+            app: { latency: '85 - 190 ms', complexity: 'O(1) Slot Lookup', security: 'Isolated Pool Limits' }
         }
     }
 };
@@ -428,7 +458,8 @@ export function ThreatSimulator() {
                                 {result?.explain_analyze || {
                                     cross_tenant_read: `EXPLAIN ANALYZE SELECT * FROM news WHERE tenant_id = '66666666-6666-6666-6666-666666666666';\n-- Plan:\n-- Index Scan using news_tenant_id_idx on news (cost=0.29..8.30 rows=1 width=382) (actual time=0.035..0.036 rows=0 loops=1)\n--   Index Cond: (tenant_id = '66666666-6666-6666-6666-666666666666'::uuid)\n--   Filter: (tenant_id = (auth.jwt()->>'tenant_id')::uuid)\n-- Planning Time: 0.145 ms\n-- Execution Time: 0.062 ms`,
                                     cache_pollution: `-- Cache Store Lookup (O(1) Memory Key Check):\n-- Command: GET "tenant:55555555-5555-5555-5555-555555555555:news-list"\n-- Status: Cache HIT (0.8ms) - Bypasses PostgreSQL engine execution.`,
-                                    sql_injection: `EXPLAIN ANALYZE SELECT * FROM news WHERE title = $1;\n-- Plan:\n-- Index Scan using news_title_idx on news (cost=0.28..8.30 rows=1 width=382) (actual time=0.021..0.022 rows=0 loops=1)\n--   Index Cond: (title = $1::text)\n-- Planning Time: 0.098 ms\n-- Execution Time: 0.039 ms`
+                                    sql_injection: `EXPLAIN ANALYZE SELECT * FROM news WHERE title = $1;\n-- Plan:\n-- Index Scan using news_title_idx on news (cost=0.28..8.30 rows=1 width=382) (actual time=0.021..0.022 rows=0 loops=1)\n--   Index Cond: (title = $1::text)\n-- Planning Time: 0.098 ms\n-- Execution Time: 0.039 ms`,
+                                    noisy_neighbor: `-- Database Connection Limits (Supavisor Sandbox):\n-- Max pool slots for Tenant Plan [free]: 3 connections\n-- Currently allocated slots: 3 (100% capacity)\n-- Queue length: 5 requests rejected instantly to prevent DB resource starvation.`
                                 }[activeScenario]}
                             </pre>
                         </div>

@@ -7,6 +7,8 @@ import { AuditFilters } from '../audit-logs/AuditFilters';
 import { AnomalyActionButtons } from '@/components/admin/audit/anomaly-action-buttons';
 import { NoisyNeighborsWidget } from '@/components/admin/audit/noisy-neighbors-widget';
 import { ThreatSimulator } from '@/components/admin/threat-simulator';
+import { WormVaultWidget } from '@/components/admin/worm-vault-widget';
+import { TenantPoolerWidget } from '@/components/admin/tenant-pooler-widget';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -281,6 +283,12 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                         </CardContent>
                     </Card>
                 </div>
+            </div>
+
+            {/* Enterprise Security Hardening Extensions (Task-1 & Task-2) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <WormVaultWidget />
+                <TenantPoolerWidget />
             </div>
         </div>
     );

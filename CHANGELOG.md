@@ -2,6 +2,17 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.4.0] - 2026-05-23
+
+### Bảo mật cấp Doanh nghiệp (Enterprise-grade Security Hardening)
+- **Lưu trữ Audit Log bất biến WORM (Write Once, Read Many)**: Thiết lập module sổ cái mật mã học [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) tự động đồng bộ audit logs từ Postgres thành các khối liên kết chuỗi mã hóa (Hash-chained immutable blocks) sử dụng SHA-256. Hệ thống thực hiện kiểm toán tính toàn vẹn (cryptographic integrity check) và đối chiếu chéo cơ sở dữ liệu để cảnh báo tức thì mọi hành vi can thiệp hay xóa dấu vết.
+- **Bảo vệ tài nguyên chống Noisy Neighbor**: Triển khai module điều tiết tài nguyên kết nối [tenant-pooler.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) mô phỏng chính sách giới hạn kết nối đồng thời cô lập (Isolated Connection Slots) của Supavisor. Tự động kiểm soát lưu lượng concurrent queries theo kế hoạch Tenant Plan (Free: 3 slots, Pro: 10 slots, Enterprise: 40 slots), chặn đứng và trả về mã lỗi 429 Too Many Requests khi có hiện tượng query flood để bảo toàn tài nguyên cho các chi nhánh lành mạnh.
+- **Giao diện Giám sát SOC Mới**:
+  - Bổ sung **WORM Cryptographic Vault widget** hiển thị trực quan trạng thái liên kết chuỗi mã hóa, lịch sử block, và cung cấp nút giả lập can thiệp phá vỡ chuỗi để chứng minh tính tự kiểm toán.
+  - Bổ sung **Tenant Connection Pooler widget** hiển thị thời gian thực mức độ chiếm dụng slot kết nối của từng Tenant, đi kèm bảng điều khiển giả lập tấn công dồn dập (Noisy Neighbor flood query) trả về mã lỗi 429 từ server.
+  - Tích hợp 2 widget mới này vào trang quản trị an ninh [page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx).
+- **Mở rộng kịch bản Threat Simulator**: Tích hợp kịch bản giả lập thứ 4 **Noisy Neighbor connection limits** vào API `/api/admin/security/simulate-attack` và component [threat-simulator.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx), chứng minh hoàn hảo nguyên lý giới hạn tài nguyên và điều phối tải (Rate Limiting & Connection Limit) cho đồ án tốt nghiệp.
+
 ## [1.3.0] - 2026-05-23
 
 ### Nâng cấp Threat Simulator (Security Platform Engineering)
