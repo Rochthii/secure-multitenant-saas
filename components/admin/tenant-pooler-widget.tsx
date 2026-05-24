@@ -195,23 +195,23 @@ export function TenantPoolerWidget() {
                                         </div>
                                         
                                         {/* Simulation Control */}
-                                        <div className="pt-2 border-t border-slate-800/60 flex gap-2">
+                                        <div className="pt-2 border-t border-slate-800/60 flex flex-col sm:flex-row gap-2">
                                             <Button 
                                                 size="sm" 
                                                 variant="ghost"
                                                 onClick={() => handleSimulateFlood(t.tenantId, t.plan, 2)}
                                                 disabled={simulating}
-                                                className="text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[10px] h-7 flex-1 border border-slate-800"
+                                                className="text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-[10px] h-7 flex-1 border border-slate-800 w-full"
                                             >
-                                                Query chuẩn
+                                                Truy vấn
                                             </Button>
                                             <Button 
                                                 size="sm" 
                                                 onClick={() => handleSimulateFlood(t.tenantId, t.plan, t.maxConcurrentLimit + 3)}
                                                 disabled={simulating}
-                                                className="bg-rose-600 hover:bg-rose-500 text-white text-[10px] h-7 font-bold flex-1 border-none shadow"
+                                                className="bg-rose-600 hover:bg-rose-500 text-white text-[10px] h-7 font-bold flex-1 border-none shadow w-full"
                                             >
-                                                Tấn công FLOOD (429)
+                                                Tấn công 429
                                             </Button>
                                         </div>
                                     </CardContent>

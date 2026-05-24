@@ -10,6 +10,7 @@ import { ThreatSimulator } from '@/components/admin/threat-simulator';
 import { WormVaultWidget } from '@/components/admin/worm-vault-widget';
 import { TenantPoolerWidget } from '@/components/admin/tenant-pooler-widget';
 import { SecurityTabsContainer } from '@/components/admin/security/security-tabs-container';
+import { SecurityReportButton } from '@/components/admin/security/security-report-button';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -303,8 +304,11 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                         Trung tâm Giám sát An toàn Thông tin (SOC). Cung cấp khả năng theo dõi hành vi, phát hiện truy cập bất thường và bảo vệ dữ liệu bằng RLS.
                     </p>
                 </div>
-                <div className="relative z-10 flex gap-4">
-                    <div className="px-5 py-3 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700 shadow-inner">
+                <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    {/* Security Report Button */}
+                    <SecurityReportButton />
+
+                    <div className="px-5 py-3 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700 shadow-inner shrink-0">
                         <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">RLS Coverage</div>
                         <div className="flex items-center gap-3">
                             <div className="text-2xl font-black text-amber-400">{stats.rlsCoverage?.percentage || 93}%</div>

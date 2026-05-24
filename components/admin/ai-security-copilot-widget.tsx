@@ -358,9 +358,9 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
                 >
                     {hasNewAlert ? (
                         <>
-                            <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5">
+                            <span className="absolute -top-1 -right-1 flex h-5 w-5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-4.5 w-4.5 bg-rose-500 text-[9px] font-black text-white items-center justify-center">!</span>
+                                <span className="relative inline-flex rounded-full h-5 w-5 bg-rose-500 text-[9px] font-black text-white items-center justify-center">!</span>
                             </span>
                             <ShieldAlert className="w-7 h-7 text-rose-400 animate-pulse" />
                         </>
@@ -413,14 +413,11 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
                         </div>
 
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                setIsOpen(false);
-                            }}
-                            className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors shrink-0"
+                            type="button"
+                            onClick={() => setIsOpen(false)}
+                            className="relative z-50 p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors shrink-0 pointer-events-auto cursor-pointer"
                         >
-                            <X className="w-4.5 h-4.5" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -552,7 +549,7 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
 
                                                 {m.suggestedAction.executed ? (
                                                     <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-400">
-                                                        <CheckCircle2 className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
+                                                        <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                                                         <span>{m.suggestedAction.message}</span>
                                                     </div>
                                                 ) : (
