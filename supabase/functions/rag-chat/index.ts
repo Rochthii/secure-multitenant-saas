@@ -114,6 +114,9 @@ const corsHeaders = {
 
 const GEMINI_API_KEY = (globalThis as any).Deno.env.get("GEMINI_API_KEY") || "";
 const GEMINI_API_KEY_2 = (globalThis as any).Deno.env.get("GEMINI_API_KEY_2") || "";
+const GEMINI_API_KEY_3 = (globalThis as any).Deno.env.get("GEMINI_API_KEY_3") || "";
+const GEMINI_API_KEY_4 = (globalThis as any).Deno.env.get("GEMINI_API_KEY_4") || "";
+const GEMINI_API_KEY_5 = (globalThis as any).Deno.env.get("GEMINI_API_KEY_5") || "";
 const GROQ_API_KEY = (globalThis as any).Deno.env.get("GROQ_API_KEY") || "";
 const SUPABASE_URL = (globalThis as any).Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = (globalThis as any).Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -122,29 +125,51 @@ const SUPABASE_ANON_KEY = (globalThis as any).Deno.env.get("SUPABASE_ANON_KEY") 
 // ============================================================
 // HỆ THỐNG DỰ PHÒNG (MULTI-KEY FAILOVER)
 // ============================================================
-async function fetchGemini(urlPath: string, options: RequestInit): Promise<Response> {
-  const keys = [GEMINI_API_KEY, GEMINI_API_KEY_2].filter(k => k && k.length > 5);
+async function fetchGemini(urlPath: string, options: RequestInit, additionalKeys: string[] = []): Promise<Response> {
+  const envKeys = [
+    GEMINI_API_KEY, 
+    GEMINI_API_KEY_2, 
+    GEMINI_API_KEY_3, 
+    GEMINI_API_KEY_4, 
+    GEMINI_API_KEY_5
+  ];
+  
+  // Hợp nhất env keys và additional keys từ DB, loại bỏ khoảng trắng, null hoặc keys quá ngắn
+  const rawKeys = [...envKeys, ...additionalKeys];
+  const keys = Array.from(new Set(rawKeys))
+    .map(k => k?.trim())
+    .filter(k => k && k.length > 5);
+
   if (keys.length === 0) throw new Error("No Gemini API Keys configured.");
+  
   let lastRes: Response | null = null;
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const separator = urlPath.includes('?') ? '&' : '?';
     const finalUrl = `https://generativelanguage.googleapis.com/v1beta/${urlPath}${separator}key=${key}`;
-    const res = await fetch(finalUrl, options);
     
-    if (res.ok) return res;
-    
-    // 429 Too Many Requests -> Chờ 1 giây trước khi thử Key tiếp theo (Backoff logic)
-    if (res.status === 429 && i < keys.length - 1) {
-      console.warn(`[Gemini RateLimit] Key ${i+1} hit 429. Waiting 1s before failover...`);
-      await new Promise(r => setTimeout(r, 1000));
-    } else if (res.status < 500 && res.status !== 429) {
-      // 400, 403, 404... -> Lỗi client không cần retry key khác
-      return res;
+    try {
+      const res = await fetch(finalUrl, options);
+      if (res.ok) return res;
+      
+      // Lỗi 429 (Rate Limit): Backoff chờ 1s rồi chuyển key khác
+      if (res.status === 429 && i < keys.length - 1) {
+        console.warn(`[Gemini RateLimit] Key ${i+1} hit 429. Waiting 1s before failover...`);
+        await new Promise(r => setTimeout(r, 1000));
+      } 
+      // Lỗi 400 (Bad Request - Có thể do API Key invalid / expired / over quota)
+      else if (res.status === 400 && i < keys.length - 1) {
+        console.warn(`[Gemini InvalidKey] Key ${i+1} hit 400 (Possibly invalid/expired key). Failover immediately...`);
+      }
+      
+      console.warn(`[Gemini Failover] Key ${i+1} failed (${res.status}). Trying next key...`);
+      lastRes = res;
+    } catch (e) {
+      console.error(`[Gemini RequestError] Key ${i+1} failed due to network exception:`, e);
+      if (i === keys.length - 1) {
+        throw e;
+      }
     }
-    
-    console.warn(`[Gemini Failover] Key ${i+1} failed (${res.status}). Trying next...`);
-    lastRes = res;
   }
   return lastRes!;
 }
@@ -478,6 +503,25 @@ serve(async (req: Request) => {
     // Client dùng cho tác vụ quản trị (Bypass RLS - dùng để đếm tin nhắn)
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Tải danh sách Gemini API Keys động từ database settings
+    let additionalKeys: string[] = [];
+    try {
+      const { data: dbSetting } = await adminClient
+        .from('settings')
+        .select('value')
+        .eq('key', 'gemini_api_keys')
+        .maybeSingle();
+      if (dbSetting?.value) {
+        additionalKeys = dbSetting.value
+          .split(',')
+          .map((k: string) => k.trim())
+          .filter((k: string) => k.length > 5);
+        console.log(`[Gemini Keys] Successfully loaded ${additionalKeys.length} additional API keys from Database Settings.`);
+      }
+    } catch (e) {
+      console.warn("[Gemini Keys] Failed to query dynamic keys from database settings table:", e);
+    }
+
     const body = await req.json();
     const { 
       query, 
@@ -618,7 +662,7 @@ serve(async (req: Request) => {
             contents: [{ parts: [{ text: `Xác định câu sau có liên quan đến quy định công ty, bảo mật thông tin, nhân sự, quy trình nghiệp vụ, ISO, chính sách nội bộ hoặc nghiệp vụ doanh nghiệp không.\nChỉ trả JSON: {"on_topic": true} hoặc {"on_topic": false}.\nCâu: <q>${safeQuery}</q>` }] }],
             generationConfig: { responseMimeType: "application/json", temperature: 0 }
           })
-        });
+        }, additionalKeys);
         if (guardRes.ok) {
           const guardData: GeminiResponse = await guardRes.json();
           T('latency_guard_ms');
@@ -686,7 +730,7 @@ Luật:
                 contents: [{ parts: [{ text: routerPrompt }] }],
                 generationConfig: { responseMimeType: "application/json", temperature: 0 }
               })
-            }
+            }, additionalKeys
           );
 
           if (!routerRes.ok) {
@@ -829,7 +873,7 @@ ${chatHistory}
                 contents: [{ parts: [{ text: expanderPrompt }] }],
                 generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
               })
-            });
+            }, additionalKeys);
 
             if (expanderRes.ok) {
               const expanderData = await expanderRes.json();
@@ -871,7 +915,7 @@ Nếu câu hỏi không liên quan chính sách doanh nghiệp, trả về [].
             contents: [{ parts: [{ text: nerPrompt }] }],
             generationConfig: { responseMimeType: "application/json", temperature: 0 }
           })
-        });
+        }, additionalKeys);
 
         if (nerRes.ok) {
           const nerData = await nerRes.json();
@@ -933,7 +977,7 @@ Nếu câu hỏi không liên quan chính sách doanh nghiệp, trả về [].
             content: { parts: [{ text: optimizedQuery }] },
             output_dimensionality: 1536,
           }),
-        }
+        }, additionalKeys
       );
       
       if (!embeddingResponse.ok) {
@@ -1172,30 +1216,30 @@ Nếu câu hỏi không liên quan chính sách doanh nghiệp, trả về [].
         `models/gemini-2.0-flash:streamGenerateContent?alt=sse`,
         {
           method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: contentsArray, // ← FIX: Multi-turn history thay vì single-turn
-          generationConfig: {
-            // FIX AUDIT-6: Dynamic temperature — strict mode (0.0) vs creative mode (0.3)
-            // Khi ít tài liệu (weak), cho phép AI sáng tạo hơn trong giới hạn context
-            temperature: contextStrength === "strong" ? 0.0 : 0.3,
-            // FIX 10: Dynamic Token Limit - tránh lãng phí khi trả lời câu ngắn/chế độ strict
-            maxOutputTokens: contextStrength === "strong" ? 1500 : 2500,
-          },
-          // FIX SECURITY: Dùng mức MODERATE thay vì BLOCK_NONE
-          // BLOCK_NONE sẽ bypass toàn bộ content filter của Gemini → nguy hiểm với sản phẩm tôn giáo
-          safetySettings: [
-            { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
-            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-          ],
-        }),
-      }
-    );
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: systemPrompt }]
+            },
+            contents: contentsArray, // ← FIX: Multi-turn history thay vì single-turn
+            generationConfig: {
+              // FIX AUDIT-6: Dynamic temperature — strict mode (0.0) vs creative mode (0.3)
+              // Khi ít tài liệu (weak), cho phép AI sáng tạo hơn trong giới hạn context
+              temperature: contextStrength === "strong" ? 0.0 : 0.3,
+              // FIX 10: Dynamic Token Limit - tránh lãng phí khi trả lời câu ngắn/chế độ strict
+              maxOutputTokens: contextStrength === "strong" ? 1500 : 2500,
+            },
+            // FIX SECURITY: Dùng mức MODERATE thay vì BLOCK_NONE
+            // BLOCK_NONE sẽ bypass toàn bộ content filter của Gemini → nguy hiểm với sản phẩm tôn giáo
+            safetySettings: [
+              { category: "HARM_CATEGORY_HARASSMENT",        threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+              { category: "HARM_CATEGORY_HATE_SPEECH",       threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+              { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_ONLY_HIGH" },
+              { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+            ],
+          }),
+        }, additionalKeys
+      );
 
     // Bắt lỗi catch (của fetch fail)
     } catch (e) {

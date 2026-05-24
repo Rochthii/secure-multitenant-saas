@@ -27,15 +27,20 @@ export interface VerificationResult {
     status: 'SECURE' | 'TAMPERED' | 'OUT_OF_SYNC';
 }
 
+const BUCKET_NAME = 'security-vault';
+const FILE_NAME = 'immutable_ledger.json';
+
 const VAULT_DIR = path.join(process.cwd(), 'storage', 'worm_vault');
-const LEDGER_PATH = path.join(VAULT_DIR, 'immutable_ledger.json');
+const LEDGER_PATH = path.join(VAULT_DIR, FILE_NAME);
 const GENESIS_HASH = '0000000000000000000000000000000000000000000000000000000000000000';
 
-// Ensure directory exists
+// Ensure local directory exists for fallback
 function ensureVaultDir() {
-    if (!fs.existsSync(VAULT_DIR)) {
-        fs.mkdirSync(VAULT_DIR, { recursive: true });
-    }
+    try {
+        if (!fs.existsSync(VAULT_DIR)) {
+            fs.mkdirSync(VAULT_DIR, { recursive: true });
+        }
+    } catch {}
 }
 
 // Calculate block hash
@@ -56,44 +61,111 @@ export function calculateBlockHash(block: Omit<WormBlock, 'hash'>): string {
     return crypto.createHash('sha256').update(dataString).digest('hex');
 }
 
-// Load ledger from file system (Read-Only WORM access)
-export function loadWormLedger(): WormBlock[] {
-    ensureVaultDir();
-    if (!fs.existsSync(LEDGER_PATH)) {
-        return [];
-    }
+// Ensure Supabase Storage bucket exists
+async function ensureStorageBucket(supabase: any) {
     try {
-        const fileContent = fs.readFileSync(LEDGER_PATH, 'utf-8');
-        return JSON.parse(fileContent) as WormBlock[];
+        const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+        if (listError) throw listError;
+        
+        const exists = buckets?.some((b: any) => b.name === BUCKET_NAME);
+        if (!exists) {
+            console.log(`[WORM Vault] Creating private bucket: ${BUCKET_NAME}`);
+            const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+                public: false,
+                fileSizeLimit: 52428800 // 50MB
+            });
+            if (createError) throw createError;
+        }
     } catch (e) {
-        console.error('Error reading WORM ledger, possibly corrupted:', e);
-        return [];
+        console.error('[WORM Vault] Error checking/creating bucket:', e);
     }
 }
 
-// Write ledger to file system and apply write protections if possible
-function saveWormLedger(ledger: WormBlock[]) {
-    ensureVaultDir();
-    
-    // On Windows, remove read-only attribute temporarily to update
-    if (fs.existsSync(LEDGER_PATH)) {
-        try {
-            fs.chmodSync(LEDGER_PATH, 0o666); // Writeable
-        } catch {}
-    }
-    
-    fs.writeFileSync(LEDGER_PATH, JSON.stringify(ledger, null, 2), 'utf-8');
-    
-    // Make file read-only to protect against accidental edits (Basic local WORM)
+// Load ledger from Supabase Storage (with physical local WORM fallback)
+export async function loadWormLedger(): Promise<WormBlock[]> {
+    // 1. Try downloading from Supabase Storage first
     try {
-        fs.chmodSync(LEDGER_PATH, 0o444); // Read-only
-    } catch {}
+        const supabase = await createAdminClient();
+        await ensureStorageBucket(supabase);
+        
+        const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .download(FILE_NAME);
+            
+        if (!error && data) {
+            const text = await data.text();
+            return JSON.parse(text) as WormBlock[];
+        }
+        
+        if (error && (error as any).status !== 404) {
+            console.warn('[WORM Vault] Supabase Storage download error, trying local fallback:', error);
+        }
+    } catch (storageErr) {
+        console.warn('[WORM Vault] Supabase Storage connection failed, trying local fallback:', storageErr);
+    }
+
+    // 2. Fallback read from local file system (dev environment support)
+    try {
+        ensureVaultDir();
+        if (fs.existsSync(LEDGER_PATH)) {
+            const fileContent = fs.readFileSync(LEDGER_PATH, 'utf-8');
+            return JSON.parse(fileContent) as WormBlock[];
+        }
+    } catch (localErr) {
+        console.error('[WORM Vault] Error reading local ledger fallback:', localErr);
+    }
+
+    return [];
+}
+
+// Write ledger to Supabase Storage (with physical local WORM fallback)
+export async function saveWormLedger(ledger: WormBlock[]) {
+    const ledgerJSON = JSON.stringify(ledger, null, 2);
+
+    // 1. Save to Supabase Storage first
+    try {
+        const supabase = await createAdminClient();
+        await ensureStorageBucket(supabase);
+        
+        const { error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .upload(FILE_NAME, ledgerJSON, {
+                contentType: 'application/json',
+                upsert: true
+            });
+            
+        if (error) {
+            console.warn('[WORM Vault] Supabase Storage upload failed, trying local fallback:', error);
+        } else {
+            console.log('[WORM Vault] Successfully saved ledger to Supabase Storage.');
+        }
+    } catch (storageErr) {
+        console.warn('[WORM Vault] Supabase Storage connection failed for write, trying local fallback:', storageErr);
+    }
+
+    // 2. Fallback local write
+    try {
+        ensureVaultDir();
+        if (fs.existsSync(LEDGER_PATH)) {
+            try {
+                fs.chmodSync(LEDGER_PATH, 0o666); // Writeable
+            } catch {}
+        }
+        
+        fs.writeFileSync(LEDGER_PATH, ledgerJSON, 'utf-8');
+        
+        try {
+            fs.chmodSync(LEDGER_PATH, 0o444); // Read-only
+        } catch {}
+    } catch (localErr) {
+        console.warn('[WORM Vault] Local fallback write skipped (expected on Serverless/Vercel):', (localErr as any).message);
+    }
 }
 
 // Sync Postgres Audit Logs to WORM vault
 export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; totalBlocks: number }> {
     const supabase = (await createAdminClient()) as any;
-    const ledger = loadWormLedger();
+    const ledger = await loadWormLedger();
     
     // Fetch logs from DB sorted by created_at ascending
     const { data: dbLogs, error } = await supabase
@@ -136,7 +208,7 @@ export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; tota
     }
     
     if (syncedCount > 0) {
-        saveWormLedger(ledger);
+        await saveWormLedger(ledger);
     }
     
     return {
@@ -147,7 +219,7 @@ export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; tota
 
 // Perform a cryptographically verified security audit on the logs
 export async function verifyWormLedgerIntegrity(): Promise<VerificationResult> {
-    const ledger = loadWormLedger();
+    const ledger = await loadWormLedger();
     const result: VerificationResult = {
         isValid: true,
         totalBlocks: ledger.length,
@@ -248,8 +320,8 @@ export async function verifyWormLedgerIntegrity(): Promise<VerificationResult> {
 }
 
 // Tamper simulation utility (for verification & demonstrations)
-export function simulateWormTampering(blockIndex: number, newActionValue: string): { success: boolean; message: string } {
-    const ledger = loadWormLedger();
+export async function simulateWormTampering(blockIndex: number, newActionValue: string): Promise<{ success: boolean; message: string }> {
+    const ledger = await loadWormLedger();
     if (blockIndex <= 0 || blockIndex > ledger.length) {
         return { success: false, message: 'Invalid block index' };
     }
@@ -258,7 +330,7 @@ export function simulateWormTampering(blockIndex: number, newActionValue: string
     const targetBlock = ledger[blockIndex - 1];
     targetBlock.action = newActionValue;
     
-    saveWormLedger(ledger);
+    await saveWormLedger(ledger);
     return {
         success: true,
         message: `DELIBERATELY TAMPERED with Block #${blockIndex}. The cryptographic chain integrity is now broken.`

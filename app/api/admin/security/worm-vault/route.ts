@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
         
         if (action === 'status') {
             const verification = await verifyWormLedgerIntegrity();
-            const ledger = loadWormLedger();
+            const ledger = await loadWormLedger();
             
             // Return latest 10 ledger blocks for preview
             const recentBlocks = ledger.slice(-15).reverse();
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({ error: 'Missing block index or new action value' }, { status: 400 });
             }
             
-            const result = simulateWormTampering(index, newVal);
+            const result = await simulateWormTampering(index, newVal);
             if (result.success) {
                 return NextResponse.json({ message: result.message });
             } else {

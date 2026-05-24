@@ -413,7 +413,11 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
                         </div>
 
                         <button
-                            onClick={() => setIsOpen(false)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                setIsOpen(false);
+                            }}
                             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors shrink-0"
                         >
                             <X className="w-4.5 h-4.5" />
