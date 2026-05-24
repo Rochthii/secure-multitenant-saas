@@ -8,7 +8,7 @@ import { generateAndSendSecurityPDFReport } from '@/lib/security/telegram-report
 export async function POST(request: NextRequest) {
     const startTime = Date.now();
     let logId: string | null = null;
-    const supabase = await createAdminClient();
+    const supabase = (await createAdminClient()) as any;
 
     // 1. Xác thực bảo mật Cron
     const authHeader = request.headers.get('authorization');
