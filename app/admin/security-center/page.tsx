@@ -9,6 +9,7 @@ import { NoisyNeighborsWidget } from '@/components/admin/audit/noisy-neighbors-w
 import { ThreatSimulator } from '@/components/admin/threat-simulator';
 import { WormVaultWidget } from '@/components/admin/worm-vault-widget';
 import { TenantPoolerWidget } from '@/components/admin/tenant-pooler-widget';
+import { SecurityTabsContainer } from '@/components/admin/security/security-tabs-container';
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -39,33 +40,11 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
 
-    return (
-        <div className="space-y-8 pb-10">
-            {/* Header section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 dark:bg-slate-950/80 text-white p-8 rounded-3xl relative overflow-hidden shadow-2xl border border-slate-800">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2.5 bg-amber-500/20 rounded-xl backdrop-blur-sm border border-amber-500/30">
-                            <Shield className="w-7 h-7 text-amber-400" />
-                        </div>
-                        <h1 className="text-3xl font-playfair font-black tracking-tight bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent">Security Operations Center</h1>
-                    </div>
-                    <p className="text-slate-400 max-w-2xl text-sm">
-                        Trung tâm Giám sát An toàn Thông tin (SOC). Cung cấp khả năng theo dõi hành vi, phát hiện truy cập bất thường và bảo vệ dữ liệu bằng RLS.
-                    </p>
-                </div>
-                <div className="relative z-10 flex gap-4">
-                    <div className="px-5 py-3 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700 shadow-inner">
-                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">RLS Coverage</div>
-                        <div className="flex items-center gap-3">
-                            <div className="text-2xl font-black text-amber-400">{stats.rlsCoverage?.percentage || 93}%</div>
-                            <ShieldCheck className="w-5 h-5 text-amber-400" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+    // ============================================================
+    // NODE 1: GIÁM SÁT SOC THỜI GIAN THỰC (REAL-TIME SOC)
+    // ============================================================
+    const realtimeSocNode = (
+        <div className="space-y-8">
             {/* Metrics Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="bg-white/85 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800/80 shadow-xl overflow-hidden group transition-all duration-300 hover:border-amber-500/30">
@@ -139,7 +118,7 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Anomaly Detection & AI */}
+                {/* Left Column: Anomaly Detection */}
                 <div className="space-y-8 lg:col-span-1">
                     <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                         <CardHeader className="bg-rose-500/5 dark:bg-rose-950/10 border-b border-rose-100/50 dark:border-rose-950/20 pb-4">
@@ -172,8 +151,6 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                                     <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-bold uppercase">Warning</span>
                                                 </div>
                                             </div>
-                                            
-                                            {/* Quick Actions (Task-2.1) */}
                                             <div className="shrink-0 flex items-center">
                                                 <AnomalyActionButtons userEmail={alert.user_email} userId={alert.user_id} />
                                             </div>
@@ -183,12 +160,6 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                             )}
                         </CardContent>
                     </Card>
-
-                    {/* Rate Limits & Noisy Neighbors (Task-1.1 & 1.2) */}
-                    <NoisyNeighborsWidget rateLimitHits={stats.rateLimitHits} />
-
-                    {/* Threat Simulator Demo (Task-6.1) */}
-                    <ThreatSimulator />
 
                     <Card className="bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
                         <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -284,12 +255,71 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                     </Card>
                 </div>
             </div>
+        </div>
+    );
 
-            {/* Enterprise Security Hardening Extensions (Task-1 & Task-2) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <WormVaultWidget />
+    // ============================================================
+    // NODE 2: SỔ CÁI BẤT BIẾN (WORM VAULT)
+    // ============================================================
+    const wormVaultNode = (
+        <div className="animate-in fade-in duration-300">
+            <WormVaultWidget />
+        </div>
+    );
+
+    // ============================================================
+    // NODE 3: PHÒNG THÍ NGHIỆM GIẢ LẬP & SANDBOX
+    // ============================================================
+    const sandboxNode = (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
+                {/* Threat Simulator Demo */}
+                <ThreatSimulator />
+                
+                {/* Rate Limits & Noisy Neighbors */}
+                <NoisyNeighborsWidget rateLimitHits={stats.rateLimitHits} />
+            </div>
+            
+            <div>
+                {/* Tenant Connection Pooler Widget */}
                 <TenantPoolerWidget />
             </div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-8 pb-10">
+            {/* Header section */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 dark:bg-slate-950/80 text-white p-8 rounded-3xl relative overflow-hidden shadow-2xl border border-slate-800">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2.5 bg-amber-500/20 rounded-xl backdrop-blur-sm border border-amber-500/30">
+                            <Shield className="w-7 h-7 text-amber-400" />
+                        </div>
+                        <h1 className="text-3xl font-playfair font-black tracking-tight bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 bg-clip-text text-transparent">Security Operations Center</h1>
+                    </div>
+                    <p className="text-slate-400 max-w-2xl text-sm">
+                        Trung tâm Giám sát An toàn Thông tin (SOC). Cung cấp khả năng theo dõi hành vi, phát hiện truy cập bất thường và bảo vệ dữ liệu bằng RLS.
+                    </p>
+                </div>
+                <div className="relative z-10 flex gap-4">
+                    <div className="px-5 py-3 bg-slate-800/80 backdrop-blur-md rounded-2xl border border-slate-700 shadow-inner">
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">RLS Coverage</div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-2xl font-black text-amber-400">{stats.rlsCoverage?.percentage || 93}%</div>
+                            <ShieldCheck className="w-5 h-5 text-amber-400" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Premium Tabbed Interface */}
+            <SecurityTabsContainer 
+                realtimeSocNode={realtimeSocNode}
+                wormVaultNode={wormVaultNode}
+                sandboxNode={sandboxNode}
+            />
         </div>
     );
 }
