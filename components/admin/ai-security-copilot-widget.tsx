@@ -43,6 +43,22 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
+    // Nạp cấu hình Auto Defense bền vững từ Database khi mount component
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/admin/security/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    setIsAutoDefense(data.autoDefense === true);
+                }
+            } catch (err) {
+                console.error('Failed to fetch security settings:', err);
+            }
+        };
+        fetchSettings();
+    }, []);
+
     // Trình diễn hiệu ứng nháy đỏ khi có anomaly log (tạo cảm giác SOC thực thụ)
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -396,9 +412,30 @@ export function AISecurityCopilotWidget({ tenantId }: { tenantId?: string | null
                         <div className="flex items-center gap-2 bg-slate-950/60 p-1 px-2.5 rounded-xl border border-slate-800 shrink-0">
                             <span className="text-[9px] font-black tracking-wider uppercase text-slate-400">Auto Defense</span>
                             <button
-                                onClick={() => {
-                                    setIsAutoDefense(!isAutoDefense);
-                                    toast.success(isAutoDefense ? 'Đã tắt tự động phòng thủ.' : '🛡️ Đã kích hoạt Chế độ AI Tự động Phòng thủ chủ động (Active Defense).');
+                                onClick={async () => {
+                                    const newState = !isAutoDefense;
+                                    setIsAutoDefense(newState);
+                                    
+                                    try {
+                                        const res = await fetch('/api/admin/security/settings', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ autoDefense: newState })
+                                        });
+                                        
+                                        if (res.ok) {
+                                            toast.success(newState 
+                                                ? '🛡️ Đã kích hoạt AI Tự động Phòng thủ chủ động (Active Defense) và lưu vĩnh viễn!' 
+                                                : 'Đã tắt tự động phòng thủ trên toàn hệ thống.'
+                                            );
+                                        } else {
+                                            throw new Error('Failed to update settings');
+                                        }
+                                    } catch (err) {
+                                        console.error('Failed to sync auto defense settings:', err);
+                                        setIsAutoDefense(!newState); // Revert lại state nếu API thất bại
+                                        toast.error('Lỗi kết nối: Không thể lưu cấu hình phòng thủ. Vui lòng thử lại sau.');
+                                    }
                                 }}
                                 className={`w-8 h-4 rounded-full relative transition-all duration-300 border ${
                                     isAutoDefense 
