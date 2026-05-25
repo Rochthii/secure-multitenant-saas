@@ -6,9 +6,9 @@ Tốt — kết hợp cả hai là hướng mạnh nhất, nhưng cần một "s
 
 Viết lại "Đóng góp khoa học" thành một câu duy nhất:
 
-> **"Đề tài chứng minh rằng kiến trúc RLS+JWT Claims đạt O(1) authorization complexity — không chỉ trên giấy mà dưới điều kiện tấn công thực tế — và đo lường được cost of security ở từng lớp Defense-in-depth."**
+> **"Đề tài chứng minh rằng kiến trúc RLS kết hợp JWT Custom Claims giúp triệt tiêu hoàn toàn chi phí xác thực ngữ cảnh (Authorization Overhead) đạt mức hằng số $O(1)$ trong RAM Session và lọc dữ liệu đạt độ phức tạp $O(\log N_{\text{tenant}})$ (B-Tree Index Scan) — không chỉ trên giấy mà dưới điều kiện tấn công thực tế — và đo lường được cost of security ở từng lớp Defense-in-depth."**
 
-Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng minh O(1). Threat Simulation chứng minh "dưới tấn công thực tế". ISO 27017 matrix chứng minh "từng lớp".
+Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng minh hằng số O(1) in-memory resolution và B-Tree Index Scan. Threat Simulation chứng minh "dưới tấn công thực tế". ISO 27017 matrix chứng minh "từng lớp".
 
 ---
 
@@ -30,7 +30,7 @@ Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng m
 100,000 rows → đo AVG/P50/P95/P99
 ```
 
-Vẽ 1 đường cong: Legacy O(N) tệ dần khi data tăng, JWT Claims O(1) giữ flat. Một biểu đồ này có giá trị hơn toàn bộ con số hiện tại.
+Vẽ 1 đường cong: Legacy O(N) tệ dần khi data tăng, JWT Claims tiệm cận flat (chỉ tăng nhẹ dạng logarithmic $O(\log N_{\text{tenant}})$ nhờ tận dụng B-Tree Index). Một biểu đồ này có giá trị hơn toàn bộ con số hiện tại.
 
 **Việc 3 — Document Threat Simulation hiện có** thành test case chuẩn:
 
@@ -67,7 +67,7 @@ Không cần AI, không cần Isolation Forest. Đây là **rule-based incident 
 | Security Layer | Latency Added | Attack Vector Blocked |
 |---|---|---|
 | Middleware JWT check | +2ms | Unauthenticated access |
-| RLS tenant isolation | +X ms (O(1)) | Cross-tenant read/write |
+| RLS tenant isolation | +X ms (O(log N)) | Cross-tenant read/write |
 | ABAC time-based | +Y ms | Off-hours privilege abuse |
 | Audit trigger | +Z ms | Non-repudiation |
 | Rate limiting | +W ms | Brute force, Noisy Neighbor |
@@ -82,7 +82,7 @@ Bạn đã có data để fill vào bảng này từ benchmark. Chỉ cần đo 
 
 ```
 Chương 1: Vấn đề — Cross-tenant data leakage xảy ra như thế nào
-Chương 2: Lý thuyết — Tại sao O(1) RLS là giải pháp đúng
+Chương 2: Lý thuyết — Tại sao RLS tối ưu Custom Claims là giải pháp đúng
 Chương 3: Thiết kế — Kiến trúc Defense-in-depth 4 lớp
 Chương 4: Triển khai — Evidence từng lớp
 Chương 5: Chứng minh — Benchmark + Threat Simulation + ISO Matrix
@@ -99,7 +99,7 @@ Chương 6: Kết luận — Bài học và giới hạn trung thực
 1. Mở SOC Dashboard → Security Score 100%, ISO Compliant
 2. Chạy Threat Simulation → show 0 rows returned, audit log nhảy
 3. Trigger Auto-suspend → tenant bị khóa, Telegram nhận alert
-4. Mở Performance Dashboard → show đường cong O(1) vs O(N)
+4. Mở Performance Dashboard → show đường cong RLS tối ưu vs O(N)
 5. Mở ISO 27017 Matrix → show từng control có evidence
 ```
 
@@ -155,7 +155,7 @@ WHERE tenant_id IN (SELECT id FROM tenants WHERE status = 'active');
 Trường hợp đã tối ưu (Đọc hằng số trực tiếp từ RAM qua JWT Custom Claims):SQLEXPLAIN (ANALYZE, BUFFERS)
 SELECT * FROM public.documents 
 WHERE tenant_id = 'cơ-chế-trích-xuất-jwt-claims-hằng-số'::uuid;
--- Kết quả sẽ ép PostgreSQL chạy thẳng qua "Index Scan" với chi phí I/O (Buffers: shared hit) cực thấp và độ phức tạp O(1)
+-- Kết quả sẽ ép PostgreSQL chạy thẳng qua "Index Scan" với chi phí I/O (Buffers: shared hit) cực thấp và độ phức tạp O(log N)
 Bạn lấy hai chuỗi kết quả EXPLAIN này, ném vào các công cụ biểu diễn biểu đồ cây (như Postgres Explain Visualizer) để làm hình ảnh minh họa cho Chương 5. Khi các thầy cô hỏi về mặt tối ưu thuật toán cơ sở dữ liệu, đây chính là "tấm khiên" bảo vệ bạn.⭐ NHÓM ƯU TIÊN 2: LÕI HỌC THUẬT (Lấp GAP Đề cương)3. Tenant-Level Disaster Recovery (Khôi phục dữ liệu cục bộ)Để giải quyết bài toán "Rollback chéo" trong mô hình Shared DB (nêu tại Chương 6), bạn cần biến tính năng Export JSON của mình thành một công cụ sinh tồn.Logic thiết kế file chạy script:Bạn có thể cấu hình một hàm trong app/actions/admin/tenants.ts để trích xuất dữ liệu cô lập:TypeScript// Logic xuất dữ liệu thô cô lập cho một Tenant cụ thể
 export async function exportTenantDataIsolation(tenantId: string) {
   const supabase = createClient();

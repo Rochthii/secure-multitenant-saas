@@ -27,7 +27,7 @@ Dưới đây là bảng ánh xạ chi tiết các yêu cầu lý thuyết và k
 | **Tenant Offboarding & Hard Wipe** | **Đã hoàn thành 100%** | `supabase/migrations/20260517000001_tenant_offboarding_runbook.sql` | Quy trình hủy tư cách khách hàng (Offboard) tuân thủ ISO 27017: Chạy Hard Wipe qua Cascading Delete dọn sạch dữ liệu các bảng con, giải thích chi tiết hiện tượng phân mảnh ổ đĩa (Database Fragmentation). |
 | **Tenant Security SOC (Local SOC)** | **Đã hoàn thành 100%** | `/app/admin/t/[tenant_id]/security/page.tsx` | Cho phép Tenant Admin tự cấu hình chính sách an ninh (bắt buộc 2FA, IP Whitelisting) và thực hiện Force Logout khẩn cấp khi phát hiện xâm phạm dữ liệu. |
 | **Tenant Lifecycle & Plan Badge** | **Đã hoàn thành 100%** | `app/admin/tenants/[id]/lifecycle/page.tsx` | Quản lý vòng đời hoạt động của tenant (Suspend/Reactivate), phân loại hiển thị Plan Type với các badge sinh động (`Free`/`Pro`/`Enterprise`), ghi audit logs đầy đủ. |
-| **RLS Performance Benchmarking** | **Đã hoàn thành 100%** | `app/admin/performance/page.tsx`<br>`app/admin/performance/scaling-engine.ts` | Phân hệ đo lường thật 100% độ trễ (ms) so sánh 3 baseline trên dataset seed **111,000 bản ghi** tại cơ sở dữ liệu Supabase Cloud. Khắc phục hoàn toàn lỗi TypeScript Recharts Tooltip, vẽ biểu đồ phẳng tối ưu $O(1)$ của Claims RLS so với $O(N)$ dốc ngược của App Filtering. |
+| **RLS Performance Benchmarking** | **Đã hoàn thành 100%** | `app/admin/performance/page.tsx`<br>`app/admin/performance/scaling-engine.ts` | Phân hệ đo lường thật 100% độ trễ (ms) so sánh 3 baseline trên dataset seed **111,000 bản ghi** tại cơ sở dữ liệu Supabase Cloud. Khắc phục hoàn toàn lỗi TypeScript Recharts Tooltip, vẽ biểu đồ tối ưu dạng logarithmic $O(\log N_{\text{tenant}})$ của Claims RLS so với $O(N)$ dốc ngược của App Filtering, chứng minh triệt tiêu hoàn toàn chi phí JOIN phân quyền ($O(1)$ RAM lookup). |
 | **Threat Simulator** | **Đã hoàn thành 100%** | `app/admin/threat-simulator/page.tsx`<br>`app/api/admin/security/simulate-attack/route.ts` | Bảng điều khiển giả lập hỗ trợ đầy đủ 4 kịch bản tấn công thực tế (Cross-tenant, Path Traversal, SQL Injection, Cache Pollution và Noisy Neighbor connection limits). Tích hợp PostgreSQL EXPLAIN ANALYZE hiển thị chi tiết cây truy vết và tại sao bị chặn (Why Blocked). |
 
 ---
@@ -41,7 +41,7 @@ Dưới đây là bảng ánh xạ chi tiết các yêu cầu lý thuyết và k
 *   **Hiện trạng:** **[ĐÃ HOÀN THÀNH 100%]** Đã xây dựng trang Performance Benchmarking tại `/admin/performance` thực hiện truy vấn trực tiếp trên Database Server, so sánh trực quan hiệu năng và lập bảng kết quả thời gian thực.
 *   **Chi tiết triển khai:**
     1. Tích hợp chạy thực nghiệm ngay trên giao diện để đo lường Latency cho: Application-layer filtering, Standard RLS (JOIN) và Optimized RLS (Custom Claims JWT).
-    2. Chứng minh Custom Claims giúp tối ưu hóa truy vấn RLS tiệm cận O(1) và triệt tiêu độ trễ JOIN so với phương thức truyền thống.
+    2. Chứng minh Custom Claims giúp tối ưu hóa truy vấn RLS thông qua triệt tiêu hoàn toàn overhead JOIN ($O(1)$ RAM context resolution) và lọc dữ liệu đạt $O(\log N_{\text{tenant}})$ nhờ Index Scan.
 
 ### Khoản mục 2: Thực nghiệm Cache Leakage Testing & Tấn công giả lập (Threat Simulation)
 *   **Mô tả:** Giả lập tấn công chéo giữa các tenant và rò rỉ cache để chứng minh độ bền bỉ của RLS.
@@ -100,7 +100,7 @@ Mọi thứ trong hệ thống đều phục vụ câu này. Benchmark chứng m
 100,000 rows → đo AVG/P50/P95/P99
 ```
 
-Vẽ 1 đường cong: Legacy O(N) tệ dần khi data tăng, JWT Claims O(1) giữ flat. Một biểu đồ này có giá trị hơn toàn bộ con số hiện tại.
+Vẽ 1 đường cong: Legacy O(N) tệ dần khi data tăng, JWT Claims tiệm cận flat (chỉ tăng nhẹ dạng logarithmic $O(\log N_{\text{tenant}})$ nhờ tận dụng B-Tree Index). Một biểu đồ này có giá trị hơn toàn bộ con số hiện tại.
 
 **Việc 3 — Document Threat Simulation hiện có** thành test case chuẩn:
 
