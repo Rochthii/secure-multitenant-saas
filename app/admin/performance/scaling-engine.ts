@@ -3,7 +3,7 @@
  * Mục đích: Đo lường Latency so sánh 3 baseline lọc dữ liệu khi Dataset tăng trưởng:
  *   (1) App-side Filtering   — Fetch hết dữ liệu rồi lọc trong JavaScript → O(N) tệ nhất
  *   (2) Legacy RLS JOIN      — DB phải JOIN bảng để kiểm tra quyền → O(N) tốt hơn nhưng vẫn chậm
- *   (3) JWT Claims RLS       — Đọc trực tiếp từ JWT session, không JOIN → O(1) tối ưu nhất
+ *   (3) JWT Claims RLS       — Đọc trực tiếp từ JWT session, không JOIN → O(1) RAM lookup (Tổng thể O(log N) với Index)
  *
  * LƯU Ý QUAN TRỌNG:
  * - Cần chạy migration 20260522000000_create_benchmark_rpcs.sql trước khi sử dụng.
@@ -15,7 +15,7 @@ export type BenchmarkResult = {
     datasetSize: number;
     appFilterMs: number;    // App-side filtering (worst case O(N))
     rlsJoinMs: number;      // Legacy RLS với JOIN (O(N))
-    rlsClaimsMs: number;    // Optimized RLS với JWT Claims (O(1))
+    rlsClaimsMs: number;    // Optimized RLS với JWT Claims (O(1) Authorization Overhead)
 };
 
 /**
@@ -64,8 +64,8 @@ export async function runScalingBenchmark(
 
         // ─────────────────────────────────────────────────────────────────────
         // Baseline 3: Optimized RLS JWT Claims (Gọi RPC benchmark_rls_claims)
-        // Đọc tenant_id trực tiếp từ JWT session — O(1) constant time
-        // Không cần bất kỳ JOIN nào, kiểm tra quyền nhanh như hằng số
+        // Đọc tenant_id trực tiếp từ JWT session — O(1) RAM session lookup
+        // Không cần bất kỳ JOIN nào, tối ưu hóa tối đa tốc độ quét chỉ mục B-Tree
         // ─────────────────────────────────────────────────────────────────────
         const startClaims = performance.now();
         await supabaseAdmin.rpc('benchmark_rls_claims', { limit_count: size });

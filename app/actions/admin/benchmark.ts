@@ -22,10 +22,10 @@ export async function runRlsBenchmark(iterations: number = 100): Promise<{ legac
         // Sử dụng authenticated client (Sẽ tự động gửi Authorization header với JWT token)
         const supabase = await createClient();
 
-        // --- 1. Đo lường Legacy (O(N) - Gọi hàm SELECT public.get_current_user_role()) ---
+        // --- 1. Đo lường Legacy (JOIN - Gọi hàm SELECT public.get_current_user_role()) ---
         const legacyResult = await runTest(supabase, 'benchmark_legacy', iterations);
 
-        // --- 2. Đo lường JWT (O(1) - Đọc auth.jwt()->>'role') ---
+        // --- 2. Đo lường JWT (RAM session claims lookup - Đọc auth.jwt()->>'role') ---
         const jwtResult = await runTest(supabase, 'benchmark_jwt', iterations);
 
         return { legacy: legacyResult, jwt: jwtResult };

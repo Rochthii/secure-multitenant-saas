@@ -187,12 +187,12 @@ export default function ScalingBenchmarkPage() {
                 {/* Stat 3: Complexity */}
                 <div className="border border-slate-800/80 shadow-2xl bg-slate-900/40 backdrop-blur-xl rounded-[2rem] p-7 transition-all duration-300 hover:shadow-blue-500/5 hover:border-blue-500/30 group">
                     <div className="flex items-center justify-between text-slate-400 mb-3">
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Độ phức tạp RLS</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-slate-400">Overhead Xác thực</span>
                         <BarChart3 className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
                     </div>
                     <p className="text-4xl font-black text-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,0.3)]">O(1)</p>
                     <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-wider leading-relaxed">
-                        Constant-time nhờ JWT Session
+                        Trích xuất claim trong RAM Session
                     </p>
                 </div>
 
@@ -234,7 +234,7 @@ export default function ScalingBenchmarkPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-[#10b981] shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                            <span className="text-emerald-400">Optimized RLS: O(1)</span>
+                            <span className="text-emerald-400">Optimized RLS: O(log N)</span>
                         </div>
                     </div>
                 </div>
@@ -377,7 +377,7 @@ export default function ScalingBenchmarkPage() {
                     <div>
                         <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">Ý nghĩa khoa học của thực nghiệm (Chương 5 Đồ Án)</h3>
                         <p className="text-sm text-slate-350 leading-relaxed max-w-3xl">
-                            Đường cong phẳng gần như hằng số <strong className="text-emerald-400 font-bold">O(1)</strong> của <strong className="text-emerald-400">Optimized RLS</strong> chứng minh hệ thống SaaS có khả năng mở rộng (Scale) tuyệt đối mà không bị suy giảm hiệu năng do overhead phân quyền ở mức Database. Giải quyết triệt để bài toán thắt nút cổ chai (bottleneck) trong kiến trúc đa khách hàng.
+                            Đường cong độ trễ dạng logarithmic <strong className="text-emerald-400 font-bold">O(log N)</strong> của <strong className="text-emerald-400">Optimized RLS</strong> chứng minh hệ thống SaaS có khả năng mở rộng (Scale) vượt trội. Bằng cách triệt tiêu hoàn toàn chi phí JOIN phân quyền ($O(1)$ RAM Claims lookup) và tận dụng B-Tree Index Scan, hệ thống loại bỏ triệt để hiện tượng thắt nút cổ chai hiệu năng khi dữ liệu phình to.
                         </p>
                     </div>
                 </div>
