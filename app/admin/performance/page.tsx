@@ -367,6 +367,30 @@ export default function ScalingBenchmarkPage() {
                 </div>
             )}
 
+            {/* Benchmark Environment Specs Card */}
+            <div className="border border-slate-800/80 shadow-2xl bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] p-8 mb-8 mt-8">
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-4">
+                    Thông số Môi trường Thực nghiệm (Benchmark Environment Specs)
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
+                    <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800/60">
+                        <span className="text-slate-500 font-bold uppercase tracking-wider block mb-1">Cơ sở dữ liệu & Hosting</span>
+                        <p className="text-slate-200 font-black">PostgreSQL 16.3 (Supabase Cloud)</p>
+                        <p className="text-slate-400 mt-1">Gói VPS: 2 vCPU, 1GB RAM, SSD Storage (GP3)</p>
+                    </div>
+                    <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800/60">
+                        <span className="text-slate-500 font-bold uppercase tracking-wider block mb-1">Dữ liệu kiểm thử & Index</span>
+                        <p className="text-slate-200 font-black">111,000 dòng dữ liệu thật (Synthetic Data)</p>
+                        <p className="text-slate-400 mt-1">Chỉ mục: B-Tree Index trên trường `tenant_id` & `id`</p>
+                    </div>
+                    <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800/60">
+                        <span className="text-slate-500 font-bold uppercase tracking-wider block mb-1">Trạng thái Cache & Load-testing</span>
+                        <p className="text-slate-200 font-black">Warm Cache (Hot Read) & Cold Read</p>
+                        <p className="text-slate-400 mt-1">Công cụ: `k6` + Postgres `pg_stat_statements` (loại bỏ nhiễu mạng)</p>
+                    </div>
+                </div>
+            </div>
+
             {/* Scientific Explanation SOC Style Panel */}
             <div className="bg-slate-900 border border-slate-800 text-white rounded-[2.5rem] p-8 flex flex-col lg:flex-row items-center justify-between shadow-2xl gap-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[350px] h-[350px] bg-amber-500/5 rounded-full blur-3xl pointer-events-none mix-blend-screen" />
