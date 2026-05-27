@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { ArrowRight, Terminal, Binary, Cpu } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Globe, BarChart3 } from 'lucide-react';
 import type { AboutSectionRow } from '@/lib/cache/queries';
 
 interface StitchIntroProps {
@@ -12,72 +12,90 @@ interface StitchIntroProps {
 export function StitchIntro({ introSection }: StitchIntroProps) {
     const t = useTranslations('home.intro');
 
-    const title = introSection?.title_vi || "Digital Legacy";
+    const title = "Tối Ưu Vận Hành, Minh Bạch Tài Chính Chuỗi";
     const excerpt = introSection?.summary_vi ||
-        (introSection?.content_vi ? introSection.content_vi.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : "Exploring the intersection of tradition and digital future.");
+        "Giải pháp kiến tạo nền tảng vững vàng cho sự liên kết và thống nhất dữ liệu giữa các đơn vị thành viên doanh nghiệp. Cho phép phân quyền truy cập, CMS đa ngôn ngữ, tự động hóa báo cáo tài chính và kiểm toán bảo mật dữ liệu ở cấp độ cao nhất.";
 
     return (
-        <section className="bg-[#0A0F1A] py-24 relative overflow-hidden border-y border-white/5">
-            <div className="container mx-auto px-4 relative z-10">
+        <section className="bg-[#070A0F] py-28 relative overflow-hidden border-y border-white/5">
+            {/* Soft Ambient Light Behind Visual */}
+            <div className="absolute top-1/3 left-10 w-[400px] h-[400px] bg-[#00F2FF]/5 rounded-full blur-[120px] pointer-events-none" />
+
+            <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-16">
+                    
                     {/* Visual Side */}
                     <div className="lg:w-1/2 relative">
-                        <div className="relative z-10 rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
+                        {/* Decorative Outer Ring */}
+                        <div className="absolute -inset-2 bg-gradient-to-tr from-[#00F2FF]/20 to-indigo-500/0 rounded-[28px] opacity-60 blur-sm pointer-events-none" />
+                        
+                        <div className="relative z-10 rounded-2xl overflow-hidden border border-white/10 shadow-[0_15px_40px_rgba(0,242,255,0.06)] group">
                             {introSection?.image_url ? (
                                 <img 
                                     src={introSection.image_url} 
                                     alt={title}
-                                    className="w-full aspect-[4/3] object-cover"
+                                    className="w-full aspect-[4/3] object-cover transition-transform duration-700 group-hover:scale-105"
                                 />
                             ) : (
-                                <div className="w-full aspect-[4/3] bg-slate-900 flex items-center justify-center">
-                                    <Cpu className="w-24 h-24 text-blue-500/20" />
+                                <div className="w-full aspect-[4/3] bg-[#0C121A] flex items-center justify-center">
+                                    <ShieldCheck className="w-24 h-24 text-[#00F2FF]/25 animate-pulse" />
                                 </div>
                             )}
                         </div>
 
-                        {/* Minimal Accents */}
-                        <div className="absolute -top-4 -right-4 p-4 bg-[#0F172A] border border-white/10 rounded-lg z-20 hidden md:block">
-                            <Binary className="w-6 h-6 text-blue-400" />
+                        {/* Professional Floating Icons */}
+                        <div className="absolute -top-5 -right-5 p-4 bg-[#0A0F15]/95 border border-white/10 hover:border-[#00F2FF]/40 rounded-2xl z-20 hidden md:block shadow-2xl transition-colors duration-300">
+                            <BarChart3 className="w-5.5 h-5.5 text-[#00F2FF]" />
                         </div>
-                        <div className="absolute -bottom-4 -left-4 p-4 bg-[#0F172A] border border-white/10 rounded-lg z-20 hidden md:block">
-                            <Terminal className="w-6 h-6 text-blue-400" />
+                        <div className="absolute -bottom-5 -left-5 p-4 bg-[#0A0F15]/95 border border-white/10 hover:border-[#00F2FF]/40 rounded-2xl z-20 hidden md:block shadow-2xl transition-colors duration-300">
+                            <Globe className="w-5.5 h-5.5 text-[#00F2FF]" />
                         </div>
                     </div>
 
                     {/* Content Side */}
                     <div className="lg:w-1/2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono mb-6 uppercase tracking-widest">
-                            System.Identity.Introduction
-                        </div>
+                        <span className="inline-flex items-center gap-2 px-4.5 py-1.5 rounded-full bg-[#00F2FF]/5 border border-[#00F2FF]/25 text-[#00F2FF] text-[10px] font-bold tracking-wider mb-8 uppercase shadow-[0_0_10px_rgba(0,242,255,0.05)]">
+                          📊 HỆ THỐNG QUẢN TRỊ TẬP TRUNG (SAAS MULTI-TENANT)
+                        </span>
 
-                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-8 leading-tight tracking-tight">
-                            {title}
-                            <span className="text-blue-500">.</span>
+                        <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-8 leading-[1.12] tracking-tight">
+                          {title}
+                          <span className="text-[#00F2FF]">.</span>
                         </h2>
 
-                        <div className="space-y-6 mb-10">
-                            <p className="text-gray-400 text-lg leading-relaxed font-medium">
+                        <div className="space-y-8 mb-12">
+                            <p className="text-slate-400 text-lg leading-relaxed font-light">
                                 {excerpt}
                             </p>
                             
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-                                    <div className="text-blue-400 font-mono text-xs font-bold mb-1 uppercase">01. Heritage</div>
-                                    <div className="text-white font-bold text-lg">Ancient Wisdom</div>
+                            {/* Value Grid with Glassmorphic Design */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="p-6 rounded-2xl bg-white/[0.01] hover:bg-white/[0.02] border border-white/[0.04] hover:border-[#00F2FF]/30 transition-all duration-300">
+                                    <div className="text-[#00F2FF] font-extrabold text-[10px] mb-2 uppercase tracking-widest leading-none">
+                                      01. Kiểm Toán Minh Bạch
+                                    </div>
+                                    <div className="text-white font-extrabold text-base mb-1">
+                                      Immutable Audit Trail
+                                    </div>
+                                    <span className="text-xs text-slate-500 font-medium">Bảo vệ tính toàn vẹn dữ liệu.</span>
                                 </div>
-                                <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
-                                    <div className="text-blue-400 font-mono text-xs font-bold mb-1 uppercase">02. Future</div>
-                                    <div className="text-white font-bold text-lg">Digital Pulse</div>
+                                <div className="p-6 rounded-2xl bg-white/[0.01] hover:bg-white/[0.02] border border-white/[0.04] hover:border-[#00F2FF]/30 transition-all duration-300">
+                                    <div className="text-[#00F2FF] font-extrabold text-[10px] mb-2 uppercase tracking-widest leading-none">
+                                      02. Dashboard Thời Gian Thực
+                                    </div>
+                                    <div className="text-white font-extrabold text-base mb-1">
+                                      Real-time Analytics
+                                    </div>
+                                    <span className="text-xs text-slate-500 font-medium">Theo dõi dữ liệu tức thì.</span>
                                 </div>
                             </div>
                         </div>
 
                         <Link href={`/gioi-thieu/${introSection?.key || 'dong-chay-lich-su'}`}>
-                            <button className="group px-10 py-5 bg-blue-600 text-white font-black rounded-xl transition-all hover:bg-blue-500 active:scale-95">
-                                <div className="flex items-center gap-3">
-                                    {t('readMore')}
-                                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                            <button className="group px-10 py-4.5 bg-[#00F2FF] text-black font-extrabold rounded-xl transition-all duration-300 hover:bg-white active:scale-95 shadow-[0_4px_25px_rgba(0,242,255,0.2)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.2)]">
+                                <div className="flex items-center gap-2.5 text-xs uppercase tracking-widest">
+                                    {t('readMore') || "Tìm Hiểu Thêm"}
+                                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                                 </div>
                             </button>
                         </Link>

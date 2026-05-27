@@ -71,8 +71,8 @@ export default async function StitchHome({ domain, locale, tenantId: propTenantI
 
       {/* 1. Hero - Technical Introduction */}
       <StitchHero 
-        title={settings['site_name_vi'] || "Digital Zenith"}
-        description={settings['site_description_vi']}
+        title={settings['site_name_vi'] || "Hệ Thống Quản Trị SaaS Đa Khách Hàng (Multi-tenant)"}
+        description={settings['site_description_vi'] || "Xây dựng hệ thống quản trị trung ương tập trung cho hàng chục chi nhánh và đơn vị thành viên doanh nghiệp. Tích hợp website động, CMS đa ngôn ngữ, hệ thống kiểm toán tài chính minh bạch và dashboard phân tích thời gian thực."}
         backgroundImage={heroSlides?.[0]?.image_url}
       />
 
@@ -85,13 +85,13 @@ export default async function StitchHome({ domain, locale, tenantId: propTenantI
       {/* 3. Dharma Nodes - The Knowledge Network */}
       <StitchNodes 
         dharmaTalks={dharmaTalks} 
-        title="Dharma Knowledge Graph"
+        title="Các Phân Hệ & Tư Liệu Số"
       />
 
       {/* 4. Events - Synchronized Activities */}
       <StitchEvents 
         upcomingEvents={upcomingEvents} 
-        title="Network Transmission Events"
+        title="Lịch Lãm & Sự Kiện Vận Hành"
       />
 
       {/* 5. Footer Strip - Terminal Contact */}
