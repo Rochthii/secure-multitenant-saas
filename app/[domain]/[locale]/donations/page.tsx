@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
-import { getTransactionPurposes, getRecentTransactions } from '@/lib/donations';
+import { getTransactionProjects, getRecentTransactions } from '@/lib/donations';
 import { DonationPageClient } from '@/components/donations/DonationPageClient';
 import { KhmerPatternBg } from '@/components/ui/khmer-pattern-bg';
 import { getTenantConfig } from '@/lib/tenant';
@@ -30,7 +30,7 @@ export default async function DonatePage({
 
     // Bắt lỗi an toàn từng phần — không để một lỗi DB crash cả trang
     const [purposes, recentTransactions, t] = await Promise.all([
-        getTransactionPurposes(tenantId).catch((e) => { console.error('[DonatePage] getTransactionPurposes error:', e); return []; }),
+        getTransactionProjects(tenantId).catch((e) => { console.error('[DonatePage] getTransactionProjects error:', e); return []; }),
         getRecentTransactions(5, tenantId).catch((e) => { console.error('[DonatePage] getRecentTransactions error:', e); return []; }),
         getTranslations({ locale, namespace: 'transaction.page' }),
     ]);

@@ -82,6 +82,7 @@ export default async function HomepageManagerPage({
                                 tenantType={(tenant as any)?.tenant_type}
                                 initialBlocks={blocks}
                                 initialThemeColors={tenant?.theme_colors}
+                                initialLayoutStyle={tenant?.layout_style}
                                 isSuperAdmin={showThemeTab}
                             />
                         </CardContent>

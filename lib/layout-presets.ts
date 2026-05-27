@@ -1,4 +1,4 @@
-import { BlockConfig } from '@/lib/types/layout-blocks';
+import { BlockConfig, DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
 import { BRAND_NAME_VI } from '@/lib/constants';
 
 /**
@@ -115,3 +115,34 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
         ],
     },
 ];
+
+/**
+ * Trả về danh sách blocks mặc định tương ứng với từng Phong cách Giao diện và mô hình doanh nghiệp/chi nhánh
+ */
+export function getDefaultBlocksForStyle(layoutStyle: string, tenantType: string): BlockConfig[] {
+    const isCompany = tenantType !== 'tenant';
+    
+    // Ánh xạ Phong cách Global sang Bố cục Builder
+    const styleToPresetId: Record<string, string> = {
+        'saas_violet': 'stitch',
+        'corp_navy': 'corporate',
+        'modern_tech': 'modern',
+        'charity_green': 'mcaaron',
+        'creative_amber': 'ink',
+        'minimal_white': 'minimal',
+    };
+    
+    const presetId = styleToPresetId[layoutStyle];
+    if (presetId) {
+        const preset = LAYOUT_PRESETS.find(p => p.id === presetId);
+        if (preset) {
+            return preset.blocks.map(b => ({ ...b }));
+        }
+    }
+    
+    // Các trường hợp đặc thù / fallback cũ
+    if (layoutStyle === 'modern_tech') return DEFAULT_TECH_BLOCKS.map(b => ({ ...b }));
+    return isCompany 
+        ? DEFAULT_COMPANY_BLOCKS.map(b => ({ ...b })) 
+        : DEFAULT_LAYOUT_BLOCKS.map(b => ({ ...b }));
+}

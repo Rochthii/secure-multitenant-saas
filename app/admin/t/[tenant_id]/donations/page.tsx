@@ -14,7 +14,7 @@ import { TransactionFilters } from '@/components/admin/transaction-filters';
 import { formatCurrency } from '@/lib/constants/transaction';
 import { formatDate } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { getTransactionPurposes } from '@/lib/donations';
+import { getTransactionProjects } from '@/lib/donations';
 import { requireTenantAccess, checkPermission } from '@/lib/permissions';
 import { getTenantConfig } from '@/lib/tenant';
 
@@ -88,7 +88,7 @@ export default async function TransactionsPage({ params, searchParams }: Transac
     const canManageTransactions = await checkPermission('transactions', 'update');
 
     // Fetch purposes and mapping titles
-    const allPurposes = await getTransactionPurposes(tenant_id);
+    const allPurposes = await getTransactionProjects(tenant_id);
 
     return (
         <div className="space-y-8" suppressHydrationWarning>

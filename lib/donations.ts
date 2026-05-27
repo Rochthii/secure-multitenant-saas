@@ -104,11 +104,8 @@ export const getTransactionProjects = (tenantId?: string): Promise<TransactionPr
     )();
 };
 
-// Aliasing for backward compatibility while refactoring
-export const getTransactionPurposes = getTransactionProjects;
-
 export async function getTransactionPurpose(id: string, tenantId?: string): Promise<TransactionPurpose | null> {
-    const purposes = await getTransactionPurposes(tenantId);
+    const purposes = await getTransactionProjects(tenantId);
     return purposes.find((p) => p.id === id) || null;
 }
 

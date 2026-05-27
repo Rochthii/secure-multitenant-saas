@@ -86,7 +86,7 @@ describe('Cryptographic WORM Vault & Tenant Connection Pooler Integration Tests'
             expect(syncResult.syncedCount).toBe(2);
             expect(syncResult.totalBlocks).toBe(2);
 
-            const ledger = loadWormLedger();
+            const ledger = await loadWormLedger();
             expect(ledger.length).toBe(2);
             expect(ledger[0].index).toBe(1);
             expect(ledger[0].prev_hash).toBe('0000000000000000000000000000000000000000000000000000000000000000');
@@ -102,7 +102,7 @@ describe('Cryptographic WORM Vault & Tenant Connection Pooler Integration Tests'
             await syncAuditLogsToWorm();
             
             // Deliberately tamper with Block #1
-            simulateWormTampering(1, 'ILLEGAL_TAMPERED_ACTION');
+            await simulateWormTampering(1, 'ILLEGAL_TAMPERED_ACTION');
             
             const verification = await verifyWormLedgerIntegrity();
             expect(verification.isValid).toBe(false);

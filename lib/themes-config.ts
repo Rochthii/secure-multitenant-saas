@@ -267,6 +267,58 @@ export const BUDDHIST_THEMES: ColorTheme[] = [
             background: '#060B13', bgEnd: '#0D1527', text: '#E2F1FF',
             hero: '#03060B', surface: '#0E1726'
         }
+    },
+    {
+        id: 'saas_violet',
+        name: 'SaaS: Violet Premium — Đột Phá',
+        description: 'Tông màu Tím Violet Neon & Dark Space — tối ưu cho sản phẩm công nghệ cao.',
+        colors: {
+            primary: '#8B5CF6', secondary: '#4C1D95', accent: '#EC4899',
+            background: '#0B071E', bgEnd: '#120A2A', text: '#EDE9FE',
+            hero: '#06030F', surface: '#170F34'
+        }
+    },
+    {
+        id: 'corp_navy',
+        name: 'SaaS: Corporate Navy — Uy Tín',
+        description: 'Tông màu Xanh Navy truyền thống & Slate tối — khẳng định sự tin cậy cao.',
+        colors: {
+            primary: '#1E40AF', secondary: '#1E3A8A', accent: '#D97706',
+            background: '#0F172A', bgEnd: '#1E293B', text: '#F1F5F9',
+            hero: '#090D16', surface: '#1E293B'
+        }
+    },
+    {
+        id: 'charity_green',
+        name: 'SaaS: Social Green — Thân Thiện',
+        description: 'Tông màu Xanh Emerald & Nền sáng nhẹ nhàng — tối ưu cho các tổ chức cộng đồng.',
+        colors: {
+            primary: '#10B981', secondary: '#064E3B', accent: '#F59E0B',
+            background: '#F0FDF4', bgEnd: '#DCFCE7', text: '#064E3B',
+            hero: '#022C22', surface: '#FFFFFF'
+        }
+    },
+    {
+        id: 'creative_amber',
+        name: 'SaaS: Creative Amber — Sáng Tạo',
+        description: 'Tông màu Cam Đất ấm áp & Nền sáng nhẹ nhàng — phù hợp doanh nghiệp dịch vụ.',
+        colors: {
+            primary: '#D97706', secondary: '#78350F', accent: '#3B82F6',
+            background: '#FFFBEB', bgEnd: '#FEF3C7', text: '#78350F',
+            hero: '#451A03', surface: '#FFFFFF'
+        }
+    },
+    {
+        id: 'minimal_white',
+        name: 'SaaS: Clean Minimalist — Tối Giản',
+        description: 'Trắng/Đen tối giản tối đa — tập trung vào sự tinh tế và hiệu suất.',
+        colors: {
+            primary: '#1E293B', secondary: '#475569', accent: '#0F172A',
+            background: '#FFFFFF', bgEnd: '#F8FAFC', text: '#0F172A',
+            hero: '#090D16', surface: '#FFFFFF'
+        }
     }
 ];
+
+export const SYSTEM_THEMES = BUDDHIST_THEMES;
 

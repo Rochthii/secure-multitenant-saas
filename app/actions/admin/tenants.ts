@@ -9,6 +9,7 @@ import { TenantSchema, formatZodError } from '@/lib/validations/admin';
 import { CACHE_TAGS } from '@/lib/cache/tags';
 import { addDomainToVercel } from '@/lib/vercel';
 import { DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
+import { getDefaultBlocksForStyle } from '@/lib/layout-presets';
 
 export interface Tenant {
     id: string;
@@ -89,7 +90,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
         cleanDomain = cleanDomain.replace(/\/.*$/, '');
 
         const raw = {
-            name: formData.get('name') as string,
+            name: (formData.get('name') as string || '').trim(),
             domain: cleanDomain,
             subdomain: (formData.get('subdomain') as string) || null,
             layout_style: (formData.get('layout_style') as string) || 'saas_violet',
@@ -120,11 +121,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
         const supabase = await createClient() as any;
 
         // --- DYNAMIC DEFAULT BLOCKS ROUTING ON CREATION ---
-        const defaultBlocks = parsed.data.layout_style === 'modern_tech'
-            ? DEFAULT_TECH_BLOCKS
-            : parsed.data.tenant_type !== 'tenant'
-                ? DEFAULT_COMPANY_BLOCKS
-                : DEFAULT_LAYOUT_BLOCKS;
+        const defaultBlocks = getDefaultBlocksForStyle(parsed.data.layout_style ? parsed.data.layout_style : 'saas_violet', parsed.data.tenant_type || 'tenant');
 
         // Prepare contact_info with abbot and history
         const abbot = formData.get('abbot') as string;
@@ -203,7 +200,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         cleanDomain = cleanDomain.replace(/\/.*$/, '');
 
         const raw = {
-            name: formData.get('name') as string,
+            name: (formData.get('name') as string || '').trim(),
             domain: cleanDomain,
             subdomain: (formData.get('subdomain') as string) || null,
             layout_style: (formData.get('layout_style') as string) || 'saas_violet',
@@ -247,11 +244,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         const resetDefaultBlocks = formData.get('reset_default_blocks') === 'true';
         let layoutBlocksToUpdate = undefined;
         if (resetDefaultBlocks) {
-            layoutBlocksToUpdate = parsed.data.layout_style === 'modern_tech'
-                ? DEFAULT_TECH_BLOCKS
-                : parsed.data.tenant_type !== 'tenant'
-                    ? DEFAULT_COMPANY_BLOCKS
-                    : DEFAULT_LAYOUT_BLOCKS;
+            layoutBlocksToUpdate = getDefaultBlocksForStyle(parsed.data.layout_style ? parsed.data.layout_style : 'saas_violet', parsed.data.tenant_type || 'tenant');
         }
 
         const { error: updateError } = await supabase
@@ -512,6 +505,58 @@ export async function updateTenantTheme(
         revalidateTag(`site_settings-${tenantId}`);
         revalidatePath(`/admin/t/${tenantId}/homepage`);
         // revalidatePath('/', 'layout'); // REMOVED: Extreme resource hog. Replaced by targeted revalidateTag above.
+
+        return { success: true };
+    } catch (err: any) {
+        return { success: false, error: err.message };
+    }
+}
+
+export async function updateTenantLayoutStyle(
+    tenantId: string,
+    layoutStyle: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        await requireTenantAccess(tenantId);
+
+        const ctx = await getUserContext();
+        if (!ctx) return { success: false, error: 'Unauthorized' };
+        const user = { id: ctx.userId, app_metadata: { role: ctx.role } } as any;
+
+        const supabase = await createClient() as any;
+
+        const { data: oldData } = await supabase
+            .from('tenants')
+            .select('layout_style, domain')
+            .eq('id', tenantId)
+            .single();
+
+        const { error, count } = await supabase
+            .from('tenants')
+            .update({ layout_style: layoutStyle })
+            .eq('id', tenantId)
+            .select('*', { count: 'exact', head: true });
+
+        if (error) return { success: false, error: error.message };
+        if (count === 0) return { success: false, error: 'Không có quyền cập nhật (RLS)' };
+
+        await createAuditLog({
+            user,
+            action: 'update',
+            tableName: 'tenants',
+            recordId: tenantId,
+            oldData: { layout_style: oldData?.layout_style },
+            newData: { layout_style: layoutStyle },
+        });
+
+        // Revalidate cache
+        if (oldData?.domain) {
+            // @ts-ignore
+            revalidateTag(CACHE_TAGS.system.tenantConfig(oldData.domain));
+        }
+        // @ts-ignore
+        revalidateTag(CACHE_TAGS.system.tenantConfigGlobal);
+        revalidatePath(`/admin/t/${tenantId}/homepage`);
 
         return { success: true };
     } catch (err: any) {

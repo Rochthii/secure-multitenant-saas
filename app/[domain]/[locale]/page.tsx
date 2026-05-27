@@ -1,7 +1,7 @@
 import { getTenantConfig } from '@/lib/tenant';
 import { setRequestLocale } from 'next-intl/server';
 import DynamicPageBuilder from './home-variants/dynamic-page-builder';
-import { DEFAULT_LAYOUT_BLOCKS, DEFAULT_COMPANY_BLOCKS, DEFAULT_TECH_BLOCKS } from '@/lib/types/layout-blocks';
+import { getDefaultBlocksForStyle } from '@/lib/layout-presets';
 import dynamic from 'next/dynamic';
 import type { Metadata } from 'next';
 import { getSiteSettings } from '@/lib/site-settings';
@@ -74,11 +74,7 @@ export default async function HomePage({ params }: { params: Promise<{ domain: s
 
     // ─── Lấy Blocks cấu hình từ DB hoặc Defaults —————————————————──────────────
     // Nếu có blocks tùy chỉnh trong DB thì dùng, nếu không thì lấy blocks mặc định của theme đó
-    const defaultBlocks = layoutStyle === 'modern_tech'
-        ? DEFAULT_TECH_BLOCKS
-        : isCompany
-            ? DEFAULT_COMPANY_BLOCKS
-            : DEFAULT_LAYOUT_BLOCKS;
+    const defaultBlocks = getDefaultBlocksForStyle(layoutStyle, tenant?.tenant_type || 'tenant');
     const blocks = tenant?.layout_blocks || defaultBlocks;
 
     return (

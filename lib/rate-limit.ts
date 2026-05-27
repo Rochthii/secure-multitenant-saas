@@ -55,11 +55,4 @@ export async function checkRateLimit(
   }
 }
 
-/**
- * Get client IP from request headers
- */
-export function getClientIp(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded ? forwarded.split(',')[0] : 'unknown';
-  return ip;
-}
+

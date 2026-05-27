@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { GripVertical, Save, RotateCcw, Plus, Trash2, Smartphone, Monitor, Settings, Palette, Check, LayoutGrid, AlertTriangle, User, ExternalLink, BarChart3, Clock, Search, List, Eye, EyeOff, Info, Pipette, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BUDDHIST_THEMES, ColorTheme } from '@/lib/themes-config';
-import { updateTenantTheme } from '@/app/actions/admin/tenants';
+import { updateTenantTheme, updateTenantLayoutStyle } from '@/app/actions/admin/tenants';
 import { ColorPicker } from '@/components/ui/color-picker';
 import {
     Dialog,
@@ -654,6 +654,7 @@ interface LayoutDesignerClientProps {
     tenantType?: string;
     initialBlocks: BlockConfig[];
     initialThemeColors?: Record<string, string> | null;
+    initialLayoutStyle?: string | null;
     isSuperAdmin?: boolean;
 }
 
@@ -662,10 +663,12 @@ export function LayoutDesignerClient({
     tenantType = 'tenant', 
     initialBlocks, 
     initialThemeColors,
+    initialLayoutStyle = 'saas_violet',
     isSuperAdmin = false 
 }: LayoutDesignerClientProps) {
     const [blocks, setBlocks] = useState<BlockConfig[]>(initialBlocks);
     const [currentThemeColors, setCurrentThemeColors] = useState<Record<string, string>>(initialThemeColors || {});
+    const [currentLayoutStyle, setCurrentLayoutStyle] = useState<string>(initialLayoutStyle || 'saas_violet');
     const [isDirty, setIsDirty] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [selectedType, setSelectedType] = useState<string>('traditional_news');
@@ -798,15 +801,21 @@ export function LayoutDesignerClient({
                 themeResult = await updateTenantTheme(tenantId, currentThemeColors);
             }
 
-            if (layoutResult.success && themeResult.success) {
-                toast.success('✅ Đã lưu cấu trúc và màu sắc trang chủ', {
+            // 3. Lưu Layout Style (đồng bộ phong cách trang chủ!)
+            let styleResult = { success: true };
+            if (currentLayoutStyle !== initialLayoutStyle) {
+                styleResult = await updateTenantLayoutStyle(tenantId, currentLayoutStyle);
+            }
+
+            if (layoutResult.success && themeResult.success && styleResult.success) {
+                toast.success('✅ Đã lưu cấu trúc, màu sắc và phong cách trang chủ', {
                     description: 'Trang chủ sẽ cập nhật trong vòng vài phút.'
                 });
                 setIsDirty(false);
                 setPreviewKey(Date.now());
             } else {
                 toast.error('Lỗi khi lưu', {
-                    description: layoutResult.error || (themeResult as any).error
+                    description: layoutResult.error || (themeResult as any).error || (styleResult as any).error
                 });
             }
         } catch (err) {
@@ -836,6 +845,19 @@ export function LayoutDesignerClient({
             if (preset) {
                 setBlocks(preset.blocks.map(b => ({ ...b })));
                 setIsDirty(true);
+
+                // Ánh xạ Preset sang Layout Style
+                const PRESET_TO_LAYOUT_STYLE: Record<string, string> = {
+                    'stitch': 'saas_violet',
+                    'corporate': 'corp_navy',
+                    'modern': 'modern_tech',
+                    'mcaaron': 'charity_green',
+                    'ink': 'creative_amber',
+                    'minimal': 'minimal_white',
+                };
+                const mappedStyle = PRESET_TO_LAYOUT_STYLE[presetId] || presetId;
+                setCurrentLayoutStyle(mappedStyle);
+
                 toast.success(`✅ Đã áp dụng Layout: ${preset.nameVi}`, {
                     description: 'Nhớ bấm "Lưu Giao Diện" để lưu xuống DB.'
                 });
@@ -885,7 +907,11 @@ export function LayoutDesignerClient({
     ]);
 
     const isBlockAllowed = (key: string) => {
-        if (isCompany) return !TEMPLE_BLOCK_KEYS.has(key);
+        if (isCompany) {
+            if (key.startsWith('traditional_')) return false;
+            return !TEMPLE_BLOCK_KEYS.has(key);
+        }
+        if (key.startsWith('enterprise_') || key.startsWith('mcaaron_') || key.startsWith('stitch-')) return false;
         return !ENTERPRISE_BLOCK_KEYS.has(key);
     };
 
@@ -1025,8 +1051,17 @@ export function LayoutDesignerClient({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {filteredPresets.map(preset => {
                             const isConfirming = confirmPresetId === preset.id;
+                            const LAYOUT_STYLE_TO_PRESET: Record<string, string> = {
+                                'saas_violet': 'stitch',
+                                'corp_navy': 'corporate',
+                                'modern_tech': 'modern',
+                                'charity_green': 'mcaaron',
+                                'creative_amber': 'ink',
+                                'minimal_white': 'minimal',
+                            };
+                            const activePresetId = LAYOUT_STYLE_TO_PRESET[currentLayoutStyle] || currentLayoutStyle;
                             const currentHeroType = blocks[0]?.type || '';
-                            const isActive = currentHeroType.startsWith(preset.id === 'traditional' ? 'traditional_hero' : preset.id);
+                            const isActive = preset.id === activePresetId || currentHeroType.startsWith(preset.id === 'traditional' ? 'traditional_hero' : preset.id);
                             return (
                                 <button
                                     key={preset.id}
