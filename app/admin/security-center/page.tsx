@@ -15,6 +15,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { IpBlocklistWidget } from '@/components/admin/security/ip-blocklist-widget';
+import { SocRealtimeListener } from '@/components/admin/security/soc-realtime-listener';
 
 export default async function SecurityCenterPage({ searchParams }: { searchParams: Promise<any> }) {
     const globalAccess = await isGlobalAdmin();
@@ -343,6 +344,23 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                     </p>
                 </div>
                 <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    {/* Council QR Code Entry */}
+                    <div className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-md p-2 rounded-2xl border border-slate-700 shadow-lg shrink-0 group transition-all hover:border-amber-500/20">
+                        <img 
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://khleang.vercel.app/council&color=f59e0b&bgcolor=1e293b" 
+                            alt="QR Council Portal" 
+                            className="w-12 h-12 rounded-xl border border-amber-500/20 group-hover:scale-105 transition-transform"
+                        />
+                        <div>
+                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Council Portal</div>
+                            <div className="text-[11px] font-black text-amber-400">Quét QR để Hack CSDL</div>
+                            <div className="text-[9px] text-slate-500 font-medium">Bản Sandbox PTIT</div>
+                        </div>
+                    </div>
+
+                    {/* SOC Realtime Audio Listener */}
+                    <SocRealtimeListener />
+
                     {/* Security Report Button */}
                     <SecurityReportButton />
 
