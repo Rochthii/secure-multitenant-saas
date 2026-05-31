@@ -4,6 +4,20 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 
 ## [1.6.0] - 2026-05-31
 
+### Động cơ Phát hiện Bất thường Lai (HBCAD Anomaly Engine)
+- **Thiết kế & Triển khai Động cơ phát hiện lai (HBCAD)**: Thêm cột `risk_score` vào bảng `audit_logs` và tạo bảng `user_activity_baselines` để lưu trữ baseline tần suất hoạt động trung bình ($\mu$) và độ lệch chuẩn ($\sigma$) của User.
+- **Thuật toán tính điểm rủi ro CRS thời gian thực**: Phát triển hàm `calculate_event_risk_score()` chạy `BEFORE INSERT` trên `audit_logs` kết hợp:
+  - *Base Context Risk (ABAC)*: Phạt ngoài giờ hành chính (x2.5), ngoài IP whitelist (x3.5) và trọng số hành động.
+  - *Outlier Deviation (Z-Score)*: Xác định đột biến tần suất hoạt động so với baseline của User ($Z = \frac{x-\mu}{\sigma}$).
+  - *Sequential Pattern Penalty (SPP)*: Cộng phạt khi phát hiện chuỗi dò quét RLS (+50), chuỗi xóa dữ liệu phá hoại (+60), hoặc chuỗi càn quét SELECT (+40).
+- **Giao diện SOC Telemetry & LED Neon**: Tích hợp hiển thị CRS dynamic và đèn Neon dynamic (High Risk $\ge 75$, Warning $35\text{-}74$) trong danh sách log an ninh.
+
+### Phòng vệ Chủ động Phân tầng & Edge IP Block (Tiered SOAR Active Defense)
+- **Triệt tiêu lỗ hổng Reverse DDoS**: Nâng cấp trigger SOAR `soc_active_alert_trigger()` sang mô hình **Phản ứng Phân tầng (Tiered Mitigation)**. Khi phát hiện IP lạ vi phạm $\ge 3$ lần/phút, SOAR tự động chèn IP đó vào danh sách cấm `blocked_ips` để Edge Middleware chặn đứng tại biên thay vì khóa cả Tenant (Reverse DDoS).
+- **Bảo vệ Whitelist Admin**: Cơ chế đối chiếu IP Whitelist động để tuyệt đối **không tự khóa nhầm** IP của Admin hợp pháp.
+- **Edge Middleware IP Lock**: Cập nhật `middleware.ts` check động blocked_ips với cache Edge `15s` giữ nguyên thời gian phản hồi siêu tốc $< 4\text{ms}$ và hiển thị trang HTML 403 Cyber SOC chi tiết lý do.
+- **Premium IP Blocklist Widget**: Tạo component [ip-blocklist-widget.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/ip-blocklist-widget.tsx) hỗ trợ hiển thị danh sách IP bị chặn thời gian thực và cung cấp nút gỡ chặn (Unblock) kiểm toán đầy đủ.
+
 ### Công cụ Hỗ trợ Phát triển AI (CodeGraph Development Tools)
 - **Tích hợp CodeGraph MCP Server**: Cài đặt global package `@colbymchenry/codegraph` và khởi tạo lập chỉ mục đồ thị tri thức mã nguồn thành công cho **729 file**, tạo ra **7.071 node** và **14.499 edge** quan hệ cục bộ. Đã tự động đăng ký cổng kết nối MCP Server với các AI coding assistants lớn (Cursor, Claude Code, Gemini CLI, Antigravity IDE) nhằm tối ưu hóa chi phí token và tăng tốc độ phân tích mã nguồn.
 
