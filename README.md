@@ -17,7 +17,7 @@
 
 Trọng tâm nghiên cứu của đề tài tập trung giải quyết bài toán tối ưu hóa hạ tầng và an toàn thông tin mức doanh nghiệp (Research Engineer Mindset):
 
-> **"Đề tài chứng minh rằng kiến trúc RLS kết hợp JWT Custom Claims đạt độ phức tạp trích xuất phân quyền tối ưu O(1) (in-memory JWT resolution) và cơ chế lọc mức dòng đạt O(log N_tenant) tối ưu chỉ mục (Indexed B-Tree Scan) — dưới điều kiện tấn công thực tế — và đo lường được chi phí bảo mật (cost of security) ở từng lớp của kiến trúc Phòng thủ Chiều sâu (Defense-in-depth)."**
+> **"Đề tài chứng minh rằng kiến trúc RLS kết hợp JWT Custom Claims giúp triệt tiêu hoàn toàn chi phí xác thực ngữ cảnh (Authorization Overhead) đạt mức thời gian hằng số trong bộ nhớ RAM (Constant-time RAM Resolution) và cơ chế lọc mức dòng đạt độ phức tạp tối ưu chỉ mục B-Tree $O(\log N_{tenant})$ (Indexed B-Tree Scan) — dưới điều kiện tấn công thực tế — và đo lường được chi phí bảo mật (cost of security) ở từng lớp của kiến trúc Phòng thủ Chiều sâu (Defense-in-depth)."**
 
 ---
 
@@ -46,7 +46,7 @@ graph TD
     *   *Cơ chế:* Next.js Middleware thực thi tại Edge Runtime (<4ms) phân tích host/subdomain từ header để định tuyến động (`Smart Router`). Đồng thời truy vấn động danh sách IP an toàn của Tenant từ cơ sở dữ liệu (được cache 30s) để thực thi khóa mạng nội bộ (`Intranet Lockdown`), chặn IP lạ truy cập phân khu quản trị.
 2.  **Lớp 2: Identity Authentication (Xác thực danh tính trong bộ nhớ)**
     *   *Mã nguồn:* Supabase Auth & JWT Custom Claims
-    *   *Cơ chế:* Thông tin ID khách hàng (`tenant_id`) và vai trò phân quyền (`role`) được nhúng trực tiếp và ký số mật mã học vào JWT payload khi đăng nhập. RLS Engine trích xuất trực tiếp thông tin này từ bộ nhớ RAM của Postgres Session (`auth.jwt()`) giúp đạt tốc độ xử lý **O(1)**, bypass hoàn toàn các phép `JOIN` bảng quyền hạn tốn kém.
+    *   *Cơ chế:* Thông tin ID khách hàng (`tenant_id`) và vai trò phân quyền (`role`) được nhúng trực tiếp và ký số mật mã học vào JWT payload khi đăng nhập. RLS Engine trích xuất trực tiếp thông tin này từ bộ nhớ RAM của Postgres Session (`auth.jwt()`) giúp đạt tốc độ xử lý thời gian hằng số (**Constant-time in-memory lookup**), bypass hoàn toàn các phép `JOIN` bảng quyền hạn tốn kém.
 3.  **Lớp 3: Database Isolation (Cô lập cấp CSDL)**
     *   *Mã nguồn:* Các chính sách RLS trên tất cả các bảng nghiệp vụ.
     *   *Cơ chế:* Thực thi an toàn cứng ở tầng cơ sở dữ liệu. Mọi truy vấn từ ứng dụng đều bị PostgreSQL tự động viết lại (Query Rewrite), áp dụng bộ lọc cứng: `tenant_id = (auth.jwt()->>'tenant_id')::uuid`, đảm bảo cô lập dữ liệu chéo tuyệt đối.
@@ -76,7 +76,7 @@ graph TD
 *   **Kết quả đo đạc trực quan:** So sánh 3 baseline lọc dữ liệu dưới cả 2 trạng thái **Hot Read** (Warm Cache - Shared Buffers Hit) và **Cold Read** (SSD I/O):
     *   *App-side Filtering:* Lọc ở tầng ứng dụng. Khi dữ liệu phình to lên 100,000 dòng, thời gian xử lý và độ trễ tăng vọt dốc ngược theo độ phức tạp O(N) do tốn tài nguyên truyền tải (Network I/O) và bộ nhớ RAM.
     *   *RLS JOIN:* Dùng RLS JOIN bảng kiểm tra quyền truyền thống. Độ trễ tăng theo quy mô do chi phí JOIN phức tạp.
-    *   *Optimized RLS (Claims):* Đọc tenant_id từ JWT Claims trong RAM Session (O(1)) kết hợp B-Tree Index. Độ trễ duy trì sự ổn định tuyệt vời (gần như flat từ 1.1 ms đến 3.5 ms ở quy mô 100,000 dòng) nhờ độ phức tạp **O(log N_tenant)** (Indexed B-Tree Scan).
+    *   *Optimized RLS (Claims):* Đọc tenant_id từ JWT Claims trong RAM Session (Constant-time) kết hợp B-Tree Index. Độ trễ duy trì sự ổn định tuyệt vời (gần như flat từ 1.1 ms đến 3.5 ms ở quy mô 100,000 dòng) nhờ độ phức tạp **O(log N_tenant)** (Indexed B-Tree Scan).
 *   **EXPLAIN (ANALYZE, BUFFERS):** Bóc tách chi tiết cây thực thi truy vấn của PostgreSQL để chứng minh RLS chèn claims RAM và tận dụng Index Scan thay vì Sequential Scan.
 
 ### 3.4 Phân hệ Trợ lý AI Dharma Chat & Agentic GraphRAG (Phụ trợ NCKH)

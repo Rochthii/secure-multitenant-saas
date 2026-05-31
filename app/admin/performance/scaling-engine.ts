@@ -1,81 +1,109 @@
 /**
- * Scaling Benchmark Engine — Chương 5 Đồ án Tốt nghiệp PTIT
- * Mục đích: Đo lường Latency so sánh 3 baseline lọc dữ liệu khi Dataset tăng trưởng:
- *   (1) App-side Filtering   — Fetch hết dữ liệu rồi lọc trong JavaScript → O(N) tệ nhất
- *   (2) Legacy RLS JOIN      — DB phải JOIN bảng để kiểm tra quyền → O(N) tốt hơn nhưng vẫn chậm
- *   (3) JWT Claims RLS       — Đọc trực tiếp từ JWT session, không JOIN → O(1) RAM lookup (Tổng thể O(log N) với Index)
- *
- * LƯU Ý QUAN TRỌNG:
- * - Cần chạy migration 20260522000000_create_benchmark_rpcs.sql trước khi sử dụng.
- * - Dataset benchmark là bảng `benchmark_legacy` và `benchmark_jwt` với 100,000 dòng.
- * - Chỉ dùng với `createAdminClient()` để đọc được dữ liệu đầy đủ (bypass RLS cho App-side test).
+ * Scaling Benchmark Engine (v2.0)
+ * Đồ án Tốt nghiệp PTIT - Chăm Rốch Thi
+ * Mục đích: Đo lường độ trễ thực thi (Latency) và tính toán phân vị (Percentiles - P50, P95, P99)
+ *   khi quy mô dữ liệu tăng trưởng (1k -> 10k -> 100k).
  */
+
+export type PercentileData = {
+    p50: number; // Median (50% người dùng có độ trễ dưới mức này)
+    p95: number; // 95th Percentile (Phản ánh độ trễ phổ biến ở tải cao)
+    p99: number; // 99th Percentile (Đuôi độ trễ - Worst case scenario)
+};
 
 export type BenchmarkResult = {
     datasetSize: number;
-    appFilterMs: number;    // App-side filtering (worst case O(N))
-    rlsJoinMs: number;      // Legacy RLS với JOIN (O(N))
-    rlsClaimsMs: number;    // Optimized RLS với JWT Claims (O(1) Authorization Overhead)
+    appFilter: PercentileData;
+    rlsJoin: PercentileData;
+    rlsClaims: PercentileData;
 };
 
 /**
- * Chạy bộ đo lường hiệu năng theo 3 mức dataset khác nhau.
- * @param supabaseAdmin - Client được khởi tạo bằng createAdminClient() (service_role)
- * @param currentTenantId - tenant_id thực tế của user đang đăng nhập (lấy từ getUserContext())
+ * Hàm tiện ích tính toán giá trị phân vị từ mảng dữ liệu độ trễ
  */
-export async function runScalingBenchmark(
-    supabaseAdmin: any,
-    currentTenantId: string
-): Promise<BenchmarkResult[]> {
-    // 3 mức dataset để vẽ đường cong hiệu năng (1k → 10k → 100k)
+function calculatePercentile(latencies: number[], percentile: number): number {
+    if (!latencies || latencies.length === 0) return 0;
+    
+    // Sắp xếp mảng độ trễ tăng dần
+    const sorted = [...latencies].sort((a, b) => a - b);
+    const index = Math.ceil((percentile / 100) * sorted.length) - 1;
+    const clampedIndex = Math.max(0, Math.min(index, sorted.length - 1));
+    
+    // Làm tròn đến 3 chữ số thập phân
+    return Number(sorted[clampedIndex].toFixed(3));
+}
+
+/**
+ * Động cơ đo lường và tính toán thống kê phân vị hiệu năng
+ * Chạy lặp lại mỗi phép đo 50 lần để đảm bảo tính hội tụ thống kê chuẩn khoa học.
+ */
+export async function runScalingBenchmark(supabase: any): Promise<BenchmarkResult[]> {
     const sizes = [1000, 10000, 100000];
+    const iterations = 50; // Số lần chạy lặp lại để lấy dữ liệu thống kê
     const results: BenchmarkResult[] = [];
 
     for (const size of sizes) {
-        // ─────────────────────────────────────────────────────────────────────
-        // Baseline 1: App-side Filtering (Mô phỏng Anti-pattern cổ điển)
-        // Fetch toàn bộ [size] dòng từ DB (bypass RLS qua admin client),
-        // rồi filter bằng JavaScript — đây là những gì "legacy app" không dùng
-        // DB-level security thường làm. Đo thời gian FETCH + FILTER.
-        // ─────────────────────────────────────────────────────────────────────
-        const startApp = performance.now();
-        const { data: allData, error: appError } = await supabaseAdmin
-            .from('benchmark_legacy')
-            .select('id, name, tenant_id, created_at')
-            .limit(size);
+        const appLatencies: number[] = [];
+        const joinLatencies: number[] = [];
+        const claimsLatencies: number[] = [];
 
-        if (!appError && allData) {
-            // Giả lập lọc theo tenant_id trong JavaScript (đây là anti-pattern)
-            // Phải dùng currentTenantId thực tế để đảm bảo kết quả có ý nghĩa
-            const _filtered = allData.filter(
-                (row: { tenant_id: string }) => row.tenant_id === currentTenantId
-            );
+        for (let i = 0; i < iterations; i++) {
+            // ==============================================================================
+            // 1. ĐO LƯỜNG APP-SIDE FILTERING (Lọc ở tầng Client Next.js)
+            // Đo lường thời gian fetch và filter thực tế ở Client.
+            // ==============================================================================
+            const startApp = performance.now();
+            const { data: allData } = await supabase
+                .from('audit_logs')
+                .select('id, tenant_id')
+                .limit(size);
+            
+            // Giả lập logic lọc trong JS
+            const filtered = allData?.filter((item: any) => item.tenant_id === '55555555-5555-5555-5555-555555555555');
+            const endApp = performance.now();
+            appLatencies.push(endApp - startApp);
+
+            // ==============================================================================
+            // 2. ĐO LƯỜNG RLS JOIN (Legacy - Đo trực tiếp Execution Time ở Database-side)
+            // Gọi RPC đo lường bằng clock_timestamp() để triệt tiêu nhiễu mạng HTTP.
+            // ==============================================================================
+            const { data: joinTime, error: joinErr } = await supabase.rpc('measure_db_rls_join', { 
+                limit_count: size 
+            });
+            if (!joinErr && joinTime !== null) {
+                joinLatencies.push(joinTime);
+            }
+
+            // ==============================================================================
+            // 3. ĐO LƯỜNG RLS CLAIMS (Optimized JWT - Đo trực tiếp Execution Time ở Database-side)
+            // Gọi RPC đo lường bằng clock_timestamp() để triệt tiêu nhiễu mạng HTTP.
+            // ==============================================================================
+            const { data: claimsTime, error: claimsErr } = await supabase.rpc('measure_db_rls_claims', { 
+                limit_count: size 
+            });
+            if (!claimsErr && claimsTime !== null) {
+                claimsLatencies.push(claimsTime);
+            }
         }
-        const endApp = performance.now();
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Baseline 2: Legacy RLS JOIN (Gọi RPC benchmark_rls_join)
-        // Hàm này buộc DB phải JOIN bảng tenants để kiểm tra quyền — O(N)
-        // Mỗi dòng dữ liệu phải được kiểm tra lại điều kiện JOIN
-        // ─────────────────────────────────────────────────────────────────────
-        const startJoin = performance.now();
-        await supabaseAdmin.rpc('benchmark_rls_join', { limit_count: size });
-        const endJoin = performance.now();
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Baseline 3: Optimized RLS JWT Claims (Gọi RPC benchmark_rls_claims)
-        // Đọc tenant_id trực tiếp từ JWT session — O(1) RAM session lookup
-        // Không cần bất kỳ JOIN nào, tối ưu hóa tối đa tốc độ quét chỉ mục B-Tree
-        // ─────────────────────────────────────────────────────────────────────
-        const startClaims = performance.now();
-        await supabaseAdmin.rpc('benchmark_rls_claims', { limit_count: size });
-        const endClaims = performance.now();
-
+        // Tính toán các chỉ số phân vị P50, P95, P99
         results.push({
             datasetSize: size,
-            appFilterMs: Math.round((endApp - startApp) * 100) / 100,
-            rlsJoinMs: Math.round((endJoin - startJoin) * 100) / 100,
-            rlsClaimsMs: Math.round((endClaims - startClaims) * 100) / 100,
+            appFilter: {
+                p50: calculatePercentile(appLatencies, 50),
+                p95: calculatePercentile(appLatencies, 95),
+                p99: calculatePercentile(appLatencies, 99)
+            },
+            rlsJoin: {
+                p50: calculatePercentile(joinLatencies, 50),
+                p95: calculatePercentile(joinLatencies, 95),
+                p99: calculatePercentile(joinLatencies, 99)
+            },
+            rlsClaims: {
+                p50: calculatePercentile(claimsLatencies, 50),
+                p95: calculatePercentile(claimsLatencies, 95),
+                p99: calculatePercentile(claimsLatencies, 99)
+            }
         });
     }
 

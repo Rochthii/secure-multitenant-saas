@@ -114,3 +114,11 @@ scripts/test_*.mjs
 /scripts/
 
 
+# Local immudb binaries and data
+/bin/
+/data/
+
+# CodeGraph and local IDE state
+/.codegraph/
+/.identity-*
+/.state-*

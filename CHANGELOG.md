@@ -2,6 +2,28 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.6.0] - 2026-05-31
+
+### Công cụ Hỗ trợ Phát triển AI (CodeGraph Development Tools)
+- **Tích hợp CodeGraph MCP Server**: Cài đặt global package `@colbymchenry/codegraph` và khởi tạo lập chỉ mục đồ thị tri thức mã nguồn thành công cho **729 file**, tạo ra **7.071 node** và **14.499 edge** quan hệ cục bộ. Đã tự động đăng ký cổng kết nối MCP Server với các AI coding assistants lớn (Cursor, Claude Code, Gemini CLI, Antigravity IDE) nhằm tối ưu hóa chi phí token và tăng tốc độ phân tích mã nguồn.
+
+### Kiểm thử Tự động An ninh Database (pgTAP Database Testing)
+- **Triển khai bộ Unit Test pgTAP chuyên sâu**: Thiết lập thư mục kiểm thử `/supabase/tests/database/` và hoàn thiện tệp kiểm thử tự động [security_features.test.sql](file:///e:/PTIT_THESIS_SAAS/supabase/tests/database/security_features.test.sql) tích hợp **6 test case** chính, bảo chứng khoa học cho hai trụ cột an ninh:
+  - Lọc cô lập tenant RLS chéo (Cross-tenant RLS Isolation).
+  - Tính bất biến chống sửa đổi/xóa dấu vết của WORM Audit Log (tamper-proofing audit logs via triggers).
+- **Loại bỏ phụ thuộc dbdev**: Sửa đổi tệp migration [20260531080000_install_pgsodium_and_test_helpers.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531080000_install_pgsodium_and_test_helpers.sql) để chỉ kích hoạt cứng extension `pgsodium` (mặc định có sẵn trên Supabase), tinh giản loại bỏ sự phụ thuộc vào các thư viện bên thứ ba giúp dự án biên dịch thành công 100% trên cả Supabase Local và Supabase Cloud (Production).
+
+### Kiểm thử Động cơ đo lường Scaling & Giao diện Percentiles (Vitest & UI Testing)
+- **Tích hợp các chỉ số phân vị Percentiles (P50, P95, P99)**: Nâng cấp `scaling-engine.ts` lên phiên bản v2.0 chạy lặp 50 lần mỗi mốc dữ liệu để đảm bảo tính hội tụ thống kê, tích hợp đo lường trực tiếp Execution Time phía database nhằm loại bỏ nhiễu mạng HTTP.
+- **Phát triển bộ chuyển đổi phân vị Glassmorphic Tabs Selector**: Cập nhật Next.js UI `/admin/performance` hiển thị bộ chuyển đổi phân vị trực quan, cho phép chuyển đổi động toàn bộ LineChart, các widget phân tích và bảng số liệu tương ứng.
+- **Kiểm định Unit Test bằng Vitest**: Thiết lập tệp unit test `__tests__/lib/scaling-engine.test.ts` kiểm thử logic tính phân vị và cấu trúc dữ liệu mới, chạy thực tế thành công (100% PASS).
+
+### Triển khai Sổ cái Bất biến Cục bộ (immudb Ledger Server)
+- **Tích hợp Máy chủ immudb cục bộ (v1.9.6)**: 
+  - Phát triển script PowerShell [install-immudb.ps1](file:///e:/PTIT_THESIS_SAAS/scripts/install-immudb.ps1) tự động kích hoạt TLS 1.2 và tải binary Windows của `immudb` và `immuclient` về thư mục `/bin/`.
+  - Thiết kế tệp script chạy nhanh [START_IMMUDB.bat](file:///e:/PTIT_THESIS_SAAS/START_IMMUDB.bat) tại thư mục gốc giúp khởi động máy chủ sổ cái bất biến Merkle Tree local trên cổng `3322` và Web Console quản trị tại cổng `8080`.
+  - Chạy thử nghiệm thành công kiểm chứng chứng thực mã hóa cục bộ qua các lệnh client `safeset` và `safeget` với kết quả xác thực tuyệt đối `verified: true`.
+
 ## [1.5.0] - 2026-05-23
 
 ### Tích hợp & Refactor hoàn chỉnh AI Security Copilot & GraphRAG (SecOps Alignment)

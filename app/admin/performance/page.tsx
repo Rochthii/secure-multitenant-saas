@@ -54,6 +54,7 @@ export default function ScalingBenchmarkPage() {
     const [data, setData] = useState<BenchmarkResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [activePercentile, setActivePercentile] = useState<'p50' | 'p95' | 'p99'>('p50');
 
     const handleRun = async () => {
         setLoading(true);
@@ -76,10 +77,18 @@ export default function ScalingBenchmarkPage() {
         return String(value);
     };
 
-    // Thống kê phân tích hiệu năng
+    // Ánh xạ động dữ liệu dựa trên phân vị đã chọn
+    const chartData = data.map((row) => ({
+        datasetSize: row.datasetSize,
+        appFilterMs: row.appFilter[activePercentile],
+        rlsJoinMs: row.rlsJoin[activePercentile],
+        rlsClaimsMs: row.rlsClaims[activePercentile],
+    }));
+
+    // Thống kê phân tích hiệu năng dựa trên chartData đã ánh xạ động
     const getStats = () => {
-        if (data.length === 0) return null;
-        const maxScale = data[data.length - 1];
+        if (chartData.length === 0) return null;
+        const maxScale = chartData[chartData.length - 1];
         const appMs = maxScale.appFilterMs;
         const claimsMs = maxScale.rlsClaimsMs;
         const speedup = appMs > 0 ? (appMs / claimsMs).toFixed(1) : '0';
@@ -190,7 +199,7 @@ export default function ScalingBenchmarkPage() {
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400">Overhead Xác thực</span>
                         <BarChart3 className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
                     </div>
-                    <p className="text-4xl font-black text-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,0.3)]">O(1)</p>
+                    <p className="text-4xl font-black text-blue-400 drop-shadow-[0_0_12px_rgba(59,130,246,0.3)]">Const</p>
                     <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-wider leading-relaxed">
                         Trích xuất claim trong RAM Session
                     </p>
@@ -213,14 +222,33 @@ export default function ScalingBenchmarkPage() {
 
             {/* Performance Chart Card */}
             <div className="border border-slate-800/80 shadow-2xl bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden">
-                <div className="py-6 px-8 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/50">
-                    <div>
-                        <span className="text-xs font-black uppercase tracking-widest text-slate-400 block">
-                            Đồ thị đường cong hiệu năng Scaling (Average Latencies)
-                        </span>
-                        <p className="text-[10px] text-slate-500 mt-1 font-bold">
-                            So sánh thực tế tốc độ xử lý (ms) khi quy mô dữ liệu (N) tăng trưởng tuyến tính
-                        </p>
+                <div className="py-6 px-8 border-b border-slate-800 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 bg-slate-900/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 justify-between w-full xl:w-auto">
+                        <div>
+                            <span className="text-xs font-black uppercase tracking-widest text-slate-400 block">
+                                Đồ thị đường cong hiệu năng Scaling (Thống Kê Phân Vị)
+                            </span>
+                            <p className="text-[10px] text-slate-500 mt-1 font-bold">
+                                So sánh thực tế tốc độ xử lý (ms) khi quy mô dữ liệu (N) tăng trưởng tuyến tính
+                            </p>
+                        </div>
+                        
+                        {/* Bộ chuyển đổi phân vị Percentiles P50/P95/P99 */}
+                        <div className="flex items-center gap-1 p-1 bg-slate-950/80 rounded-xl border border-slate-850 shadow-inner shrink-0">
+                            {(['p50', 'p95', 'p99'] as const).map((p) => (
+                                <button
+                                    key={p}
+                                    onClick={() => setActivePercentile(p)}
+                                    className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                                        activePercentile === p
+                                            ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/10'
+                                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                                >
+                                    {p === 'p50' ? 'P50 (Median)' : p.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="flex flex-wrap gap-x-5 gap-y-1.5 justify-end text-[10px] font-black uppercase tracking-wider text-slate-400">
@@ -260,9 +288,9 @@ export default function ScalingBenchmarkPage() {
                             </div>
                         )}
 
-                        {data.length > 0 && !loading && (
+                        {chartData.length > 0 && !loading && (
                             <ResponsiveContainer width="100%" height="100%">
-                                <LineChart data={data} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
+                                <LineChart data={chartData} margin={{ top: 15, right: 30, left: 10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                                     <XAxis
                                         dataKey="datasetSize"
@@ -314,11 +342,11 @@ export default function ScalingBenchmarkPage() {
             </div>
 
             {/* Comparison Data Table */}
-            {data.length > 0 && !loading && (
+            {chartData.length > 0 && !loading && (
                 <div className="border border-slate-800/80 shadow-2xl bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden animate-in fade-in duration-700">
-                    <div className="py-5 px-8 border-b border-slate-800 bg-slate-900/50">
+                    <div className="py-5 px-8 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
                         <span className="text-xs font-black uppercase tracking-widest text-slate-400 block">
-                            Bảng số liệu đối chiếu chi tiết các kịch bản
+                            Bảng số liệu đối chiếu chi tiết các kịch bản ({activePercentile.toUpperCase()})
                         </span>
                     </div>
                     <div className="overflow-x-auto">
@@ -333,7 +361,7 @@ export default function ScalingBenchmarkPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-800 font-medium">
-                                {data.map((row) => {
+                                {chartData.map((row) => {
                                     const improvement = row.appFilterMs > 0
                                         ? ((row.appFilterMs - row.rlsClaimsMs) / row.appFilterMs * 100).toFixed(1)
                                         : '—';
@@ -401,7 +429,7 @@ export default function ScalingBenchmarkPage() {
                     <div>
                         <h3 className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">Ý nghĩa khoa học của thực nghiệm (Chương 5 Đồ Án)</h3>
                         <p className="text-sm text-slate-350 leading-relaxed max-w-3xl">
-                            Đường cong độ trễ dạng logarithmic <strong className="text-emerald-400 font-bold">O(log N)</strong> của <strong className="text-emerald-400">Optimized RLS</strong> chứng minh hệ thống SaaS có khả năng mở rộng (Scale) vượt trội. Bằng cách triệt tiêu hoàn toàn chi phí JOIN phân quyền ($O(1)$ RAM Claims lookup) và tận dụng B-Tree Index Scan, hệ thống loại bỏ triệt để hiện tượng thắt nút cổ chai hiệu năng khi dữ liệu phình to.
+                            Đường cong độ trễ dạng logarithmic <strong className="text-emerald-400 font-bold">O(log N)</strong> của <strong className="text-emerald-400">Optimized RLS</strong> chứng minh hệ thống SaaS có khả năng mở rộng (Scale) vượt trội. Bằng cách triệt tiêu hoàn toàn chi phí JOIN phân quyền (Constant-time RAM Claims lookup) và tận dụng B-Tree Index Scan, hệ thống loại bỏ triệt để hiện tượng thắt nút cổ chai hiệu năng khi dữ liệu phình to.
                         </p>
                     </div>
                 </div>

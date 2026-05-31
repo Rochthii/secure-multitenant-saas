@@ -31,7 +31,7 @@ graph LR
 | `100% secure` / `perfect isolation` | **`Defense-in-depth`** / **`Tenant Isolation`** | Chấp nhận không có hệ thống nào an toàn tuyệt đối; bảo mật là tập hợp nhiều lớp phòng thủ tương hỗ. |
 | `absolute protection` | **`Practical mitigation`** / **`Risk reduction`** | Giảm thiểu bề mặt tấn công và giảm thiểu rủi ro xuống mức có thể chấp nhận được của doanh nghiệp. |
 | `impossible to bypass` | **`Tamper-resistant`** | Tăng chi phí tấn công của kẻ phá hoại lên cực cao khiến việc tấn công không còn hiệu quả kinh tế. |
-| `true O(1)` / `flat latency` | **`Near constant-time RAM resolution`** | Phân tách rõ: Chi phí xác thực context trong RAM là hằng số $O(1)$, còn quét dữ liệu thực tế đạt $O(\log N_{\text{tenant}})$. |
+| `O(1) / flat latency` (Dễ gây tranh cãi) | **`Scale-independent Latency`** | Phân tách rõ: Chi phí xác thực context trong RAM là thời gian hằng số (Constant-time in-memory lookup), còn quét dữ liệu thực tế đạt độ phức tạp tối ưu chỉ mục B-Tree (B-Tree Index Scan). |
 | `perfect RLS` | **`RLS Index Scan with Custom Claims`** | Mô tả chính xác cơ chế kỹ thuật thay vì dùng các tính từ cảm tính. |
 
 ---
@@ -114,7 +114,7 @@ Execution Time: 0.154 ms
 1. **`Index Scan using news_tenant_id_idx`:**
    * *Ý nghĩa:* Chứng minh PostgreSQL Query Planner **không thực hiện Sequential Scan (Seq Scan - $O(N)$)** quét qua 111,000 dòng để tìm bản ghi, mà sử dụng cấu trúc cây B-Tree của chỉ mục `news_tenant_id_idx` để nhảy thẳng đến vùng dữ liệu của Tenant đó với độ phức tạp $O(\log N_{\text{tenant}})$.
 2. **`Index Cond` & `current_setting('request.jwt.claims', true)`:**
-   * *Ý nghĩa:* Chứng minh cơ chế **Query Rewrite** của RLS Engine hoạt động xuất sắc. PostgreSQL đã tự động biên dịch lại câu truy vấn ban đầu và chèn điều kiện lọc `tenant_id` lấy ra trực tiếp từ biến môi trường RAM Session (`request.jwt.claims`). Phép toán đọc từ RAM này tốn chi phí hằng số $O(1)$.
+   * *Ý nghĩa:* Chứng minh cơ chế **Query Rewrite** của RLS Engine hoạt động xuất sắc. PostgreSQL đã tự động biên dịch lại câu truy vấn ban đầu và chèn điều kiện lọc `tenant_id` lấy ra trực tiếp từ biến môi trường RAM Session (`request.jwt.claims`). Phép toán đọc từ RAM này hoạt động với thời gian hằng số trong bộ nhớ (Constant-time in-memory lookup).
 3. **`Buffers: shared hit=6`:**
    * *Ý nghĩa:* Đây là bằng chứng thép của trạng thái **Warm Cache**. Toàn bộ 6 trang dữ liệu (8KB/page) chứa index và data tuples đều nằm sẵn trên `Shared Buffers` của RAM (Cache Hit), hoàn toàn không phát sinh bất kỳ lần đọc đĩa vật lý nào (`shared read=0`), giúp đạt tốc độ tối đa.
 4. **`Planning Time: 0.285 ms` vs `Execution Time: 0.154 ms`:**

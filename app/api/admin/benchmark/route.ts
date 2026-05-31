@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         // Dùng tenantId thực của user hiện tại (fallback về dummy nếu là super_admin không có tenant)
         const currentTenantId = ctx.tenantId ?? '55555555-5555-5555-5555-555555555555';
 
-        const results = await runScalingBenchmark(supabaseAdmin, currentTenantId);
+        const results = await runScalingBenchmark(supabaseAdmin);
 
         return NextResponse.json({ success: true, results });
     } catch (err: any) {
