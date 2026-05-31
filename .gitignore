@@ -50,6 +50,7 @@ supabase-keys.txt
 **/*.spec.*
 **/__tests__/
 **/tests/
+!supabase/tests/**
 vitest.config.*
 playwright.config.*
 
@@ -89,6 +90,7 @@ supabase/migrations_backup
 *.sql
 *.html
 !supabase/migrations/*.sql
+!supabase/tests/**/*.sql
 
 # Scripts & Local utilities
 /check-*.js

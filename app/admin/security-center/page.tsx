@@ -14,6 +14,7 @@ import { SecurityReportButton } from '@/components/admin/security/security-repor
 import { createAdminClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { IpBlocklistWidget } from '@/components/admin/security/ip-blocklist-widget';
 
 export default async function SecurityCenterPage({ searchParams }: { searchParams: Promise<any> }) {
     const globalAccess = await isGlobalAdmin();
@@ -40,6 +41,12 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
     const { data: logs, count } = await query
         .order('created_at', { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
+
+    // Fetch dynamic blocked_ips
+    const { data: blockedIps } = await (supabase as any)
+        .from('blocked_ips')
+        .select('*')
+        .order('blocked_at', { ascending: false });
 
     // ============================================================
     // NODE 1: GIÁM SÁT SOC THỜI GIAN THỰC (REAL-TIME SOC)
@@ -127,7 +134,7 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                 <ShieldAlert className="w-5 h-5 text-rose-500" /> Phát hiện truy cập bất thường
                             </CardTitle>
                             <CardDescription className="text-slate-500 dark:text-slate-400 text-xs">
-                                Hành vi bất thường (&gt;20 actions/giờ) cần điều tra.
+                                Phát hiện hành vi rủi ro dựa trên chỉ số CRS thời gian thực.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-4">
@@ -140,16 +147,27 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                 <div className="space-y-3">
                                     {stats.anomalyAlerts.map((alert, i) => (
                                         <div key={i} className="p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white/50 dark:bg-slate-950/40 shadow-sm hover:shadow-md transition-all flex items-start gap-3 relative overflow-hidden group">
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>
-                                            <div className="bg-amber-500/10 dark:bg-amber-500/20 p-2 rounded-lg text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                            <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                                                alert.severity === 'critical' ? 'bg-rose-500' : 'bg-amber-500'
+                                            }`}></div>
+                                            <div className={`p-2 rounded-lg border shrink-0 ${
+                                                alert.severity === 'critical' 
+                                                    ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/20' 
+                                                    : 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                            }`}>
                                                 <AlertTriangle className="w-4 h-4" />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{alert.user_email}</p>
                                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">{alert.description}</p>
                                                 <div className="mt-2 flex gap-2">
-                                                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">{alert.action_count} requests</span>
-                                                    <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-bold uppercase">Warning</span>
+                                                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-md font-medium">{alert.action_count} CRS</span>
+                                                    {alert.severity === 'critical' ? (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-md font-black uppercase tracking-wider animate-pulse">Critical</span>
+                                                    ) : (
+                                                        <span className="text-[10px] px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 rounded-md font-black uppercase tracking-wider">Warning</span>
+                                                    )}
+                                                    <span className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md font-medium">{alert.period}</span>
                                                 </div>
                                             </div>
                                             <div className="shrink-0 flex items-center">
@@ -184,6 +202,16 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                             </ul>
                         </CardContent>
                     </Card>
+
+                    <IpBlocklistWidget blockedIps={(blockedIps || []).map((x: any) => ({
+                        id: x.id,
+                        ip: x.ip,
+                        tenant_id: x.tenant_id,
+                        blocked_at: x.blocked_at,
+                        blocked_until: x.blocked_until,
+                        reason: x.reason,
+                        created_by: x.created_by
+                    }))} />
                 </div>
 
                 {/* Right Column: Audit Log Explorer */}
@@ -215,6 +243,7 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                             <th className="px-6 py-4">Nhân sự</th>
                                             <th className="px-6 py-4">Hành động</th>
                                             <th className="px-6 py-4">Bảng dữ liệu</th>
+                                            <th className="px-6 py-4">Rủi ro (CRS)</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
@@ -239,6 +268,15 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                                 </td>
                                                 <td className="px-6 py-3 text-slate-700 dark:text-slate-300 font-medium">
                                                     {log.table_name}
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-black border ${
+                                                        (log.risk_score || 0) >= 75 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                                                        (log.risk_score || 0) >= 35 ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                        'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                    }`}>
+                                                        {log.risk_score || 0} CRS
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))}

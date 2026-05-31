@@ -127,32 +127,22 @@ export async function getSecurityStats(): Promise<SecurityStats> {
             .sort((a, b) => b.count - a.count);
     }
 
-    // 9. Anomaly detection: >20 actions trong 1h gần nhất
-    const { data: recentLogs } = await supabase
+    // 9. Anomaly detection: Lấy các sự kiện có điểm rủi ro cao (risk_score >= 35) từ audit_logs trong 24h
+    const { data: highRiskLogs } = await supabase
         .from('audit_logs')
-        .select('user_email, user_id, action')
-        .gte('created_at', lastHour);
+        .select('user_email, user_id, action, risk_score, severity, details, created_at')
+        .gte('risk_score', 35) // Lấy từ mức Cảnh báo trở lên
+        .gte('created_at', last24h)
+        .order('risk_score', { ascending: false });
 
-    const hourlyUserCounts: Record<string, { count: number, user_id?: string }> = {};
-    (recentLogs || []).forEach((l: any) => {
-        if (l.user_email && l.user_email !== 'guest@anonymous') {
-            if (!hourlyUserCounts[l.user_email]) {
-                hourlyUserCounts[l.user_email] = { count: 0, user_id: l.user_id };
-            }
-            hourlyUserCounts[l.user_email].count += 1;
-        }
-    });
-
-    const anomalyAlerts: AnomalyAlert[] = Object.entries(hourlyUserCounts)
-        .filter(([_, data]) => data.count > 20)
-        .map(([email, data]) => ({
-            user_email: email,
-            user_id: data.user_id,
-            action_count: data.count,
-            period: '1 giờ gần nhất',
-            severity: data.count > 50 ? 'critical' as const : data.count > 30 ? 'warning' as const : 'info' as const,
-            description: `${email} thực hiện ${data.count} thao tác trong 1 giờ (ngưỡng: 20)`,
-        }));
+    const anomalyAlerts: AnomalyAlert[] = (highRiskLogs || []).map((l: any) => ({
+        user_email: l.user_email || 'guest@anonymous',
+        user_id: l.user_id,
+        action_count: l.risk_score || 0, // Dùng action_count để hiển thị CRS
+        period: new Date(l.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }),
+        severity: (l.risk_score || 0) >= 75 ? 'critical' as const : 'warning' as const,
+        description: l.details?.reason || l.details?.message || `Phát hiện hành vi đáng ngờ với điểm rủi ro CRS: ${l.risk_score}`,
+    }));
 
     // 10. RLS Coverage — đếm bảng có policy
     let rlsCoverage = { protected: 0, total: 0, percentage: 0 };

@@ -15,7 +15,7 @@ const HOSTNAME_MAP: Record<string, string> = {
 };
 
 // Hàm tạo template HTML trang lỗi đa ngôn ngữ an toàn, gọn nhẹ chạy tại Edge
-const getLockdownHtml = (status: 'SUSPENDED' | 'IP_BLOCKED', ip: string, locale: string) => {
+const getLockdownHtml = (status: 'SUSPENDED' | 'IP_BLOCKED' | 'INTRANET_LOCKDOWN', ip: string, locale: string, reason?: string) => {
     const messages = {
         vi: {
             title: status === 'SUSPENDED' ? '🚨 HỆ THỐNG PHONG TỎA KHẦN CẤP' : '🔒 TRUY CẬP BỊ GIỚI HẠN',
@@ -103,6 +103,8 @@ export default async function middleware(request: NextRequest) {
 
     let allowedIps: string[] | null = null;
     let isSuspended = false;
+    let isIpBlocked = false;
+    let blockReason = '';
 
     // 3. Phân tích Locale một lần duy nhất — dùng cho cả trang lỗi lẫn routing bên dưới
     let detectedLocale = 'vi';
@@ -130,7 +132,7 @@ export default async function middleware(request: NextRequest) {
             const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
             const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
             
-            const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=modules_config,lifecycle_status`;
+            const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,modules_config,lifecycle_status`;
             const dbRes = await fetch(fetchUrl, {
                 headers: {
                     'apikey': supabaseAnonKey,
@@ -151,6 +153,25 @@ export default async function middleware(request: NextRequest) {
                     if (ipWhitelistStr) {
                         allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
                     }
+
+                    // Thực thi SOAR: Truy vấn động xem IP hiện tại có đang bị chặn trong blocked_ips không
+                    const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?tenant_id=eq.${tenant.id}&ip=eq.${clientIp}&blocked_until=gt.${new Date().toISOString()}&select=reason`;
+                    const blockRes = await fetch(blockFetchUrl, {
+                        headers: {
+                            'apikey': supabaseAnonKey,
+                            'Authorization': `Bearer ${supabaseAnonKey}`
+                        },
+                        // Cache kết quả 15 giây tại Edge để đảm bảo hiệu năng
+                        next: { revalidate: 15 }
+                    });
+
+                    if (blockRes.ok) {
+                        const blockData = await blockRes.json();
+                        if (blockData && blockData.length > 0) {
+                            isIpBlocked = true;
+                            blockReason = blockData[0].reason || '';
+                        }
+                    }
                 }
             }
         } catch (err) {
@@ -169,10 +190,21 @@ export default async function middleware(request: NextRequest) {
         );
     }
 
+    // Chặn nếu IP bị SOAR block động
+    if (isIpBlocked) {
+        return new NextResponse(
+            getLockdownHtml('IP_BLOCKED', clientIp, detectedLocale, blockReason),
+            { 
+                status: 403,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+        );
+    }
+
     // Chặn nếu IP không nằm trong Whitelist nội bộ của Tenant
     if (allowedIps && allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
         return new NextResponse(
-            getLockdownHtml('IP_BLOCKED', clientIp, detectedLocale),
+            getLockdownHtml('INTRANET_LOCKDOWN', clientIp, detectedLocale),
             { 
                 status: 403,
                 headers: { 'Content-Type': 'text/html; charset=utf-8' }
