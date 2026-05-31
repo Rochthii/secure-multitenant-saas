@@ -67,22 +67,54 @@ export async function runScalingBenchmark(supabase: any): Promise<BenchmarkResul
             // 2. ĐO LƯỜNG RLS JOIN (Legacy - Đo trực tiếp Execution Time ở Database-side)
             // Gọi RPC đo lường bằng clock_timestamp() để triệt tiêu nhiễu mạng HTTP.
             // ==============================================================================
+            const joinStart = performance.now();
             const { data: joinTime, error: joinErr } = await supabase.rpc('measure_db_rls_join', { 
                 limit_count: size 
             });
-            if (!joinErr && joinTime !== null) {
-                joinLatencies.push(joinTime);
+            const joinEnd = performance.now();
+            if (joinErr) {
+                // RPC không tồn tại trên server (chưa migrate) → fallback sang đo client-side
+                console.error('[Benchmark] measure_db_rls_join error:', joinErr.message);
+                // Fallback: đo thời gian round-trip query JOIN tương đương
+                const fbStart = performance.now();
+                await supabase
+                    .from('benchmark_legacy')
+                    .select('id')
+                    .eq('tenant_id', '55555555-5555-5555-5555-555555555555')
+                    .limit(size);
+                joinLatencies.push(performance.now() - fbStart);
+            } else if (joinTime !== null && Number(joinTime) > 0) {
+                joinLatencies.push(Number(joinTime));
+            } else if (joinTime !== null && Number(joinTime) === 0) {
+                // RPC trả về 0 → bảng trống hoặc quá nhanh, fallback sang client timing
+                console.warn('[Benchmark] measure_db_rls_join returned 0ms → fallback to client timing');
+                joinLatencies.push(joinEnd - joinStart);
             }
 
             // ==============================================================================
             // 3. ĐO LƯỜNG RLS CLAIMS (Optimized JWT - Đo trực tiếp Execution Time ở Database-side)
             // Gọi RPC đo lường bằng clock_timestamp() để triệt tiêu nhiễu mạng HTTP.
             // ==============================================================================
+            const claimsStart = performance.now();
             const { data: claimsTime, error: claimsErr } = await supabase.rpc('measure_db_rls_claims', { 
                 limit_count: size 
             });
-            if (!claimsErr && claimsTime !== null) {
-                claimsLatencies.push(claimsTime);
+            const claimsEnd = performance.now();
+            if (claimsErr) {
+                // RPC không tồn tại → fallback sang đo client-side
+                console.error('[Benchmark] measure_db_rls_claims error:', claimsErr.message);
+                const fbStart = performance.now();
+                await supabase
+                    .from('benchmark_jwt')
+                    .select('id')
+                    .eq('tenant_id', '55555555-5555-5555-5555-555555555555')
+                    .limit(size);
+                claimsLatencies.push(performance.now() - fbStart);
+            } else if (claimsTime !== null && Number(claimsTime) > 0) {
+                claimsLatencies.push(Number(claimsTime));
+            } else if (claimsTime !== null && Number(claimsTime) === 0) {
+                console.warn('[Benchmark] measure_db_rls_claims returned 0ms → fallback to client timing');
+                claimsLatencies.push(claimsEnd - claimsStart);
             }
         }
 
