@@ -65,12 +65,22 @@ graph TD
     Hash_current = SHA256(Record_Content + Hash_previous)
     Ledger này được đồng bộ bất biến vào private bucket security-vault trên cloud storage (hoặc local fallback với thuộc tính file read-only 0o444). Nếu dữ liệu thô trong database bị can thiệp trái phép, chuỗi liên kết sẽ bị gãy và kích hoạt báo động giả mạo vật lý lập tức.
 
-### 3.2 Động cơ SOAR & Phòng vệ chủ động (Active Defense)
-*   *Mã nguồn:* [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql)
-*   **Tự động cô lập Anomaly (Auto-suspension):** Database trigger đếm tần suất vi phạm an ninh (RLS Violation) của từng Tenant. Nếu phát hiện hành vi tấn công dồn dập (3 vi phạm/phút), hệ thống tự động khóa chuyển trạng thái tenant sang suspended, chặn đứng mọi truy cập ghi vào hệ thống.
-*   **Telegram Webhook Alert bất đồng bộ:** Sử dụng hàm net.http_post của PostgreSQL bắn webhook trực tiếp về Telegram cá nhân của Admin thời gian thực. Tích hợp phép ghép chuỗi CHR(10) trong SQL để định dạng tin nhắn phân dòng rõ ràng, sắc nét và chuyên nghiệp trên thiết bị di động của quản trị viên.
+### 3.2 Động cơ SOAR & Phòng vệ chủ động Phân tầng (Tiered Active Defense)
+*   *Mã nguồn:* [20260531110000_soar_tiered_response_active_defense.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531110000_soar_tiered_response_active_defense.sql) & [middleware.ts](file:///e:/PTIT_THESIS_SAAS/middleware.ts)
+*   **Triệt tiêu lỗ hổng Reverse DDoS:** Tự động chặn IP lạ ngoài Whitelist tại Edge Middleware ($< 4\text{ms}$) khi phát hiện $\ge 3$ vi phạm an ninh/phút, bảo vệ người dùng hợp pháp không bị DoS nhầm do hacker giả mạo.
+*   **Phản ứng Phân tầng linh hoạt:** Tự động chặn IP lạ (Tầng 1 - Edge IP Block), tự động khóa tài khoản/session User phá hoại nội bộ (Tầng 2 - User-level Lockout), và phong tỏa Tenant làm lá chắn cuối cùng (Tầng 3 - Tenant Lockdown).
+*   **Bảo vệ IP Whitelist:** Không tự khóa nhầm IP của quản trị viên nhờ cơ chế đối chiếu Whitelist động của Tenant.
+*   **Telegram Webhook Alert bất đồng bộ:** Sử dụng hàm `net.http_post` bắn webhook cảnh báo đỏ kèm Attack Path chi tiết về điện thoại Admin thời gian thực.
 
-### 3.3 Phân hệ Thực nghiệm Đo lường hiệu năng (Performance Benchmarking)
+### 3.3 Động cơ Phát hiện Bất thường Lai (HBCAD Engine)
+*   *Mã nguồn:* [20260531100000_hybrid_anomaly_detection.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531100000_hybrid_anomaly_detection.sql)
+*   **Điểm Rủi ro Tích lũy (CRS):** Thay thế hoàn toàn ngưỡng phát hiện tĩnh thô sơ bằng tính toán Điểm Rủi ro Tích lũy (0-100) thời gian thực kết hợp:
+    *   *Base Context Risk (ABAC):* Trọng số Action Severity $\times$ Temporal Multiplier (phạt x2.5 ngoài giờ) $\times$ Network Multiplier (phạt x3.5 ngoài whitelist).
+    *   *Behavioral Deviation (Z-Score):* Đo lường độ lệch chuẩn đột biến tần suất so với baseline lịch sử cá nhân hóa của chính User đó ($Z = \frac{x-\mu}{\sigma}$).
+    *   *Sequential Pattern Penalty (SPP):* Phạt cộng dồn khi phát hiện chuỗi dò quét RLS (+50), chuỗi xóa dữ liệu phá hoại (+60), hoặc chuỗi càn quét SELECT (+40).
+*   **Cyber SOC Telemetry:** Đèn Neon LED cảnh báo động trên SOC Dashboard (Đỏ: High Risk $\ge 75$, Vàng: Warning $35\text{-}74$, Xanh: Low Risk).
+
+### 3.4 Phân hệ Thực nghiệm Đo lường hiệu năng (Performance Benchmarking)
 *   *Mã nguồn:* [scaling-engine.ts](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/scaling-engine.ts) & [page.tsx](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/page.tsx)
 *   **Dataset quy mô lớn:** Đo đạc thực tế độ trễ của **111,000 bản ghi dữ liệu thật** trên Supabase Cloud.
 *   **Kết quả đo đạc trực quan:** So sánh 3 baseline lọc dữ liệu dưới cả 2 trạng thái **Hot Read** (Warm Cache - Shared Buffers Hit) và **Cold Read** (SSD I/O):
@@ -79,7 +89,7 @@ graph TD
     *   *Optimized RLS (Claims):* Đọc tenant_id từ JWT Claims trong RAM Session (Constant-time) kết hợp B-Tree Index. Độ trễ duy trì sự ổn định tuyệt vời (gần như flat từ 1.1 ms đến 3.5 ms ở quy mô 100,000 dòng) nhờ độ phức tạp **O(log N_tenant)** (Indexed B-Tree Scan).
 *   **EXPLAIN (ANALYZE, BUFFERS):** Bóc tách chi tiết cây thực thi truy vấn của PostgreSQL để chứng minh RLS chèn claims RAM và tận dụng Index Scan thay vì Sequential Scan.
 
-### 3.4 Phân hệ Trợ lý AI Dharma Chat & Agentic GraphRAG (Phụ trợ NCKH)
+### 3.5 Phân hệ Trợ lý AI Dharma Chat & Agentic GraphRAG (Phụ trợ NCKH)
 *   *Mã nguồn:* Thư mục [docs/ai-rag/](file:///e:/PTIT_THESIS_SAAS/docs/ai-rag) & Migration AI Copilot
 *   **RAG (Retrieval Augmented Generation):** Truy vấn tri thức sâu dựa trên kho tài liệu kinh điển PDF/Text (Kinh - Luật - Luận) Phật giáo Nguyên thủy, trích xuất dẫn chứng chính xác và phản hồi tiếng Việt có dẫn nguồn trực quan.
 *   **Neural Conversational Memory:** Ghi nhớ 10 tin nhắn gần nhất và giải mã ngữ cảnh câu hỏi nối tiếp của người dùng.
@@ -97,8 +107,9 @@ graph TD
 | **ABAC Authorization Model** | Time-based and IP Whitelist constraints | [20260516100000_abac_time_ip_policies.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260516100000_abac_time_ip_policies.sql) |
 | **Immutable Audit Log System** | PostgreSQL trigger block UPDATE/DELETE | [20260522000001_immutable_audit_logs.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000001_immutable_audit_logs_and_abac_extension.sql) |
 | **Cryptographic Ledger WORM Vault** | SHA-256 Hash-chaining and sync engine | [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) |
-| **Cyber SOC Dashboard** | Security Score, RLS %, Anomaly Timeline | [page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx) |
-| **Active Alerting (SOAR Engine)** | Auto-suspension & Webhook Telegram Bot | [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql) |
+| **Cyber SOC Dashboard** | Security Score, RLS %, Dynamic IP Blocklist | [page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx) |
+| **HBCAD Anomaly Engine** | Z-Score & ABAC Real-time Risk (CRS) | [20260531100000_hybrid_anomaly_detection.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531100000_hybrid_anomaly_detection.sql) |
+| **Active SOAR Engine (Tiered)** | Edge IP Blocking, Whitelist checking & Telegram | [20260531110000_soar_tiered_response_active_defense.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531110000_soar_tiered_response_active_defense.sql) |
 | **Tenant Hard Wipe & Offboarding** | Cascade dọn dẹp và phân mảnh DB | [20260517000001_tenant_offboarding_runbook.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260517000001_tenant_offboarding_runbook.sql) |
 | **RLS Performance Benchmarking** | Logarithmic O(log N) Scaling Chart | [page.tsx (performance)](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/page.tsx) |
 | **Threat Simulator Panel** | Giả lập 4 kịch bản, EXPLAIN, Why Blocked | [page.tsx (threat-simulator)](file:///e:/PTIT_THESIS_SAAS/app/admin/threat-simulator/page.tsx) |
