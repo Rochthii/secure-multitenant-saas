@@ -2,7 +2,27 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.7.0] - 2026-05-31
+
+### Phòng thủ chủ động — Bẫy Honeypot Chủ động (Active Honeypot Decoy)
+- **Triển khai API bẫy mật ngọt thực tế [`/api/security/honeypot-decoy`](file:///e:/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts):** Endpoint hoạt động hoàn toàn trong môi trường production — không phải demo. Khi attacker gọi vào endpoint này, hệ thống tự động:
+  1. Trích xuất IP thực tế từ `x-forwarded-for` / `x-real-ip` / địa chỉ kết nối socket.
+  2. Ghi ngay một bản ghi kiểm toán vào PostgreSQL với `risk_score = 100` và `action = 'honeypot_decoy_triggered'`, gắn đầy đủ metadata (`user_agent`, `referer`, `request_id`).
+  3. Gọi RPC `block_ip(ip, reason, blocked_by)` chặn lập tức IP đó khỏi tất cả các request tiếp theo tại tầng Edge Middleware (độ trễ phản hồi Edge < 4ms).
+- **Tích hợp Threat Simulator — Kịch bản 5 "Honeypot Decoy Trap"** vào [`/app/council/page.tsx`](file:///e:/PTIT_THESIS_SAAS/app/council/page.tsx): Nút bấm màu emerald gọi thẳng endpoint honeypot (không đi qua route attack chung), cho phép hội đồng kiểm tra hành trình tấn công → log → block theo thời gian thực ngay trên giao diện.
+- **Cảnh báo giọng nói AI đặc thù cho sự kiện Honeypot** trong [`soc-realtime-listener.tsx`](file:///e:/PTIT_THESIS_SAAS/components/admin/security/soc-realtime-listener.tsx): Nhận sự kiện Supabase Realtime `honeypot_decoy_triggered`, phát cảnh báo giọng nói tiếng Việt khẩn cấp riêng biệt: *"Báo động cấp đỏ! Tác nhân đã sập bẫy Honeypot. Hệ thống đang truy vết và chặn IP tấn công."*
+
+### Thẩm định Mật mã học — Forensic WORM Chain Auditor
+- **Nâng cấp [`worm-vault-widget.tsx`](file:///e:/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx) — Bộ thẩm định sổ cái mật mã học pháp lý:** Triển khai nút "Thẩm định Sổ cái" kích hoạt bộ quét SHA-256 chain forensic thực sự chạy client-side theo từng block, xác minh:
+  1. **Hash toàn vẹn block hiện tại:** Tính lại `SHA-256(content)` và đối chiếu với `hash` đã lưu trong WORM Vault.
+  2. **Liên kết chuỗi (`prev_hash` continuity):** Đảm bảo `block[n].prev_hash === block[n-1].hash` — nếu bị cắt đứt → phát hiện tamper.
+  3. **Đối chiếu cơ sở dữ liệu chéo:** Kiểm tra xem log entry tương ứng trong PostgreSQL có tồn tại không, bảo đảm không bị xóa ngoài WORM.
+  - Mỗi block đang được quét được tô sáng bằng viền **Neon vàng nhấp nháy** và badge "Đang quét..."; block bị phát hiện tamper tô đỏ `rose-500` rực.
+  - Terminal console log màu sắc: 🔍 trắng (đang quét) → ✅ xanh `emerald` (toàn vẹn) → 🚨 đỏ `rose` (vi phạm phát hiện) → 📋 cyan (báo cáo tổng kết).
+- **Kết quả xác minh kỹ thuật:** `npx tsc --noEmit` → **0 lỗi TypeScript**. Commit `0ad5f15` đã được push lên `origin/main`.
+
 ## [1.6.0] - 2026-05-31
+
 
 ### Động cơ Phát hiện Bất thường Lai (HBCAD Anomaly Engine)
 - **Thiết kế & Triển khai Động cơ phát hiện lai (HBCAD)**: Thêm cột `risk_score` vào bảng `audit_logs` và tạo bảng `user_activity_baselines` để lưu trữ baseline tần suất hoạt động trung bình ($\mu$) và độ lệch chuẩn ($\sigma$) của User.
