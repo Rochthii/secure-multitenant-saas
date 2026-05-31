@@ -347,7 +347,7 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                     {/* Council QR Code Entry */}
                     <div className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-md p-2 rounded-2xl border border-slate-700 shadow-lg shrink-0 group transition-all hover:border-amber-500/20">
                         <img 
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://khleang.vercel.app/council&color=f59e0b&bgcolor=1e293b" 
+                            src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://tdcrt.vercel.app/council&color=f59e0b&bgcolor=1e293b" 
                             alt="QR Council Portal" 
                             className="w-12 h-12 rounded-xl border border-amber-500/20 group-hover:scale-105 transition-transform"
                         />
