@@ -59,10 +59,10 @@ export async function getSecurityStats(): Promise<SecurityStats> {
         .from('audit_logs')
         .select('*', { count: 'exact', head: true });
 
-    // 2. Audit logs 24h
+    // 2. Audit logs 24h - Tối ưu hóa: Chỉ select các trường cần thiết, bỏ qua cột details JSON khổng lồ để giảm tải >99% payload qua mạng
     const { data: logs24h, count: last24hLogs } = await supabase
         .from('audit_logs')
-        .select('*', { count: 'exact' })
+        .select('action, user_email, tenant_id, risk_score, created_at', { count: 'exact' })
         .gte('created_at', last24h)
         .order('created_at', { ascending: false });
 

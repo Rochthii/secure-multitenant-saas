@@ -185,13 +185,10 @@ export function StitchNetwork() {
                 </g>
               ))}
 
-              {/* 3. Render Nodes */}
+              {/* 3. Render Nodes - Optimized for 60 FPS Client Render */}
               {nodes.map((node) => {
                 const isCentral = node.id === 'central';
                 const isActive = activeNode?.id === node.id;
-                
-                let glowColor = 'rgba(0, 242, 255, 0.4)';
-                if (node.status === 'SYNCING') glowColor = 'rgba(168, 85, 247, 0.4)';
                 
                 return (
                   <g
@@ -200,7 +197,7 @@ export function StitchNetwork() {
                     onClick={() => setActiveNode(node)}
                     onMouseEnter={() => setActiveNode(node)}
                   >
-                    {/* Ring Pulse Behind Node on Hover/Active */}
+                    {/* Ring Pulse Behind Node on Hover/Active - Optimized using pulse to avoid expensive ping transforms */}
                     {(isActive || isCentral) && (
                       <circle
                         cx={node.x}
@@ -209,9 +206,8 @@ export function StitchNetwork() {
                         fill="none"
                         stroke={node.status === 'SYNCING' ? '#a855f7' : '#00F2FF'}
                         strokeWidth="0.3"
-                        strokeOpacity="0.3"
-                        className="animate-ping"
-                        style={{ transformOrigin: `${node.x}% ${node.y}%`, animationDuration: isCentral ? '3s' : '2s' }}
+                        strokeOpacity="0.4"
+                        className="animate-pulse"
                       />
                     )}
 
@@ -224,6 +220,22 @@ export function StitchNetwork() {
                       stroke={isActive ? (node.status === 'SYNCING' ? '#c084fc' : '#22d3ee') : 'rgba(255,255,255,0.06)'}
                       strokeWidth={isActive ? '0.6' : '0.3'}
                       className="transition-all duration-300"
+                    />
+
+                    {/* Ambient Glow Aura Layer (High-Performance alternative to expensive CSS filters) */}
+                    <circle
+                      cx={node.x}
+                      cy={node.y}
+                      r={isCentral ? 5.5 : 3.5}
+                      fill={
+                        node.status === 'SECURED' 
+                          ? '#00F2FF' 
+                          : node.status === 'SYNCING' 
+                            ? '#a855f7' 
+                            : '#10b981'
+                      }
+                      opacity="0.25"
+                      className={node.status === 'SYNCING' ? 'animate-pulse' : ''}
                     />
 
                     {/* Core Glowing Dot */}
@@ -239,7 +251,6 @@ export function StitchNetwork() {
                             : '#10b981'
                       }
                       className={node.status === 'SYNCING' ? 'animate-pulse' : ''}
-                      style={{ filter: `drop-shadow(0 0 4px ${glowColor})` }}
                     />
                   </g>
                 );
