@@ -132,59 +132,63 @@ export default async function middleware(request: NextRequest) {
         }
     }
 
-    // 4. Thực thi SOAR & IP Whitelist bằng truy vấn cấu hình Tenant từ DB
+    // 4. Thực thi SOAR & IP Whitelist bằng truy vấn cấu hình bảo mật từ DB
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (supabaseUrl && supabaseAnonKey && hostname !== 'localhost:3000') {
         try {
-            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
-            const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
-            
-            const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,modules_config,lifecycle_status`;
-            const dbRes = await fetch(fetchUrl, {
+            // A. Check GLOBAL SOAR Block: Kiểm tra xem IP hiện tại có đang bị chặn trong blocked_ips toàn hệ thống không
+            const nowIso = new Date().toISOString();
+            const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?ip=eq.${clientIp}&blocked_until=gt.${nowIso}&select=reason`;
+            const blockRes = await fetch(blockFetchUrl, {
                 headers: {
                     'apikey': supabaseAnonKey,
                     'Authorization': `Bearer ${supabaseAnonKey}`
                 },
-                // Cache kết quả 30 giây tại Edge để giảm tải cho Supabase
-                next: { revalidate: 30 }
+                // Cache kết quả 15 giây tại Edge để đảm bảo hiệu năng
+                next: { revalidate: 15 }
             });
-            
-            if (dbRes.ok) {
-                const data = await dbRes.json();
-                if (data && data.length > 0) {
-                    const tenant = data[0];
-                    if (tenant.lifecycle_status === 'suspended') {
-                        isSuspended = true;
-                    }
-                    const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist;
-                    if (ipWhitelistStr) {
-                        allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
-                    }
 
-                    // Thực thi SOAR: Truy vấn động xem IP hiện tại có đang bị chặn trong blocked_ips không
-                    const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?tenant_id=eq.${tenant.id}&ip=eq.${clientIp}&blocked_until=gt.${new Date().toISOString()}&select=reason`;
-                    const blockRes = await fetch(blockFetchUrl, {
-                        headers: {
-                            'apikey': supabaseAnonKey,
-                            'Authorization': `Bearer ${supabaseAnonKey}`
-                        },
-                        // Cache kết quả 15 giây tại Edge để đảm bảo hiệu năng
-                        next: { revalidate: 15 }
-                    });
+            if (blockRes.ok) {
+                const blockData = await blockRes.json();
+                if (blockData && blockData.length > 0) {
+                    isIpBlocked = true;
+                    blockReason = blockData[0].reason || '';
+                }
+            }
 
-                    if (blockRes.ok) {
-                        const blockData = await blockRes.json();
-                        if (blockData && blockData.length > 0) {
-                            isIpBlocked = true;
-                            blockReason = blockData[0].reason || '';
+            // B. Tiếp tục kiểm tra cấu hình Tenant cụ thể (nếu IP chưa bị chặn và hostname hợp lệ)
+            if (!isIpBlocked) {
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
+                const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
+                
+                const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,modules_config,lifecycle_status`;
+                const dbRes = await fetch(fetchUrl, {
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${supabaseAnonKey}`
+                    },
+                    // Cache kết quả 30 giây tại Edge để giảm tải cho Supabase
+                    next: { revalidate: 30 }
+                });
+                
+                if (dbRes.ok) {
+                    const data = await dbRes.json();
+                    if (data && data.length > 0) {
+                        const tenant = data[0];
+                        if (tenant.lifecycle_status === 'suspended') {
+                            isSuspended = true;
+                        }
+                        const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist;
+                        if (ipWhitelistStr) {
+                            allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
                         }
                     }
                 }
             }
         } catch (err) {
-            console.error('[Middleware] Lỗi fetch cấu hình Tenant từ DB:', err);
+            console.error('[Middleware] Lỗi fetch cấu hình an ninh từ DB:', err);
         }
     }
 

@@ -251,7 +251,7 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                                         {(logs || []).map((log: any) => (
                                             <tr key={log.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
                                                 <td className="px-6 py-3 whitespace-nowrap text-slate-500 dark:text-slate-450 font-mono text-[11px]">
-                                                    {new Date(log.created_at).toLocaleString('vi-VN')}
+                                                    {new Date(log.created_at).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}
                                                 </td>
                                                 <td className="px-6 py-3">
                                                     <div className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[150px]">{log.user_email || 'System'}</div>
