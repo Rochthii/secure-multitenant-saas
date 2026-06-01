@@ -127,21 +127,21 @@ export async function getSecurityStats(): Promise<SecurityStats> {
             .sort((a, b) => b.count - a.count);
     }
 
-    // 9. Anomaly detection: Lấy các sự kiện có điểm rủi ro cao (risk_score >= 35) từ audit_logs trong 24h
+    // 9. Anomaly detection: Lấy các sự kiện có điểm rủi ro cao hoặc vi phạm an ninh nghiêm trọng từ audit_logs trong 24h
     const { data: highRiskLogs } = await supabase
         .from('audit_logs')
         .select('user_email, user_id, action, risk_score, severity, details, created_at')
-        .gte('risk_score', 35) // Lấy từ mức Cảnh báo trở lên
+        .or('risk_score.gte.35,severity.eq.CRITICAL,severity.eq.HIGH')
         .gte('created_at', last24h)
-        .order('risk_score', { ascending: false });
+        .order('created_at', { ascending: false });
 
     const anomalyAlerts: AnomalyAlert[] = (highRiskLogs || []).map((l: any) => ({
         user_email: l.user_email || 'guest@anonymous',
         user_id: l.user_id,
-        action_count: l.risk_score || 0, // Dùng action_count để hiển thị CRS
+        action_count: l.risk_score || (l.severity === 'CRITICAL' ? 95 : 75), // Gán CRS score mặc định cho log thô
         period: new Date(l.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }),
-        severity: (l.risk_score || 0) >= 75 ? 'critical' as const : 'warning' as const,
-        description: l.details?.reason || l.details?.message || `Phát hiện hành vi đáng ngờ với điểm rủi ro CRS: ${l.risk_score}`,
+        severity: (l.risk_score || 0) >= 75 || l.severity === 'CRITICAL' ? 'critical' as const : 'warning' as const,
+        description: l.details?.reason || l.details?.message || `Phát hiện hành vi đáng ngờ có độ nghiêm trọng: ${l.severity}`,
     }));
 
     // 10. RLS Coverage — đếm bảng có policy

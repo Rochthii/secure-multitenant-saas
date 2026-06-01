@@ -14,6 +14,12 @@ BEGIN
         SELECT 1 FROM information_schema.tables 
         WHERE table_schema = 'public' AND table_name = 'tenants'
     ) THEN
+        -- Tránh lỗi trùng lặp bằng cách đổi tên domain của tenant khác nếu có
+        UPDATE public.tenants
+        SET domain = 'nexus-temp-' || substr(id::text, 1, 8) || '.vercel.app'
+        WHERE domain = 'nexus-corp-ptit.vercel.app' 
+          AND id <> '11111111-1111-1111-1111-111111111111';
+
         UPDATE public.tenants
         SET domain = 'nexus-corp-ptit.vercel.app'
         WHERE id = '11111111-1111-1111-1111-111111111111';

@@ -94,7 +94,7 @@ ON CONFLICT (tenant_id, key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Seed 3 bài viết mẫu (News) cho Nexus Corp — an toàn idempotent
 INSERT INTO public.news (
-    tenant_id, title, slug, excerpt, content, status, published_at, category
+    tenant_id, title_vi, slug, excerpt_vi, content_vi, status, published_at
 )
 SELECT
     '66666666-6666-6666-6666-666666666666',
@@ -103,14 +103,13 @@ SELECT
     'Nexus Corp chính thức công bố nền tảng bảo mật đám mây thế hệ mới, tích hợp AI phát hiện mối đe dọa theo thời gian thực.',
     '<p>Nexus Corp hôm nay chính thức ra mắt <strong>CloudShield 2026</strong> — nền tảng bảo mật đám mây toàn diện tích hợp AI...</p>',
     'published',
-    NOW() - INTERVAL '2 days',
-    'Công nghệ'
+    NOW() - INTERVAL '2 days'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.news WHERE tenant_id = '66666666-6666-6666-6666-666666666666' AND slug = 'nexus-corp-cloud-security-2026'
 );
 
 INSERT INTO public.news (
-    tenant_id, title, slug, excerpt, content, status, published_at, category
+    tenant_id, title_vi, slug, excerpt_vi, content_vi, status, published_at
 )
 SELECT
     '66666666-6666-6666-6666-666666666666',
@@ -119,14 +118,13 @@ SELECT
     'Sau 6 tháng kiểm toán nghiêm ngặt, Nexus Corp chính thức được cấp chứng nhận ISO 27001:2022 — tiêu chuẩn bảo mật thông tin quốc tế cao nhất.',
     '<p>Đây là cột mốc quan trọng khẳng định cam kết của Nexus Corp về an toàn thông tin...</p>',
     'published',
-    NOW() - INTERVAL '7 days',
-    'Thành tựu'
+    NOW() - INTERVAL '7 days'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.news WHERE tenant_id = '66666666-6666-6666-6666-666666666666' AND slug = 'nexus-corp-iso-27001-2022'
 );
 
 INSERT INTO public.news (
-    tenant_id, title, slug, excerpt, content, status, published_at, category
+    tenant_id, title_vi, slug, excerpt_vi, content_vi, status, published_at
 )
 SELECT
     '66666666-6666-6666-6666-666666666666',
@@ -135,15 +133,14 @@ SELECT
     'Với văn phòng mới tại Singapore và Bangkok, Nexus Corp đặt mục tiêu phục vụ 1000+ doanh nghiệp khu vực vào năm 2027.',
     '<p>Chiến lược mở rộng khu vực là bước đi chiến lược tiếp theo của Nexus Corp...</p>',
     'published',
-    NOW() - INTERVAL '14 days',
-    'Chiến lược'
+    NOW() - INTERVAL '14 days'
 WHERE NOT EXISTS (
     SELECT 1 FROM public.news WHERE tenant_id = '66666666-6666-6666-6666-666666666666' AND slug = 'nexus-corp-mo-rong-dong-nam-a'
 );
 
 -- Seed 2 sự kiện mẫu cho Nexus Corp
 INSERT INTO public.events (
-    tenant_id, title, slug, description, start_date, end_date, location, status
+    tenant_id, title_vi, slug, description_vi, start_date, end_date, location, status
 )
 SELECT
     '66666666-6666-6666-6666-666666666666',
@@ -159,7 +156,7 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO public.events (
-    tenant_id, title, slug, description, start_date, end_date, location, status
+    tenant_id, title_vi, slug, description_vi, start_date, end_date, location, status
 )
 SELECT
     '66666666-6666-6666-6666-666666666666',
