@@ -344,19 +344,24 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                     </p>
                 </div>
                 <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                    {/* Council QR Code Entry */}
-                    <div className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-md p-2 rounded-2xl border border-slate-700 shadow-lg shrink-0 group transition-all hover:border-amber-500/20">
-                        <img 
-                            src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://tdcrt.vercel.app/council&color=f59e0b&bgcolor=1e293b" 
-                            alt="QR Council Portal" 
-                            className="w-12 h-12 rounded-xl border border-amber-500/20 group-hover:scale-105 transition-transform"
-                        />
-                        <div>
-                            <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Council Portal</div>
-                            <div className="text-[11px] font-black text-amber-400">Quét QR để Hack CSDL</div>
-                            <div className="text-[9px] text-slate-500 font-medium">Bản Sandbox PTIT</div>
+                    {/* Council QR Code Entry — enlarged for easy scanning */}
+                    <div className="flex flex-col items-center gap-2 bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl border border-amber-500/40 shadow-[0_0_24px_rgba(245,158,11,0.18)] shrink-0 group transition-all hover:border-amber-400/70 hover:shadow-[0_0_36px_rgba(245,158,11,0.30)]">
+                        {/* Pulse ring */}
+                        <div className="relative">
+                            <div className="absolute inset-0 rounded-2xl bg-amber-500/10 animate-pulse pointer-events-none" />
+                            <img
+                                src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://tdcrt.vercel.app/council&color=f59e0b&bgcolor=0f172a&margin=6"
+                                alt="QR Council Portal — tdcrt.vercel.app/council"
+                                className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl border-2 border-amber-500/50 group-hover:scale-105 transition-transform relative z-10"
+                            />
+                        </div>
+                        <div className="text-center">
+                            <div className="text-[9px] text-amber-400/70 font-bold uppercase tracking-widest">📱 Quét để tấn công</div>
+                            <div className="text-[11px] font-black text-amber-400 leading-tight">Threat Simulator</div>
+                            <div className="text-[8px] text-slate-500 font-mono mt-0.5">tdcrt.vercel.app/council</div>
                         </div>
                     </div>
+
 
                     {/* SOC Realtime Audio Listener */}
                     <SocRealtimeListener />
