@@ -89,17 +89,17 @@ export default function ScalingBenchmarkPage() {
     const getStats = () => {
         if (chartData.length === 0) return null;
         const maxScale = chartData[chartData.length - 1];
-        const appMs = maxScale.appFilterMs;
+        const joinMs = maxScale.rlsJoinMs;
         const claimsMs = maxScale.rlsClaimsMs;
-        const speedup = appMs > 0 ? (appMs / claimsMs).toFixed(1) : '0';
-        const reduction = appMs > 0 ? (((appMs - claimsMs) / appMs) * 100).toFixed(1) : '0';
+        const speedup = claimsMs > 0 ? (joinMs / claimsMs).toFixed(1) : '0';
+        const reduction = joinMs > 0 ? (((joinMs - claimsMs) / joinMs) * 100).toFixed(1) : '0';
         
         return {
             speedup,
             reduction,
             maxScaleSize: maxScale.datasetSize.toLocaleString(),
             claimsMs: claimsMs.toFixed(2),
-            appMs: appMs.toFixed(2),
+            joinMs: joinMs.toFixed(2),
         };
     };
 
@@ -175,7 +175,7 @@ export default function ScalingBenchmarkPage() {
                         {stats ? `${stats.speedup}x` : '—'}
                     </p>
                     <p className="text-[10px] text-slate-500 mt-3 font-bold uppercase tracking-wider leading-relaxed">
-                        JWT Claims nhanh hơn App-side
+                        JWT Claims nhanh hơn RLS JOIN (Legacy)
                     </p>
                 </div>
 
@@ -362,10 +362,10 @@ export default function ScalingBenchmarkPage() {
                             </thead>
                             <tbody className="divide-y divide-slate-800 font-medium">
                                 {chartData.map((row) => {
-                                    const improvement = row.appFilterMs > 0
-                                        ? ((row.appFilterMs - row.rlsClaimsMs) / row.appFilterMs * 100).toFixed(1)
+                                    const improvement = row.rlsJoinMs > 0
+                                        ? ((row.rlsJoinMs - row.rlsClaimsMs) / row.rlsJoinMs * 100).toFixed(1)
                                         : '—';
-                                    const speedup = row.rlsClaimsMs > 0 ? (row.appFilterMs / row.rlsClaimsMs).toFixed(1) : '—';
+                                    const speedup = row.rlsClaimsMs > 0 ? (row.rlsJoinMs / row.rlsClaimsMs).toFixed(1) : '—';
                                     
                                     return (
                                         <tr key={row.datasetSize} className="hover:bg-slate-800/30 transition-colors">
@@ -383,7 +383,7 @@ export default function ScalingBenchmarkPage() {
                                             </td>
                                             <td className="px-8 py-5">
                                                 <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-black rounded-full border border-emerald-500/20 inline-flex items-center gap-1 shadow-inner">
-                                                    Nhanh hơn {speedup}x (-{improvement}%)
+                                                    Nhanh hơn {speedup}x (-{improvement}% trễ)
                                                 </span>
                                             </td>
                                         </tr>
