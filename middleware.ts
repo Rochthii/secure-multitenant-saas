@@ -12,7 +12,9 @@ const HOSTNAME_MAP: Record<string, string> = {
     'khleang': 'khleang.vercel.app',
     'hophong': 'chuahophongcu.com',
     'chantarangsay': 'chua-chantarangsay-new.vercel.app',
+    'nexus': 'nexus-corp.vercel.app',       // Tenant doanh nghiệp — demo multi-tenant
 };
+
 
 // Hàm tạo template HTML trang lỗi đa ngôn ngữ an toàn, gọn nhẹ chạy tại Edge
 const getLockdownHtml = (status: 'SUSPENDED' | 'IP_BLOCKED' | 'INTRANET_LOCKDOWN', ip: string, locale: string, reason?: string) => {
