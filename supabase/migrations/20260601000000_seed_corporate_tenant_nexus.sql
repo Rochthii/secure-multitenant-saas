@@ -21,7 +21,8 @@ INSERT INTO public.tenants (
     theme_colors,
     contact_info,
     lifecycle_status,
-    modules_config
+    modules_config,
+    layout_blocks
 )
 VALUES (
     '66666666-6666-6666-6666-666666666666',
@@ -57,7 +58,14 @@ VALUES (
             "documents": true,
             "ai_portal": false
         }
-    }'
+    }',
+    '[
+        {"id": "corp-hero",     "type": "enterprise_hero",     "visible": true},
+        {"id": "corp-features", "type": "enterprise_features",  "visible": true},
+        {"id": "corp-stats",    "type": "enterprise_stats",     "visible": true},
+        {"id": "corp-news",     "type": "enterprise_news",      "visible": true},
+        {"id": "corp-cta",      "type": "enterprise_cta",       "visible": true}
+    ]'
 )
 ON CONFLICT (id) DO UPDATE SET
     domain            = EXCLUDED.domain,
@@ -67,7 +75,9 @@ ON CONFLICT (id) DO UPDATE SET
     theme_colors      = EXCLUDED.theme_colors,
     contact_info      = EXCLUDED.contact_info,
     lifecycle_status  = EXCLUDED.lifecycle_status,
-    modules_config    = EXCLUDED.modules_config;
+    modules_config    = EXCLUDED.modules_config,
+    layout_blocks     = EXCLUDED.layout_blocks;
+
 
 -- Seed dữ liệu Site Settings cho Nexus Corp (key-value pairs)
 INSERT INTO public.site_settings (tenant_id, key, value)

@@ -33,21 +33,19 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
             { id: 'mc-cta', type: 'traditional_cta', visible: true },
         ],
     },
-    // ─── CORPORATE / ENTERPRISE PREMIUM PRESET ──────────────────────────────────────────
+    // ─── CORPORATE / ENTERPRISE B2B SAAS PRESET ──────────────────────────────────────────
     {
         id: 'corporate',
-        name: 'Corporate (Enterprise)',
-        nameVi: 'Tập Đoàn & Doanh Nghiệp',
+        name: 'Corporate (Enterprise B2B)',
+        nameVi: 'Tập Đoàn & Doanh Nghiệp B2B',
         emoji: '🏢',
-        description: 'Giao diện Tập đoàn & Doanh nghiệp toàn cầu, hiện đại, minh bạch & tin cậy cao',
+        description: 'Giao diện B2B SaaS chuẩn Enterprise — dark navy, hero chuyển đổi số, tính năng dịch vụ, chỉ số năng lực, tin tức tổ chức',
         blocks: [
-            { id: 'corp-hero', type: 'mcaaron_hero', visible: true },
-            { id: 'corp-stats', type: 'mcaaron_statistics', visible: true },
-            { id: 'corp-services', type: 'mcaaron_services', visible: true },
-            { id: 'corp-transparency', type: 'mcaaron_transparency', visible: true },
-            { id: 'corp-founders', type: 'mcaaron_founder', visible: true },
-            { id: 'corp-news', type: 'mcaaron_news', visible: true },
-            { id: 'corp-network', type: 'mcaaron_network', visible: true },
+            { id: 'corp-hero',     type: 'enterprise_hero',     visible: true },
+            { id: 'corp-features', type: 'enterprise_features',  visible: true },
+            { id: 'corp-stats',    type: 'enterprise_stats',     visible: true },
+            { id: 'corp-news',     type: 'enterprise_news',      visible: true },
+            { id: 'corp-cta',      type: 'enterprise_cta',       visible: true },
         ],
     },
     // ─── MODERN ─────────────────────────────────────────────────────────────────
