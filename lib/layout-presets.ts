@@ -20,8 +20,8 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'mcaaron',
         name: BRAND_NAME_VI,
-        nameVi: 'Doanh Nghiệp Xã Hội',
-        emoji: '🤝',
+        nameVi: 'Social Green',
+        emoji: '🌿',
         description: 'Giao diện chuyên biệt cho doanh nghiệp tác động xã hội, minh bạch và đội ngũ chuyên nghiệp',
         blocks: [
             { id: 'mc-hero', type: 'mcaaron_hero', visible: true },
@@ -37,8 +37,8 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'corporate',
         name: 'Corporate (Enterprise B2B)',
-        nameVi: 'Tập Đoàn & Doanh Nghiệp B2B',
-        emoji: '🏢',
+        nameVi: 'Corporate Navy',
+        emoji: '🛡️',
         description: 'Giao diện B2B SaaS chuẩn Enterprise — dark navy, hero chuyển đổi số, tính năng dịch vụ, chỉ số năng lực, tin tức tổ chức',
         blocks: [
             { id: 'corp-hero',     type: 'enterprise_hero',     visible: true },
@@ -52,7 +52,7 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'modern',
         name: 'Modern SaaS',
-        nameVi: 'Hiện Đại & Đột Phá',
+        nameVi: 'Cyberpunk Neon Tech',
         emoji: '⚡',
         description: 'Glassmorphism cao cấp, chế độ tối màu công nghệ, dải thông tin truyền thông liên tục',
         blocks: [
@@ -68,7 +68,7 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'minimal',
         name: 'Minimal Clean',
-        nameVi: 'Tối Giản Sang Trọng',
+        nameVi: 'Clean Minimalist',
         emoji: '📄',
         description: 'Bố cục Swiss editorial cao cấp, chú trọng Typography, thoáng đãng và tinh tế',
         blocks: [
@@ -84,13 +84,16 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'stitch',
         name: 'Stitch (Digital Zenith)',
-        nameVi: 'Stitch (Đỉnh Cao Kỹ Thuật Số)',
-        emoji: '🤖',
+        nameVi: 'Violet Premium',
+        emoji: '🔮',
         description: 'Phong cách Fintech & Công nghệ, trực quan hóa mạng lưới liên kết kỹ thuật số',
         blocks: [
             { id: 'st-hero', type: 'stitch-hero', visible: true },
             { id: 'st-stats', type: 'stitch-stats', visible: true },
+            { id: 'st-intro', type: 'stitch-intro', visible: true },
+            { id: 'st-network', type: 'stitch-network', visible: true },
             { id: 'st-nodes', type: 'stitch-nodes', visible: true },
+            { id: 'st-news', type: 'stitch-news', visible: true },
             { id: 'st-events', type: 'stitch-events', visible: true },
             { id: 'st-footer-strip', type: 'stitch-footer-strip', visible: true },
         ],
@@ -100,7 +103,7 @@ export const LAYOUT_PRESETS: LayoutPreset[] = [
     {
         id: 'ink',
         name: 'Ink Editorial',
-        nameVi: 'Tạp Chí Ấn Phẩm',
+        nameVi: 'Creative Amber',
         emoji: '🖋️',
         description: 'Trắng tinh + đen ink tối giản nghệ thuật, cấu trúc tạp chí tri thức & triết lý doanh nghiệp',
         blocks: [

@@ -8,12 +8,12 @@ const intlMiddleware = createMiddleware(routing);
 const ROOT_ROUTES = ['/login', '/admin', '/collaborator', '/auth', '/forgot-password', '/update-password'];
 
 const HOSTNAME_MAP: Record<string, string> = {
-    'phuly': 'chuaphuly.vercel.app',
-    'khleang': 'khleang.vercel.app',
-    'hophong': 'chuahophongcu.com',
-    'chantarangsay': 'chua-chantarangsay-new.vercel.app',
-    'nexus': 'nexus-corp.vercel.app',       // Tenant doanh nghiệp — demo multi-tenant
+    'nexus': 'nexus-corp-ptit.vercel.app',  // Tenant doanh nghiệp công nghệ — B2B SaaS demo
 };
+
+// Danh sách tenant cho phép chuyển đổi qua ?tenant= trên production (demo hội đồng)
+const DEMO_TENANT_WHITELIST = new Set(['nexus']);
+
 
 
 // Hàm tạo template HTML trang lỗi đa ngôn ngữ an toàn, gọn nhẹ chạy tại Edge
@@ -66,7 +66,9 @@ export default async function middleware(request: NextRequest) {
     // 1. Hostname Resolution
     let hostname = request.headers.get('host') || 'localhost:3000';
 
-    // Xử lý test qua Query String (Chỉ cho phép trong dev hoặc local để tránh lỗ hổng bảo mật bypass trên production)
+    // Xử lý chuyển đổi tenant qua Query String
+    // - Trong dev/local: cho phép mọi tenant param (UUID, domain, key)
+    // - Trên production: CHỈ cho phép key nằm trong DEMO_TENANT_WHITELIST (an toàn, không bypass tùy ý)
     const searchParams = request.nextUrl.searchParams;
     const tenantParam = searchParams.get('tenant') || searchParams.get('tenant_id');
     const isLocal = hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname.includes('[::1]');
@@ -74,16 +76,23 @@ export default async function middleware(request: NextRequest) {
 
     // FIX: Lưu trạng thái đã override để tránh bị reset nhầm về localhost bên dưới
     let tenantOverridden = false;
-    if (tenantParam && isDebug) {
-        if (HOSTNAME_MAP[tenantParam]) {
-            hostname = HOSTNAME_MAP[tenantParam];
-            tenantOverridden = true;
-        } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
-            hostname = tenantParam;
-            tenantOverridden = true;
-        } else if (tenantParam.includes('.')) {
-            hostname = tenantParam;
-            tenantOverridden = true;
+    if (tenantParam) {
+        const isWhitelisted = DEMO_TENANT_WHITELIST.has(tenantParam);
+        if (isDebug || isWhitelisted) {
+            // Production: chỉ chấp nhận key trong whitelist (mapped sang domain thật)
+            if (HOSTNAME_MAP[tenantParam]) {
+                hostname = HOSTNAME_MAP[tenantParam];
+                tenantOverridden = true;
+            } else if (isDebug) {
+                // Dev only: cho phép UUID hoặc domain trực tiếp
+                if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
+                    hostname = tenantParam;
+                    tenantOverridden = true;
+                } else if (tenantParam.includes('.')) {
+                    hostname = tenantParam;
+                    tenantOverridden = true;
+                }
+            }
         }
     }
 
@@ -92,9 +101,7 @@ export default async function middleware(request: NextRequest) {
         hostname = 'localhost:3000';
     }
 
-    if (hostname.endsWith('khleang.vercel.app')) {
-        hostname = 'khleang.vercel.app';
-    }
+
 
     // 2. Nhận dạng IP khách truy cập an toàn (Chống IP Spoofing trên Cloudflare/Vercel)
     const clientIp = (request as any).ip || 

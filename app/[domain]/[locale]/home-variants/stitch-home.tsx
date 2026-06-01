@@ -5,6 +5,8 @@ import { generateOrganizationSchema } from '@/lib/seo/json-ld';
 import { StitchHero } from '@/components/sections/stitch/StitchHero';
 import { StitchNodes } from '@/components/sections/stitch/StitchNodes';
 import { StitchStats } from '@/components/sections/stitch/StitchStats';
+import { StitchNetwork } from '@/components/sections/stitch/StitchNetwork';
+import { StitchNews } from '@/components/sections/stitch/StitchNews';
 import { StitchEvents } from '@/components/sections/stitch/StitchEvents';
 import { StitchFooterStrip } from '@/components/sections/stitch/StitchFooterStrip';
 import { StitchIntro } from '@/components/sections/stitch/StitchIntro';
@@ -40,6 +42,15 @@ export default async function StitchHome({ domain, locale, tenantId: propTenantI
     thumbnail: talk.thumbnail_url
   }));
 
+  // Mapping raw events to component interface
+  const events = upcomingEvents.map((event: any) => ({
+    id: event.id,
+    title: event.title_vi || event.title_en || 'Sự Kiện Vận Hành',
+    slug: event.slug,
+    start_date: event.start_date,
+    location: event.location || undefined
+  }));
+
   // SEO Schema
   const organizationSchema = generateOrganizationSchema({
     name: settings['site_name_vi'] || 'Digital Zenith',
@@ -69,7 +80,7 @@ export default async function StitchHome({ domain, locale, tenantId: propTenantI
         dangerouslySetInnerHTML={{ __html: organizationSchema }}
       />
 
-      {/* 1. Hero - Technical Introduction */}
+      {/* 1. Hero - Technical Introduction with dashboard mockup and grid floor */}
       <StitchHero 
         title={settings['site_name_vi'] || "Hệ Thống Quản Trị SaaS Đa Khách Hàng (Multi-tenant)"}
         description={settings['site_description_vi'] || "Xây dựng hệ thống quản trị trung ương tập trung cho hàng chục chi nhánh và đơn vị thành viên doanh nghiệp. Tích hợp website động, CMS đa ngôn ngữ, hệ thống kiểm toán tài chính minh bạch và dashboard phân tích thời gian thực."}
@@ -82,15 +93,21 @@ export default async function StitchHome({ domain, locale, tenantId: propTenantI
       {/* 2.5. Intro - Digital Identity */}
       <StitchIntro introSection={introSection} />
 
+      {/* 2.7. Network - Interactive Topology Network */}
+      <StitchNetwork />
+
       {/* 3. Dharma Nodes - The Knowledge Network */}
       <StitchNodes 
         dharmaTalks={dharmaTalks} 
         title="Các Phân Hệ & Tư Liệu Số"
       />
 
+      {/* 3.5. News - Operational Messages from DB */}
+      <StitchNews news={news as any} title="Tin Tức & Thông Điệp Vận Hành" />
+
       {/* 4. Events - Synchronized Activities */}
       <StitchEvents 
-        upcomingEvents={upcomingEvents} 
+        upcomingEvents={events} 
         title="Lịch Lãm & Sự Kiện Vận Hành"
       />
 

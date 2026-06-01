@@ -24,11 +24,8 @@ export async function GET(req: NextRequest) {
     let searchHost = host;
     if (host.includes('localhost') || host.includes('127.0.0.1')) {
         const tenantParam = searchParams.get('tenant');
-        if (tenantParam === 'phuly') searchHost = 'chuaphuly.vercel.app';
-        else if (tenantParam === 'khleang') searchHost = 'khleang.vercel.app';
-        else if (tenantParam === 'hophong') searchHost = 'chuahophongcu.com';
-        else if (tenantParam === 'chantarangsay') searchHost = 'chua-chantarangsay-new.vercel.app';
-        else searchHost = 'localhost:3000';
+        if (tenantParam === 'nexus') searchHost = 'nexus-corp-ptit.vercel.app';
+        else searchHost = 'nexus-corp-ptit.vercel.app'; // Mặc định chuyển sang Tập đoàn Alpha
     }
 
     const { data: tenant } = await (supabase

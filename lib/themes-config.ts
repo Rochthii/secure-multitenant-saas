@@ -19,53 +19,7 @@ export interface ColorTheme {
 }
 
 export const BUDDHIST_THEMES: ColorTheme[] = [
-    // ── 1. MÀU THEO TENANT (GIỮ NGUYÊN MÀU 100%) ─────────────────────────────
-    {
-        id: 'chantarangsay-classic',
-        tenantId: '55555555-5555-5555-5555-555555555555',
-        name: 'Cổ Điển Hổ Phách',
-        description: 'Nâu hổ phách ấm áp — nhận diện thương hiệu gốc.',
-        colors: {
-            primary: '#F59E0B', secondary: '#5C4033', accent: '#FF8C00',
-            background: '#FEF9F3', bgEnd: '#FDF5EB', text: '#2C1810',
-            hero: '#1A0F09', surface: '#FAFAF7', opacity: '0.05'
-        }
-    },
-    {
-        id: 'phu-ly-red',
-        tenantId: '22222222-2222-2222-2222-222222222222',
-        name: 'Đỏ Kim — Chi Nhánh Phù Ly',
-        description: 'Tông đỏ vàng uy nghiêm — nhận diện chi nhánh Phù Ly.',
-        colors: {
-            primary: '#D4AF37', secondary: '#8B1E1E', accent: '#C59A28',
-            background: '#F5F0E6', bgEnd: '#EBE2CD', text: '#3A1F1F',
-            hero: '#280F0F', surface: '#F8F5EE', opacity: '0.05'
-        }
-    },
-    {
-        id: 'khleang-green',
-        tenantId: '33333333-3333-3333-3333-333333333333',
-        name: "Xanh Lá — Chi Nhánh Kh'leang",
-        description: 'Tông xanh thiên nhiên — nhận diện chi nhánh Kh\'leang.',
-        colors: {
-            primary: '#2F6F4E', secondary: '#E8C547', accent: '#E8C547',
-            background: '#FFFFFF', bgEnd: '#F0F5F2', text: '#132B1E',
-            hero: '#0A1F14', surface: '#F4F9F6', opacity: '0.03'
-        }
-    },
-    {
-        id: 'ho-phong-purple',
-        tenantId: '44444444-4444-4444-4444-444444444444',
-        name: 'Tím — Chi Nhánh Hộ Phòng',
-        description: 'Tông tím thanh lịch — nhận diện chi nhánh Hộ Phòng.',
-        colors: {
-            primary: '#5A3E8E', secondary: '#F2D16B', accent: '#F2D16B',
-            background: '#F5F0E6', bgEnd: '#EBE2D0', text: '#271744',
-            hero: '#150C28', surface: '#F7F4F0', opacity: '0.04'
-        }
-    },
-
-    // ── 2. PRESET THEO PHONG CÁCH THIẾT KẾ ─────────────────────────────────────
+    // ── 1. PRESET THEO PHONG CÁCH THIẾT KẾ ─────────────────────────────────────
     {
         id: 'modern-moon',
         name: 'Corporate Dark — Xanh Navy & Vàng',

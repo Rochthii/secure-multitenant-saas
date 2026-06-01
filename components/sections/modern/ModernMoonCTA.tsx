@@ -2,116 +2,99 @@
 
 import React from 'react';
 import { Link } from '@/i18n/routing';
+import { ShieldCheck, Cpu, Terminal, ArrowRight } from 'lucide-react';
 
-/**
- * ModernMoonCTA — Call-to-action Transaction dạng "Vầng Trăng" cho Modern Layout.
- * Nền hình tròn phát sáng lớn + text overlay + nút donate.
- * Hoàn toàn CSS-based, không cần ảnh ngoài.
- */
-export function ModernMoonCTA({ modulesConfig }: { modulesConfig?: Record<string, boolean> }) {
-    if (modulesConfig?.transactions === false) return null;
-    return (
-        <section className="py-20 sm:py-32 px-4 relative overflow-hidden bg-black/5">
-            <div className="max-w-4xl mx-auto text-center relative z-10">
-                {/* Simplified Icon Circle */}
-                <div className="relative inline-flex items-center justify-center mb-10">
-                    <div
-                        className="w-24 h-24 rounded-full flex items-center justify-center border-2"
-                        style={{
-                            borderColor: 'rgb(var(--theme-primary) / 0.2)',
-                            backgroundColor: 'rgb(var(--theme-bg-start))'
-                        }}
-                    >
-                        <div
-                            className="w-16 h-16 rounded-full flex items-center justify-center"
-                            style={{
-                                backgroundColor: 'rgb(var(--theme-primary) / 0.1)'
-                            }}
-                        >
-                            {/* Lotus icon */}
-                            <svg
-                                className="w-9 h-9"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                style={{ color: 'rgb(var(--theme-text))' }}
-                            >
-                                <path
-                                    d="M12 22c-4.418 0-8-1.79-8-4 0-1.77 2.006-3.305 4.92-3.793C9.64 13.513 10.79 13 12 13s2.36.513 3.08 1.207C17.994 14.695 20 16.23 20 18c0 2.21-3.582 4-8 4z"
-                                    fill="currentColor" opacity="0.7"
-                                />
-                                <path
-                                    d="M12 14c0-4.418 1.79-8 4-8 1.105 0 2.087.67 2.793 1.748C20.243 8.56 21 10.185 21 12c0 1.105-.336 2.112-.878 2.912C18.505 13.343 15.404 12 12 12V14z"
-                                    fill="currentColor" opacity="0.5"
-                                />
-                                <path
-                                    d="M12 14c0-4.418-1.79-8-4-8-1.105 0-2.087.67-2.793 1.748C3.757 8.56 3 10.185 3 12c0 1.105.336 2.112.878 2.912C5.495 13.343 8.596 12 12 12V14z"
-                                    fill="currentColor" opacity="0.5"
-                                />
-                                <path
-                                    d="M12 3c0 4.418 0 9-0 9"
-                                    stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" opacity="0.6"
-                                />
-                            </svg>
-                        </div>
-                    </div>
-
-                    {/* Rings */}
-                    <div
-                        className="absolute inset-0 rounded-full animate-ping opacity-10"
-                        style={{ border: '2px solid rgb(var(--theme-primary))' }}
-                    />
-                </div>
-
-                {/* Text */}
-                <p
-                    className="text-[11px] font-bold uppercase tracking-[0.3em] mb-4"
-                    style={{ color: 'rgb(var(--theme-primary))' }}
-                >
-                    Thanh toán
-                </p>
-                <h2
-                    className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-5"
-                    style={{ color: 'rgb(var(--theme-text))' }}
-                >
-                    Gieo Duyên Lành
-                    <br />
-                    <span style={{ color: 'rgb(var(--theme-primary))' }}>Cùng Chánh Pháp</span>
-                </h2>
-                <p
-                    className="text-base sm:text-lg mb-10 max-w-xl mx-auto leading-relaxed"
-                    style={{ color: 'rgb(var(--theme-text) / 0.65)' }}
-                >
-                    Mỗi đóng góp của bạn giúp duy trì ngôi già lam, hỗ trợ chư Tăng tu học
-                    và lan toả Chánh Pháp đến cộng đồng.
-                </p>
-
-                {/* Buttons */}
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                    <Link
-                        href="/transactions"
-                        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-bold text-[15px] transition-all duration-300 hover:-translate-y-0.5"
-                        style={{
-                            backgroundColor: 'rgb(var(--theme-primary))',
-                            color: 'rgb(var(--theme-hero))'
-                        }}
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-                        </svg>
-                        Đóng góp Ngay
-                    </Link>
-                    <Link
-                        href="/transactions/cong-duc-ghi-danh"
-                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all duration-300 hover:-translate-y-0.5"
-                        style={{
-                            border: '1.5px solid rgb(var(--theme-primary) / 0.4)',
-                            color: 'rgb(var(--theme-text))',
-                        }}
-                    >
-                        Xem Thành tích Ghi Danh
-                    </Link>
-                </div>
-            </div>
-        </section>
-    );
+interface ModernMoonCTAProps {
+  modulesConfig?: Record<string, boolean>;
 }
+
+export function ModernMoonCTA({ modulesConfig }: ModernMoonCTAProps) {
+  // If transaction module is disabled, we still show the SaaS CTA as it's the main homepage anchor
+  return (
+    <section className="py-28 bg-[#05080C] border-t border-white/5 relative overflow-hidden flex items-center justify-center">
+      
+      {/* 1. Large Glowing Neon Cyan Moon/Aura in the center background */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] sm:w-[600px] sm:h-[600px] rounded-full opacity-[0.04] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, #00F2FF 0%, transparent 70%)',
+          filter: 'blur(80px)'
+        }}
+      />
+      
+      {/* Dynamic Grid Overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+        style={{ 
+          backgroundImage: `linear-gradient(to right, #00F2FF 1px, transparent 1px), linear-gradient(to bottom, #00F2FF 1px, transparent 1px)`,
+          backgroundSize: '40px 40px' 
+        }} 
+      />
+
+      <div className="container mx-auto px-6 relative z-10 max-w-4xl text-center">
+        
+        {/* Simplified High-tech Cyber Circle Icon */}
+        <div className="relative inline-flex items-center justify-center mb-10 group">
+          
+          {/* Inner Glowing rings */}
+          <div className="absolute inset-0 rounded-full border border-[#00F2FF]/10 scale-125 animate-ping" style={{ animationDuration: '4s' }} />
+          <div className="absolute inset-0 rounded-full border border-dashed border-[#00F2FF]/30 animate-spin" style={{ animationDuration: '25s' }} />
+          
+          <div
+            className="w-24 h-24 rounded-full flex items-center justify-center border border-white/10 bg-[#0A1017] group-hover:border-[#00F2FF]/40 transition-colors duration-500 shadow-2xl relative"
+          >
+            <div
+              className="w-16 h-16 rounded-full flex items-center justify-center bg-[#00F2FF]/5 border border-[#00F2FF]/10 group-hover:bg-[#00F2FF]/10 transition-colors duration-500"
+            >
+              <ShieldCheck className="w-8 h-8 text-[#00F2FF] animate-pulse" />
+            </div>
+          </div>
+        </div>
+
+        {/* Console Pill */}
+        <div className="flex justify-center mb-6">
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#00F2FF]/5 border border-[#00F2FF]/20 text-[#00F2FF] text-[9px] font-mono font-extrabold tracking-widest uppercase">
+            <Cpu className="w-3 h-3 text-[#00F2FF]" />
+            SOAR CORE ENGINE ACTIVE
+          </span>
+        </div>
+
+        {/* Title with Gradient and Cyberpunk Text */}
+        <h2 className="text-3xl sm:text-5xl font-black leading-tight text-white mb-6 uppercase tracking-tight">
+          Sẵn Sàng Chuyển Đổi Số
+          <br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00F2FF] to-indigo-400">
+            Nâng Tầm Bảo Mật SaaS
+          </span>
+        </h2>
+
+        {/* Subtitle */}
+        <p className="text-sm sm:text-base md:text-lg text-slate-400 font-light max-w-2xl mx-auto leading-relaxed mb-12">
+          Trải nghiệm hệ thống quản trị SaaS đa chi nhánh với khả năng kiểm toán mã hóa bất biến WORM, cô lập rủi ro tự động tại Edge Middleware và quản lý phân quyền Granular RBAC API chặt chẽ.
+        </p>
+
+        {/* Modern Call to Actions */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full sm:w-auto">
+          <Link
+            href="/admin"
+            className="group w-full sm:w-auto px-10 py-4 bg-[#00F2FF] text-black font-extrabold rounded-xl text-xs uppercase tracking-widest hover:bg-white transition-all duration-300 shadow-[0_4px_25px_rgba(0,242,255,0.25)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.25)] hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+          >
+            Trải Nghiệm Dashboard
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+          
+          <Link
+            href="/documents"
+            className="w-full sm:w-auto px-10 py-4 border border-white/10 text-white hover:text-[#00F2FF] font-extrabold rounded-xl text-xs uppercase tracking-widest hover:bg-white/5 hover:border-[#00F2FF]/30 transition-all duration-300 backdrop-blur-sm active:scale-95 flex items-center justify-center gap-2"
+          >
+            <Terminal className="w-4 h-4 text-slate-500 group-hover:text-[#00F2FF] transition-colors" />
+            Tài Liệu Kỹ Thuật
+          </Link>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+export default ModernMoonCTA;

@@ -28,7 +28,12 @@ export const getTenantConfig = async (domain: string): Promise<TenantConfig | nu
 
             try {
                 // Chuẩn hóa hostname (ví dụ: chuaphuly.localhost:3000 -> localhost:3000)
-                const lookupDomain = domain.includes('localhost') ? 'localhost:3000' : domain;
+                let lookupDomain = domain.includes('localhost') ? 'localhost:3000' : domain;
+
+                // Nếu chạy local, tự động map sang Tập đoàn Alpha (bây giờ có domain nexus-corp-ptit.vercel.app) làm mặc định
+                if (lookupDomain === 'localhost:3000') {
+                    lookupDomain = 'nexus-corp-ptit.vercel.app';
+                }
 
                 // 1. Ưu tiên tìm chính xác theo tên miền (Domain)
                 let result = await supabase

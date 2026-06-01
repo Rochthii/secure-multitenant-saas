@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 
 // Temporary debug endpoint — DELETE AFTER USE
-// Usage: GET /api/debug-categories?domain=chuaphuly.web.app
+// Usage: GET /api/debug-categories?domain=nexus-corp-ptit.vercel.app
 export async function GET(request: NextRequest) {
-    const domain = request.nextUrl.searchParams.get('domain') || 'chuaphuly.web.app';
+    const domain = request.nextUrl.searchParams.get('domain') || 'nexus-corp-ptit.vercel.app';
     
     const supabase = await createAdminClient();
     
@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
 
     const tenantId = (tenant as any).id;
 
-    // 2. Get ALL categories for this tenant (with null + 55555555 + tenant)
+    // 2. Get ALL categories for this tenant (with null + 11111111 + tenant)
     const { data: cats } = await supabase
         .from('categories')
         .select('id, name_vi, slug, module, parent_id, tenant_id, is_visible, order_position')
-        .or(`tenant_id.eq.55555555-5555-5555-5555-555555555555,tenant_id.eq.${tenantId}`)
+        .or(`tenant_id.eq.11111111-1111-1111-1111-111111111111,tenant_id.eq.${tenantId}`)
         .in('module', ['news', 'dharma', 'documents'])
         .eq('is_visible', true)
         .order('module')

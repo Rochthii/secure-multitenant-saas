@@ -8,7 +8,7 @@
  */
 export const SITE_URL =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
-    'https://khleang.vercel.app';
+    'https://nexus-corp-ptit.vercel.app';
 
 export const DEFAULT_SITE_NAME = "Secure Multi-tenant SaaS";
 export const DEFAULT_SITE_DESCRIPTION = "Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tảng đa khách hàng";

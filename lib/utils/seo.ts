@@ -125,7 +125,7 @@ export function generateTags(title: string, categoryName: string = ''): string[]
  * Falls back to NEXT_PUBLIC_SITE_URL if domain is missing.
  */
 export function getTenantBaseUrl(domain: string): string {
-    if (!domain) return process.env.NEXT_PUBLIC_SITE_URL || 'https://khleang.vercel.app';
+    if (!domain) return process.env.NEXT_PUBLIC_SITE_URL || 'https://nexus-corp-ptit.vercel.app';
     const decodedDomain = decodeURIComponent(domain);
     const protocol = decodedDomain.includes('localhost') || decodedDomain.includes('.local') ? 'http' : 'https';
     return `${protocol}://${decodedDomain}`;
