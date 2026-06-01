@@ -94,20 +94,18 @@ RETURNS double precision AS $$
 DECLARE
     start_time timestamptz;
     end_time timestamptz;
-    temp_row record;
+    temp_count bigint;
 BEGIN
     start_time := clock_timestamp();
     
-    -- Thực thi quét loop để ép Postgres chạy toàn bộ cây truy vấn vật lý
-    FOR temp_row IN 
+    -- Sử dụng truy vấn đếm trực tiếp để loại bỏ 100% overhead vòng lặp PL/pgSQL
+    SELECT count(*) INTO temp_count FROM (
         SELECT bl.id 
         FROM public.benchmark_legacy bl
         INNER JOIN public.tenants t ON bl.tenant_id = t.id
-        WHERE (t.status = 'active' AND bl.tenant_id = '55555555-5555-5555-5555-555555555555')
+        WHERE (t.lifecycle_status = 'active' AND bl.tenant_id = '55555555-5555-5555-5555-555555555555')
         LIMIT limit_count
-    LOOP
-        NULL; -- Không làm gì, chỉ ép thực thi
-    END LOOP;
+    ) s;
     
     end_time := clock_timestamp();
     RETURN extract(epoch from (end_time - start_time)) * 1000.0; -- Trả về ms
@@ -120,19 +118,17 @@ RETURNS double precision AS $$
 DECLARE
     start_time timestamptz;
     end_time timestamptz;
-    temp_row record;
+    temp_count bigint;
 BEGIN
     start_time := clock_timestamp();
     
-    -- Thực thi quét sử dụng claims mô phỏng (bypass JOIN)
-    FOR temp_row IN 
+    -- Sử dụng truy vấn đếm trực tiếp để loại bỏ 100% overhead vòng lặp PL/pgSQL
+    SELECT count(*) INTO temp_count FROM (
         SELECT bj.id 
         FROM public.benchmark_jwt bj
         WHERE (bj.tenant_id = '55555555-5555-5555-5555-555555555555')
         LIMIT limit_count
-    LOOP
-        NULL;
-    END LOOP;
+    ) s;
     
     end_time := clock_timestamp();
     RETURN extract(epoch from (end_time - start_time)) * 1000.0; -- Trả về ms
