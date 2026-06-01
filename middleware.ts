@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 // 1. Pre-allocated Constants (Cố định vùng nhớ ngoài hàm)
 const intlMiddleware = createMiddleware(routing);
 
-const ROOT_ROUTES = ['/login', '/admin', '/collaborator', '/auth', '/forgot-password', '/update-password'];
+const ROOT_ROUTES = ['/login', '/admin', '/collaborator', '/auth', '/forgot-password', '/update-password', '/council'];
 
 const HOSTNAME_MAP: Record<string, string> = {
     'nexus': 'nexus-corp-ptit.vercel.app',  // Tenant doanh nghiệp công nghệ — B2B SaaS demo
