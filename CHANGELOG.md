@@ -13,6 +13,11 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 - **Thiết kế sơ đồ SVG Cyberpunk ([attack-flow-map.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/attack-flow-map.tsx)):** Xây dựng component React mới sử dụng đồ họa SVG động trực quan hóa 5 chốt chặn Zero Trust (Client IP, Edge Security Middleware, Identity JWT, Database RLS, và Context ABAC).
 - **Tích hợp Threat Simulator v5 ([threat-simulator.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx)):** Nhúng trực tiếp bản đồ SVG tương tác và đồng bộ các trạng thái phản ứng SOAR (`running`, `phase`, `result`). Khi chạy giả lập, chấm sáng hoạt ảnh di chuyển dọc theo các lớp kết nối và nhấp nháy viền đỏ neon tại lớp chịu trách nhiệm chặn đứng cuộc tấn công thực tế từ kết quả API.
 
+### Bản đồ Ma trận Tương tác Học thuật & Động cơ QR Động (SOC Live Fire Presentation)
+- **Bản đồ ma trận học thuật tương tác ([matrix-blueprint.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/matrix-blueprint.tsx)):** Xây dựng bảng ma trận 4x4 cyberpunk tương tác, trình bày chi tiết phân tích học thuật độ phức tạp thuật toán ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và điều khoản tuân thủ **ISO/IEC 27017 CLD** cho 4 tầng bảo vệ Zero Trust.
+- **Tích hợp Premium SOC Tabs ([security-tabs-container.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/security-tabs-container.tsx)):** Thiết kế và bố trí layout menu responsive Grid 4 tab mượt mà để chuyển đổi nhanh giữa Giám sát SOC, Sổ cái WORM, Giả lập Sandbox và Ma trận học thuật.
+- **Động cơ mã QR động thích ứng ([page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx)):** Đọc động HTTP Host của request để sinh mã QR trỏ chính xác về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud). Khắc phục triệt để việc hardcode domain tĩnh giúp hội đồng PTIT dễ dàng quét QR và trải nghiệm chặn IP tức thời trên máy local.
+
 ## [1.7.0] - 2026-05-31
 
 ### Phòng thủ chủ động — Bẫy Honeypot Chủ động (Active Honeypot Decoy)

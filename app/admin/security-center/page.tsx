@@ -16,12 +16,20 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { IpBlocklistWidget } from '@/components/admin/security/ip-blocklist-widget';
 import { SocRealtimeListener } from '@/components/admin/security/soc-realtime-listener';
+import { headers } from 'next/headers';
+import { TechnicalAcademicMatrix } from '@/components/admin/security/matrix-blueprint';
 
 export default async function SecurityCenterPage({ searchParams }: { searchParams: Promise<any> }) {
     const globalAccess = await isGlobalAdmin();
     if (!globalAccess) redirect('/admin');
     
     const stats = await getSecurityStats();
+    
+    // Resolve dynamic host for live fire QR Code
+    const headersList = await headers();
+    const host = headersList.get('host') || 'tdcrt.vercel.app';
+    const protocol = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+    const councilUrl = `${protocol}://${host}/council`;
     
     // Resolve search params for logs
     const resolvedParams = await searchParams;
@@ -350,15 +358,15 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                         <div className="relative">
                             <div className="absolute inset-0 rounded-2xl bg-amber-500/10 animate-pulse pointer-events-none" />
                             <img
-                                src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://tdcrt.vercel.app/council&color=f59e0b&bgcolor=0f172a&margin=6"
-                                alt="QR Council Portal — tdcrt.vercel.app/council"
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(councilUrl)}&color=f59e0b&bgcolor=0f172a&margin=6`}
+                                alt={`QR Council Portal — ${host}/council`}
                                 className="w-28 h-28 sm:w-36 sm:h-36 rounded-xl border-2 border-amber-500/50 group-hover:scale-105 transition-transform relative z-10"
                             />
                         </div>
                         <div className="text-center">
                             <div className="text-[9px] text-amber-400/70 font-bold uppercase tracking-widest">📱 Quét để tấn công</div>
                             <div className="text-[11px] font-black text-amber-400 leading-tight">Threat Simulator</div>
-                            <div className="text-[8px] text-slate-500 font-mono mt-0.5">tdcrt.vercel.app/council</div>
+                            <div className="text-[8px] text-slate-500 font-mono mt-0.5">{host}/council</div>
                         </div>
                     </div>
 
@@ -379,12 +387,22 @@ export default async function SecurityCenterPage({ searchParams }: { searchParam
                 </div>
             </div>
 
-            {/* Premium Tabbed Interface */}
-            <SecurityTabsContainer 
-                realtimeSocNode={realtimeSocNode}
-                wormVaultNode={wormVaultNode}
-                sandboxNode={sandboxNode}
-            />
+            {/* Academic Blueprint Matrix Node */}
+            {(() => {
+                const blueprintNode = (
+                    <div className="animate-in fade-in duration-300">
+                        <TechnicalAcademicMatrix />
+                    </div>
+                );
+                return (
+                    <SecurityTabsContainer 
+                        realtimeSocNode={realtimeSocNode}
+                        wormVaultNode={wormVaultNode}
+                        sandboxNode={sandboxNode}
+                        blueprintNode={blueprintNode}
+                    />
+                );
+            })()}
         </div>
     );
 }
