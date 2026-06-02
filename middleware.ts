@@ -1,6 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextResponse, type NextRequest } from 'next/server';
+import { redisClient } from './lib/security/redis-client';
 
 // 1. Pre-allocated Constants (Cố định vùng nhớ ngoài hàm)
 const intlMiddleware = createMiddleware(routing);
@@ -132,63 +133,117 @@ export default async function middleware(request: NextRequest) {
         }
     }
 
-    // 4. Thực thi SOAR & IP Whitelist bằng truy vấn cấu hình bảo mật từ DB
+    // 4. Thực thi SOAR & IP Whitelist bằng Redis Edge Cache kết hợp Fallback và Negative Caching
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (supabaseUrl && supabaseAnonKey && hostname !== 'localhost:3000') {
+    if (hostname !== 'localhost:3000') {
         try {
-            // A. Check GLOBAL SOAR Block: Kiểm tra xem IP hiện tại có đang bị chặn trong blocked_ips toàn hệ thống không
-            const nowIso = new Date().toISOString();
-            const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?ip=eq.${clientIp}&blocked_until=gt.${nowIso}&select=reason`;
-            const blockRes = await fetch(blockFetchUrl, {
-                headers: {
-                    'apikey': supabaseAnonKey,
-                    'Authorization': `Bearer ${supabaseAnonKey}`
-                },
-                // Cache kết quả 15 giây tại Edge để đảm bảo hiệu năng
-                next: { revalidate: 15 }
-            });
+            // --- BƯỚC A: KIỂM TRA IP BLOCKLIST (GLOBAL SOAR) ---
+            const redisBlockKey = `blocklist:${clientIp}`;
+            const cachedBlock = await redisClient.get<any>(redisBlockKey);
 
-            if (blockRes.ok) {
-                const blockData = await blockRes.json();
-                if (blockData && blockData.length > 0) {
+            if (cachedBlock !== null) {
+                // Nếu cache hit
+                if (cachedBlock !== false && typeof cachedBlock === 'object') {
                     isIpBlocked = true;
-                    blockReason = blockData[0].reason || '';
+                    blockReason = cachedBlock.reason || 'Banned by SOAR Active Defense';
                 }
-            }
-
-            // B. Tiếp tục kiểm tra cấu hình Tenant cụ thể (nếu IP chưa bị chặn và hostname hợp lệ)
-            if (!isIpBlocked) {
-                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
-                const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
-                
-                const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,modules_config,lifecycle_status`;
-                const dbRes = await fetch(fetchUrl, {
+                // Nếu cachedBlock === false, nghĩa là IP an toàn (Negative Cache Hit), bỏ qua check DB.
+            } else if (supabaseUrl && supabaseAnonKey) {
+                // Cache miss -> Thực hiện Fallback query Postgres và ghi đè ngược cache Redis
+                const nowIso = new Date().toISOString();
+                const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?ip=eq.${clientIp}&blocked_until=gt.${nowIso}&select=reason,blocked_until`;
+                const blockRes = await fetch(blockFetchUrl, {
                     headers: {
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${supabaseAnonKey}`
-                    },
-                    // Cache kết quả 30 giây tại Edge để giảm tải cho Supabase
-                    next: { revalidate: 30 }
+                    }
                 });
-                
-                if (dbRes.ok) {
-                    const data = await dbRes.json();
-                    if (data && data.length > 0) {
-                        const tenant = data[0];
-                        if (tenant.lifecycle_status === 'suspended') {
+
+                if (blockRes.ok) {
+                    const blockData = await blockRes.json();
+                    if (blockData && blockData.length > 0) {
+                        isIpBlocked = true;
+                        blockReason = blockData[0].reason || '';
+                        
+                        // Tính TTL còn lại để đồng bộ chính xác lên Redis
+                        const blockedUntil = blockData[0].blocked_until ? new Date(blockData[0].blocked_until) : null;
+                        let ttl: number | undefined;
+                        if (blockedUntil) {
+                            const diffMs = blockedUntil.getTime() - Date.now();
+                            ttl = diffMs > 0 ? Math.ceil(diffMs / 1000) : undefined;
+                        }
+                        
+                        await redisClient.set(redisBlockKey, { reason: blockReason, blocked_until: blockData[0].blocked_until }, { ex: ttl });
+                    } else {
+                        // Negative Caching: IP an toàn, cache lại 'false' trong 15s để chặn DDoS spam DB
+                        await redisClient.set(redisBlockKey, false, { ex: 15 });
+                    }
+                }
+            }
+
+            // --- BƯỚC B: KIỂM TRA CẤU HÌNH TENANT (INTRANET LOCKDOWN) ---
+            if (!isIpBlocked) {
+                const redisTenantKey = `tenant:${hostname}`;
+                const cachedTenant = await redisClient.get<any>(redisTenantKey);
+
+                if (cachedTenant !== null) {
+                    // Cache hit
+                    if (cachedTenant !== false && typeof cachedTenant === 'object') {
+                        if (cachedTenant.lifecycle_status === 'suspended') {
                             isSuspended = true;
                         }
-                        const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist;
-                        if (ipWhitelistStr) {
-                            allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
+                        if (cachedTenant.ip_whitelist) {
+                            allowedIps = cachedTenant.ip_whitelist.split(',').map((ip: string) => ip.trim()).filter(Boolean);
+                        }
+                    }
+                    // Nếu cachedTenant === false, nghĩa là Tenant không tồn tại, không check DB tiếp.
+                } else if (supabaseUrl && supabaseAnonKey) {
+                    // Cache miss -> Thực hiện Fallback query Postgres và ghi đè cache Redis
+                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
+                    const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
+                    
+                    const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,domain,modules_config,lifecycle_status`;
+                    const dbRes = await fetch(fetchUrl, {
+                        headers: {
+                            'apikey': supabaseAnonKey,
+                            'Authorization': `Bearer ${supabaseAnonKey}`
+                        }
+                    });
+
+                    if (dbRes.ok) {
+                        const data = await dbRes.json();
+                        if (data && data.length > 0) {
+                            const tenant = data[0];
+                            const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist || null;
+                            
+                            const tenantConfig = {
+                                id: tenant.id,
+                                domain: tenant.domain,
+                                lifecycle_status: tenant.lifecycle_status,
+                                ip_whitelist: ipWhitelistStr
+                            };
+
+                            if (tenant.lifecycle_status === 'suspended') {
+                                isSuspended = true;
+                            }
+                            if (ipWhitelistStr) {
+                                allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
+                            }
+
+                            // Ghi cache cho cả domain và ID trong 10 phút (600 giây)
+                            await redisClient.set(redisTenantKey, tenantConfig, { ex: 600 });
+                            await redisClient.set(`tenant:${tenant.id}`, tenantConfig, { ex: 600 });
+                        } else {
+                            // Negative Caching: Tenant không tồn tại, cache lại 'false' trong 30s để tránh brute force subdomains
+                            await redisClient.set(redisTenantKey, false, { ex: 30 });
                         }
                     }
                 }
             }
         } catch (err) {
-            console.error('[Middleware] Lỗi fetch cấu hình an ninh từ DB:', err);
+            console.error('[Middleware] Lỗi xử lý an ninh bằng Redis Edge Cache:', err);
         }
     }
 

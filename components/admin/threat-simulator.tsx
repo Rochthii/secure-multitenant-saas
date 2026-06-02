@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ShieldAlert, ShieldX, CheckCircle2, Loader2, AlertTriangle, Zap, Lock, Eye, Database, Search, Code, BarChart2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { AttackFlowMap } from './security/attack-flow-map';
 
 type Scenario = 'cross_tenant_read' | 'cache_pollution' | 'sql_injection' | 'noisy_neighbor';
 
@@ -343,6 +344,14 @@ export function ThreatSimulator() {
                         </div>
                     )}
                 </Button>
+
+                {/* Bản Đồ Luồng Tấn Công Động */}
+                <AttackFlowMap
+                    activeScenario={activeScenario}
+                    running={running}
+                    phase={phase}
+                    result={result}
+                />
 
                 {/* Interactive Code & Performance Tab Control */}
                 <div className="border border-slate-800 bg-slate-950/40 rounded-2xl p-4 space-y-4">

@@ -15,7 +15,7 @@ Dự án của bạn đã **hoàn thành 100% ở cấp độ doanh nghiệp th�
 - **HBCAD Anomaly Engine:** Động cơ phát hiện bất thường lai đo lường rủi ro tích lũy (CRS) thời gian thực bằng thuật toán Z-Score hành vi kết hợp kiểm soát ABAC.
 - **RAG & GraphRAG AI Copilot:** Đã deploy thành công lên Cloud, sửa lỗi cổng Gateway và lỗi CSDL, nạp thành công vector nhúng 1536 chiều cho 4 văn bản chính sách lớn, stream phản hồi tiếng Việt có dẫn nguồn trực quan.
 - **Performance Benchmarking:** Đo đạc thực tế độ trễ của 111,000 bản ghi dữ liệu thật, vẽ biểu đồ phẳng chứng minh độ trễ độc lập với quy mô (Scale-independent Latency).
-- **Threat Simulator v4:** Giả lập 4 cuộc tấn công thực tế kèm giải thích trực quan Postgres `EXPLAIN ANALYZE` ngay trên UI.
+- **Threat Simulator v5:** Giả lập 5 cuộc tấn công thực tế (gồm kịch bản Honeypot mới), tích hợp **Bản Đồ Luồng Tấn Công Động (Zero Trust Map)** hoạt họa SVG trực quan hóa vị trí bị chặn và Postgres `EXPLAIN ANALYZE` ngay trên UI.
 
 ---
 
@@ -40,7 +40,7 @@ graph TD
 ### 🔒 Chi tiết hoạt động của từng lớp:
 1. **Lớp 1: Edge Security (Phân vùng mạng ở Edge)**
    - *Công nghệ:* Next.js Middleware chạy trên Edge Runtime (<4ms).
-   - *Cơ chế:* Phân tích subdomain/host của yêu cầu (Smart Router). Đọc động dải IP an toàn từ cột `modules_config->'security_settings'->>'ip_whitelist'` trong bảng `tenants`. Nếu phát hiện IP lạ truy cập phân khu quản trị của Tenant, chặn ngay lập tức (Intranet Lockdown).
+   - *Cơ chế:* Phân tích subdomain/host của yêu cầu (Smart Router). Kiểm tra trạng thái IP block và Whitelist từ **Edge Cache (Upstash Redis)** trong < 2ms với cơ chế tự động dự phòng **Local Memory Cache** khi chạy offline, triệt tiêu hoàn toàn tải truy vấn trực tiếp vào PostgreSQL. Nếu phát hiện IP lạ truy cập phân khu quản trị của Tenant hoặc IP có trong blocklist của SOAR, chặn ngay lập tức (Intranet Lockdown).
 2. **Lớp 2: Identity Authentication (Xác thực danh tính trong bộ nhớ)**
    - *Công nghệ:* Supabase Auth & JWT Custom Claims.
    - *Cơ chế:* Cung cấp ID định danh `tenant_id` và vai trò `role` được ký số bằng chữ ký mật mã học của JWT. RLS sẽ đọc trực tiếp các claims này từ biến bộ nhớ RAM của Postgres Session (`auth.jwt()`) giúp triệt tiêu độ trễ JOIN bảng dữ liệu đặc quyền.

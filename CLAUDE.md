@@ -23,6 +23,6 @@ Dự án đang trong giai đoạn "Hardening" bảo mật:
 3. **Audit Monitoring:** Theo dõi Audit Logs cho mọi hành động Admin.
 
 ## 🧠 Context Memory
-- **Last Milestone:** Hoàn thành 100% tối ưu hóa an ninh, vá lỗi FTS tiếng Việt & Gateway RAG, nạp vector nhúng 1536, đăng ký Vercel Cron báo cáo Telegram. Đồng bộ hóa và chuẩn hóa thuật ngữ học thuật (RAM Claims $O(1)$ vs Index Scan $O(\log N)$) trên giao diện UI, code logic, cẩm nang phản biện Walkthrough và tài liệu tĩnh `docs/`. Toàn bộ đã push sạch sẽ lên GitHub main.
-- **Current Focus:** Chuẩn bị tối ưu cho buổi bảo vệ tốt nghiệp PTIT.
-- **Next Step:** Soạn slide thuyết trình 10 phút, chuẩn bị kịch bản demo an ninh thực chiến (SOC Dashboard, Threat Simulator, Auto-suspend SOAR).
+- **Last Milestone:** Tích hợp bộ đệm an ninh mạng biên Edge Cache (Upstash Redis kết hợp Local Memory Cache dự phòng) giúp Middleware xử lý dưới < 3ms và chặn đứng DDoS spam DB. Xây dựng Sơ đồ luồng tấn công tương tác SVG động (Zero Trust Map) mô phỏng hoạt họa các chốt chặn an toàn cho Threat Simulator v5. Toàn bộ dự án biên dịch thành công 100% không phát sinh lỗi kiểu TypeScript.
+- **Current Focus:** Chuẩn bị tối ưu và hoàn tất slide thuyết trình tốt nghiệp PTIT.
+- **Next Step:** Soạn slide thuyết trình 10 phút, chuẩn bị kịch bản demo an ninh thực chiến (SOC Dashboard, Threat Simulator, Auto-suspend SOAR, Zero Trust SVG Map).
