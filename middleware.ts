@@ -105,10 +105,11 @@ export default async function middleware(request: NextRequest) {
 
 
     // 2. Nhận dạng IP khách truy cập an toàn (Chống IP Spoofing trên Cloudflare/Vercel)
-    const clientIp = (request as any).ip || 
+    const clientIp = request.headers.get('cf-connecting-ip') || // Ưu tiên hàng đầu từ Cloudflare
                      request.headers.get('x-vercel-forwarded-for')?.split(',')[0] || 
                      request.headers.get('x-forwarded-for')?.split(',')[0] || 
                      request.headers.get('x-real-ip') || 
+                     (request as any).ip || 
                      '127.0.0.1';
 
     let allowedIps: string[] | null = null;
@@ -200,23 +201,22 @@ export default async function middleware(request: NextRequest) {
                     }
                     // Nếu cachedTenant === false, nghĩa là Tenant không tồn tại, không check DB tiếp.
                 } else if (supabaseUrl && supabaseAnonKey) {
-                    // Cache miss -> Thực hiện Fallback query Postgres và ghi đè cache Redis
-                    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(hostname);
-                    const queryParam = isUuid ? `id=eq.${hostname}` : `domain=eq.${hostname}`;
-                    
-                    const fetchUrl = `${supabaseUrl}/rest/v1/tenants?${queryParam}&select=id,domain,modules_config,lifecycle_status`;
+                    // Cache miss -> Thực hiện gọi RPC bảo mật và ghi đè cache Redis
+                    const fetchUrl = `${supabaseUrl}/rest/v1/rpc/get_tenant_routing_config`;
                     const dbRes = await fetch(fetchUrl, {
+                        method: 'POST',
                         headers: {
                             'apikey': supabaseAnonKey,
-                            'Authorization': `Bearer ${supabaseAnonKey}`
-                        }
+                            'Authorization': `Bearer ${supabaseAnonKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ p_hostname: hostname })
                     });
 
                     if (dbRes.ok) {
-                        const data = await dbRes.json();
-                        if (data && data.length > 0) {
-                            const tenant = data[0];
-                            const ipWhitelistStr = tenant.modules_config?.security_settings?.ip_whitelist || null;
+                        const tenant = await dbRes.json();
+                        if (tenant) {
+                            const ipWhitelistStr = tenant.ip_whitelist || null;
                             
                             const tenantConfig = {
                                 id: tenant.id,

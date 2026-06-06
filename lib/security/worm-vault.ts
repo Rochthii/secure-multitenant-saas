@@ -167,43 +167,67 @@ export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; tota
     const supabase = (await createAdminClient()) as any;
     const ledger = await loadWormLedger();
     
-    // Fetch logs from DB sorted by created_at ascending
-    const { data: dbLogs, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: true });
-        
-    if (error) {
-        throw new Error(`Database error fetching audit logs: ${error.message}`);
+    // Tìm mốc thời gian cuối cùng đã được đồng bộ trong Ledger
+    let lastSyncedTimestamp = '1970-01-01T00:00:00.000Z';
+    if (ledger.length > 0) {
+        lastSyncedTimestamp = ledger[ledger.length - 1].timestamp;
     }
     
-    const logs = dbLogs || [];
     let syncedCount = 0;
-    
-    // Find logs that are not yet in the ledger
-    const ledgerLogIds = new Set(ledger.map(b => b.id));
-    
-    for (const log of logs) {
-        if (!ledgerLogIds.has(log.id)) {
-            const index = ledger.length + 1;
-            const prev_hash = ledger.length > 0 ? ledger[ledger.length - 1].hash : GENESIS_HASH;
+    const batchSize = 1000; // Phân trang 1000 bản ghi mỗi batch để tránh OOM
+    let hasMore = true;
+    let currentCursor = lastSyncedTimestamp;
+
+    while (hasMore) {
+        // Chỉ fetch các logs mới phát sinh có created_at lớn hơn block cuối cùng
+        const { data: dbLogs, error } = await supabase
+            .from('audit_logs')
+            .select('*')
+            .gt('created_at', currentCursor)
+            .order('created_at', { ascending: true })
+            .limit(batchSize);
             
-            const newBlock: Omit<WormBlock, 'hash'> = {
-                index,
-                id: log.id,
-                tenant_id: log.tenant_id,
-                user_email: log.user_email,
-                action: log.action,
-                table_name: log.table_name,
-                record_id: log.record_id,
-                severity: log.severity || 'info',
-                timestamp: new Date(log.created_at).toISOString(),
-                prev_hash
-            };
-            
-            const hash = calculateBlockHash(newBlock);
-            ledger.push({ ...newBlock, hash });
-            syncedCount++;
+        if (error) {
+            throw new Error(`Database error fetching audit logs: ${error.message}`);
+        }
+        
+        const logs = dbLogs || [];
+        if (logs.length === 0) {
+            hasMore = false;
+            break;
+        }
+        
+        const ledgerLogIds = new Set(ledger.map(b => b.id));
+        
+        for (const log of logs) {
+            if (!ledgerLogIds.has(log.id)) {
+                const index = ledger.length + 1;
+                const prev_hash = ledger.length > 0 ? ledger[ledger.length - 1].hash : GENESIS_HASH;
+                
+                const newBlock: Omit<WormBlock, 'hash'> = {
+                    index,
+                    id: log.id,
+                    tenant_id: log.tenant_id,
+                    user_email: log.user_email,
+                    action: log.action,
+                    table_name: log.table_name,
+                    record_id: log.record_id,
+                    severity: log.severity || 'info',
+                    timestamp: new Date(log.created_at).toISOString(),
+                    prev_hash
+                };
+                
+                const hash = calculateBlockHash(newBlock);
+                ledger.push({ ...newBlock, hash });
+                syncedCount++;
+            }
+            // Di chuyển cursor lên log hiện tại
+            currentCursor = log.created_at;
+        }
+
+        // Nếu số lượng lấy ra ít hơn limit batch, nghĩa là đã hết logs mới
+        if (logs.length < batchSize) {
+            hasMore = false;
         }
     }
     
