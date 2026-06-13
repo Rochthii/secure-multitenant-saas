@@ -1,7 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextResponse, type NextRequest } from 'next/server';
-import { redisClient } from './lib/security/redis-client';
+import { getLockdownHtml } from './lib/security/lockdown-templates';
+import { checkEdgeDefense } from './lib/security/edge-defense';
 
 // 1. Pre-allocated Constants (Cố định vùng nhớ ngoài hàm)
 const intlMiddleware = createMiddleware(routing);
@@ -14,46 +15,6 @@ const HOSTNAME_MAP: Record<string, string> = {
 
 // Danh sách tenant cho phép chuyển đổi qua ?tenant= trên production (demo hội đồng)
 const DEMO_TENANT_WHITELIST = new Set(['nexus']);
-
-
-
-// Hàm tạo template HTML trang lỗi đa ngôn ngữ an toàn, gọn nhẹ chạy tại Edge
-const getLockdownHtml = (status: 'SUSPENDED' | 'IP_BLOCKED' | 'INTRANET_LOCKDOWN', ip: string, locale: string, reason?: string) => {
-    const messages = {
-        vi: {
-            title: status === 'SUSPENDED' ? '🚨 HỆ THỐNG PHONG TỎA KHẦN CẤP' : '🔒 TRUY CẬP BỊ GIỚI HẠN',
-            desc: status === 'SUSPENDED' 
-                ? 'Tổ chức này tạm thời bị đình chỉ hoạt động do hệ thống SOAR tự động phát hiện hành vi tấn công mạng dồn dập hoặc theo lệnh khẩn cấp từ Super Admin để bảo toàn dữ liệu.' 
-                : 'Chi nhánh này đã thiết lập chính sách giới hạn dải IP mạng nội bộ. Địa chỉ IP hiện tại của bạn không nằm trong danh sách được phép truy cập.',
-        },
-        en: {
-            title: status === 'SUSPENDED' ? '🚨 EMERGENCY SOAR LOCKDOWN' : '🔒 RESTRICTED ACCESS',
-            desc: status === 'SUSPENDED' 
-                ? 'This organization has been temporarily suspended by the SOAR system due to detected cyberattacks or an emergency order from the Super Admin to preserve data integrity.' 
-                : 'This branch has enforced an intranet IP whitelist policy. Your current IP address is not authorized to access this network.',
-        },
-        km: {
-            title: status === 'SUSPENDED' ? '🚨 ប្រព័ន្ធត្រូវបានបិទជាបន្ទាន់ (SOAR LOCKDOWN)' : '🔒 ការចូលប្រើប្រាស់ត្រូវបានកំណត់ (INTRANET LOCKDOWN)',
-            desc: status === 'SUSPENDED' 
-                ? 'ស្ថាប័ននេះត្រូវបានផ្អាកដំណើរការជាបណ្តោះអាសន្នដោយសារតែប្រព័ន្ធ SOAR រកឃើញការវាយប្រហារបណ្តាញ ឬតាមបញ្ជាបន្ទាន់ពី Super Admin ដើម្បីការពារទិន្នន័យ។' 
-                : 'សាខានេះបានកំណត់គោលការណ៍អនុញ្ញាតតែអាសយដ្ឋាន IP ក្នុងបណ្តាញផ្ទៃក្នុងប៉ុណ្ណោះ។ អាសយដ្ឋាន IP បច្ចុប្បន្នរបស់អ្នកមិនស្ថិតក្នុងបញ្ជីដែលអាចចូលប្រើបានទេ។',
-        }
-    };
-
-    const lang = messages[locale as 'vi' | 'km' | 'en'] || messages.vi;
-
-    return `<html>
-        <body style="background-color:#0b0f19; color:#f3f4f6; font-family:system-ui,sans-serif; display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; margin:0; text-align:center; padding: 20px;">
-            <div style="border: 1px solid ${status === 'SUSPENDED' ? '#ef4444' : '#3b82f6'}; background-color: ${status === 'SUSPENDED' ? 'rgba(239,68,68,0.08)' : 'rgba(59,130,246,0.08)'}; padding: 40px; border-radius: 20px; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                <h1 style="color:${status === 'SUSPENDED' ? '#ef4444' : '#3b82f6'}; font-size: 20px; margin-top: 0; font-weight: 800; letter-spacing: -0.5px; font-family: system-ui, sans-serif;">${lang.title}</h1>
-                <p style="color:#9ca3af; font-size: 14px; line-height: 1.6; margin: 20px 0 30px 0;">${lang.desc}</p>
-                <div style="font-size: 11px; color: #6b7280; border-top: 1px solid #1f2937; padding-top: 15px; font-family: monospace;">
-                    STATUS: ${status === 'SUSPENDED' ? 'TENANT_SUSPENDED' : 'IP_NOT_WHITELISTED'} | YOUR IP: ${ip}
-                </div>
-            </div>
-        </body>
-    </html>`;
-};
 
 /**
  * Multi-tenant Middleware - "Ultra Lean" Edition (Target < 4ms)
@@ -102,8 +63,6 @@ export default async function middleware(request: NextRequest) {
         hostname = 'localhost:3000';
     }
 
-
-
     // 2. Nhận dạng IP khách truy cập an toàn (Chống IP Spoofing trên Cloudflare/Vercel)
     const clientIp = request.headers.get('cf-connecting-ip') || // Ưu tiên hàng đầu từ Cloudflare
                      request.headers.get('x-vercel-forwarded-for')?.split(',')[0] || 
@@ -134,123 +93,27 @@ export default async function middleware(request: NextRequest) {
         }
     }
 
-    // 4. Thực thi SOAR & IP Whitelist bằng Redis Edge Cache kết hợp Fallback và Negative Caching
+    // 4. Thực thi SOAR & IP Whitelist bằng Edge Defense Engine
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (hostname !== 'localhost:3000') {
-        try {
-            // --- BƯỚC A: KIỂM TRA IP BLOCKLIST (GLOBAL SOAR) ---
-            const redisBlockKey = `blocklist:${clientIp}`;
-            const cachedBlock = await redisClient.get<any>(redisBlockKey);
-
-            if (cachedBlock !== null) {
-                // Nếu cache hit
-                if (cachedBlock !== false && typeof cachedBlock === 'object') {
-                    isIpBlocked = true;
-                    blockReason = cachedBlock.reason || 'Banned by SOAR Active Defense';
-                }
-                // Nếu cachedBlock === false, nghĩa là IP an toàn (Negative Cache Hit), bỏ qua check DB.
-            } else if (supabaseUrl && supabaseAnonKey) {
-                // Cache miss -> Thực hiện Fallback query Postgres và ghi đè ngược cache Redis
-                const nowIso = new Date().toISOString();
-                const blockFetchUrl = `${supabaseUrl}/rest/v1/blocked_ips?ip=eq.${clientIp}&blocked_until=gt.${nowIso}&select=reason,blocked_until`;
-                const blockRes = await fetch(blockFetchUrl, {
-                    headers: {
-                        'apikey': supabaseAnonKey,
-                        'Authorization': `Bearer ${supabaseAnonKey}`
-                    }
-                });
-
-                if (blockRes.ok) {
-                    const blockData = await blockRes.json();
-                    if (blockData && blockData.length > 0) {
-                        isIpBlocked = true;
-                        blockReason = blockData[0].reason || '';
-                        
-                        // Tính TTL còn lại để đồng bộ chính xác lên Redis
-                        const blockedUntil = blockData[0].blocked_until ? new Date(blockData[0].blocked_until) : null;
-                        let ttl: number | undefined;
-                        if (blockedUntil) {
-                            const diffMs = blockedUntil.getTime() - Date.now();
-                            ttl = diffMs > 0 ? Math.ceil(diffMs / 1000) : undefined;
-                        }
-                        
-                        await redisClient.set(redisBlockKey, { reason: blockReason, blocked_until: blockData[0].blocked_until }, { ex: ttl });
-                    } else {
-                        // Negative Caching: IP an toàn, cache lại 'false' trong 15s để chặn DDoS spam DB
-                        await redisClient.set(redisBlockKey, false, { ex: 15 });
-                    }
-                }
-            }
-
-            // --- BƯỚC B: KIỂM TRA CẤU HÌNH TENANT (INTRANET LOCKDOWN) ---
-            if (!isIpBlocked) {
-                const redisTenantKey = `tenant:${hostname}`;
-                const cachedTenant = await redisClient.get<any>(redisTenantKey);
-
-                if (cachedTenant !== null) {
-                    // Cache hit
-                    if (cachedTenant !== false && typeof cachedTenant === 'object') {
-                        if (cachedTenant.lifecycle_status === 'suspended') {
-                            isSuspended = true;
-                        }
-                        if (cachedTenant.ip_whitelist) {
-                            allowedIps = cachedTenant.ip_whitelist.split(',').map((ip: string) => ip.trim()).filter(Boolean);
-                        }
-                    }
-                    // Nếu cachedTenant === false, nghĩa là Tenant không tồn tại, không check DB tiếp.
-                } else if (supabaseUrl && supabaseAnonKey) {
-                    // Cache miss -> Thực hiện gọi RPC bảo mật và ghi đè cache Redis
-                    const fetchUrl = `${supabaseUrl}/rest/v1/rpc/get_tenant_routing_config`;
-                    const dbRes = await fetch(fetchUrl, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': supabaseAnonKey,
-                            'Authorization': `Bearer ${supabaseAnonKey}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ p_hostname: hostname })
-                    });
-
-                    if (dbRes.ok) {
-                        const tenant = await dbRes.json();
-                        if (tenant) {
-                            const ipWhitelistStr = tenant.ip_whitelist || null;
-                            
-                            const tenantConfig = {
-                                id: tenant.id,
-                                domain: tenant.domain,
-                                lifecycle_status: tenant.lifecycle_status,
-                                ip_whitelist: ipWhitelistStr
-                            };
-
-                            if (tenant.lifecycle_status === 'suspended') {
-                                isSuspended = true;
-                            }
-                            if (ipWhitelistStr) {
-                                allowedIps = ipWhitelistStr.split(',').map((ip: string) => ip.trim()).filter(Boolean);
-                            }
-
-                            // Ghi cache cho cả domain và ID trong 10 phút (600 giây)
-                            await redisClient.set(redisTenantKey, tenantConfig, { ex: 600 });
-                            await redisClient.set(`tenant:${tenant.id}`, tenantConfig, { ex: 600 });
-                        } else {
-                            // Negative Caching: Tenant không tồn tại, cache lại 'false' trong 30s để tránh brute force subdomains
-                            await redisClient.set(redisTenantKey, false, { ex: 30 });
-                        }
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('[Middleware] Lỗi xử lý an ninh bằng Redis Edge Cache:', err);
-        }
+        const defenseResult = await checkEdgeDefense(clientIp, hostname, supabaseUrl, supabaseAnonKey);
+        isSuspended = defenseResult.isSuspended;
+        isIpBlocked = defenseResult.isIpBlocked;
+        allowedIps = defenseResult.allowedIps;
+        blockReason = defenseResult.blockReason;
     }
 
-    // Chặn khẩn cấp nếu Tenant bị tạm khóa
-    if (isSuspended) {
+    // 5. Kiểm tra và áp dụng các bộ lọc chặn an ninh biên
+    const lockdownStatus = isSuspended ? 'SUSPENDED' 
+        : isIpBlocked ? 'IP_BLOCKED' 
+        : (allowedIps && allowedIps.length > 0 && !allowedIps.includes(clientIp)) ? 'INTRANET_LOCKDOWN' 
+        : null;
+
+    if (lockdownStatus) {
         return new NextResponse(
-            getLockdownHtml('SUSPENDED', clientIp, detectedLocale),
+            getLockdownHtml(lockdownStatus, clientIp, detectedLocale, blockReason),
             { 
                 status: 403,
                 headers: { 'Content-Type': 'text/html; charset=utf-8' }
@@ -258,37 +121,8 @@ export default async function middleware(request: NextRequest) {
         );
     }
 
-    // Chặn nếu IP bị SOAR block động
-    if (isIpBlocked) {
-        return new NextResponse(
-            getLockdownHtml('IP_BLOCKED', clientIp, detectedLocale, blockReason),
-            { 
-                status: 403,
-                headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            }
-        );
-    }
-
-    // Chặn nếu IP không nằm trong Whitelist nội bộ của Tenant
-    if (allowedIps && allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
-        return new NextResponse(
-            getLockdownHtml('INTRANET_LOCKDOWN', clientIp, detectedLocale),
-            { 
-                status: 403,
-                headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            }
-        );
-    }
-
-    // 5. Xử lý Root/Admin Routes (Chặn sớm và bỏ qua rewrite multi-tenant)
     // 6. Xử lý Root/Admin Routes (Chặn sớm và bỏ qua rewrite multi-tenant)
-    let isRootRoute = false;
-    for (const route of ROOT_ROUTES) {
-        if (pathNoLocale === route || pathNoLocale.startsWith(route + '/')) {
-            isRootRoute = true;
-            break;
-        }
-    }
+    const isRootRoute = ROOT_ROUTES.some(route => pathNoLocale === route || pathNoLocale.startsWith(route + '/'));
 
     if (isRootRoute) {
         if (hasLocalePrefix) {
