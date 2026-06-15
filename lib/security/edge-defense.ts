@@ -65,6 +65,11 @@ export async function checkEdgeDefense(
                         ttl = diffMs > 0 ? Math.ceil(diffMs / 1000) : undefined;
                     }
                     
+                    // Nếu không phải chế độ cloud (chạy RAM local), giới hạn TTL tối đa 10 giây để tránh desync giữa các instance Vercel
+                    if (!redisClient.isCloudMode() && ttl && ttl > 10) {
+                        ttl = 10;
+                    }
+                    
                     await redisClient.set(redisBlockKey, { reason: blockReason, blocked_until: blockData[0].blocked_until }, { ex: ttl });
                 } else {
                     // Negative Caching: IP an toàn, cache lại 'false' trong 15s để chặn DDoS spam DB
@@ -122,8 +127,10 @@ export async function checkEdgeDefense(
                         }
 
                         // Ghi cache cho cả domain và ID trong 10 phút (600 giây)
-                        await redisClient.set(redisTenantKey, tenantConfig, { ex: 600 });
-                        await redisClient.set(`tenant:${tenant.id}`, tenantConfig, { ex: 600 });
+                        // Nếu không phải chế độ cloud (chạy RAM local), giới hạn TTL tối đa 10 giây để tránh desync
+                        const tenantTtl = redisClient.isCloudMode() ? 600 : 10;
+                        await redisClient.set(redisTenantKey, tenantConfig, { ex: tenantTtl });
+                        await redisClient.set(`tenant:${tenant.id}`, tenantConfig, { ex: tenantTtl });
                     } else {
                         // Negative Caching: Tenant không tồn tại, cache lại 'false' trong 30s để tránh brute force subdomains
                         await redisClient.set(redisTenantKey, false, { ex: 30 });
