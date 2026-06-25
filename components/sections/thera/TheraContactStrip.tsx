@@ -14,7 +14,7 @@ interface TheraContactStripProps {
 export function TheraContactStrip({ settings = {}, siteName }: TheraContactStripProps) {
     const address = settings['address'] || '';
     const phone = settings['contact_phone'] || '0938 787 165';
-    const email = settings['contact_email'] || 'contact@chantarangsay.org';
+    const email = settings['contact_email'] || '';
     const transactionZalu = settings['transaction_zalo_qr'] || null;
 
     return (

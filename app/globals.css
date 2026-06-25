@@ -19,7 +19,7 @@
 
         /* ── Theme Fallback Variables ───────────────────────────────────
            These are overridden per-tenant by layout.tsx injection.
-           Defaults match Chantarangsay's Buddhist gold/coffee palette.
+           Defaults match the system's gold/coffee palette.
         ─────────────────────────────────────────────────────────────── */
         --theme-primary: 245 158 11;
         --theme-primary-dark: 208 140 9;

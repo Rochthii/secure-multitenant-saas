@@ -4,17 +4,15 @@ import React, { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
-    createDharmaTalk,
-    updateDharmaTalk,
-    deleteDharmaTalk,
+    createLearningResource,
+    updateLearningResource,
+    deleteLearningResource,
     fetchYouTubeInfo,
-    submitDharmaTalkForReview,
-} from '@/app/actions/admin/dharma-talks';
-import { ApproveRejectButtons } from '@/components/admin/approve-reject-buttons';
+    submitLearningResourceForReview,
+} from '@/app/actions/admin/learning-resources';
 import { TagInput } from '@/components/admin/tag-input';
 import { getItemTags } from '@/app/actions/admin/tags';
-import { Badge } from '@/components/ui/badge';
-import { Hash, Send, Search, ChevronDown, Check } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { TenantBroadcastSelect } from '@/components/admin/tenant-broadcast-select';
 import { TenantFilter } from '@/components/admin/tenant-filter';
@@ -22,14 +20,14 @@ import { CustomCategorySelect } from '@/components/admin/custom-category-select'
 import { useSearchParams } from 'next/navigation';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface DharmaTalk {
+interface LearningResource {
     id: string;
     title_vi: string;
     title_km: string | null;
     description_vi: string | null;
     media_url: string;
     thumbnail_url: string | null;
-    speaker_name_vi: string | null;
+    instructor_name_vi: string | null;
     topic_vi: string | null;
     duration_minutes: number | null;
     category_id: string | null;
@@ -43,7 +41,7 @@ interface DharmaTalk {
 }
 
 interface Props {
-    initialTalks: DharmaTalk[];
+    initialTalks: LearningResource[];
     categories: any[];
     tenants: any[];
     contextTenantId: string;
@@ -95,58 +93,56 @@ const IconEye = ({ active }: { active: boolean }) => (
 );
 
 // ─── Form Modal ───────────────────────────────────────────────────────────────
-function TalkFormModal({
-    talk,
+function ResourceFormModal({
+    resource,
     categories,
     tenants,
     contextTenantId,
     currentUserRole,
     onClose,
     onSaved,
-    isCompany,
 }: {
-    talk: DharmaTalk | null;
+    resource: LearningResource | null;
     categories: any[];
     tenants: any[];
     contextTenantId: string;
     currentUserRole: string;
     onClose: () => void;
     onSaved: () => void;
-    isCompany?: boolean;
 }) {
-    const isEdit = !!talk;
+    const isEdit = !!resource;
     const [isPending, startTransition] = useTransition();
     const [submitLoading, setSubmitLoading] = useState(false);
 
     const canPublish = ['admin', 'super_admin'].includes(currentUserRole);
-    const isPublished = talk?.approval_status === 'published';
+    const isPublished = resource?.approval_status === 'published';
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState('');
 
-    const [url, setUrl] = useState(talk?.media_url || '');
-    const [title, setTitle] = useState(talk?.title_vi || '');
-    const [description, setDescription] = useState(talk?.description_vi || '');
-    const [speaker, setSpeaker] = useState(talk?.speaker_name_vi || 'Multi-tenant Ecosystem');
-    const [topic, setTopic] = useState(talk?.topic_vi || '');
-    const [thumbnail, setThumbnail] = useState(talk?.thumbnail_url || '');
-    const [categoryId, setCategoryId] = useState(talk?.category_id || '');
-    const [isFeatured, setIsFeatured] = useState(talk?.is_featured ?? true);
-    const [isActive, setIsActive] = useState(talk?.is_active ?? true);
-    const [orderPos, setOrderPos] = useState(talk?.order_position ?? 99);
+    const [url, setUrl] = useState(resource?.media_url || '');
+    const [title, setTitle] = useState(resource?.title_vi || '');
+    const [description, setDescription] = useState(resource?.description_vi || '');
+    const [instructor, setInstructor] = useState(resource?.instructor_name_vi || 'Multi-tenant Ecosystem');
+    const [topic, setTopic] = useState(resource?.topic_vi || '');
+    const [thumbnail, setThumbnail] = useState(resource?.thumbnail_url || '');
+    const [categoryId, setCategoryId] = useState(resource?.category_id || '');
+    const [isFeatured, setIsFeatured] = useState(resource?.is_featured ?? true);
+    const [isActive, setIsActive] = useState(resource?.is_active ?? true);
+    const [orderPos, setOrderPos] = useState(resource?.order_position ?? 99);
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-    const [publishedTo, setPublishedTo] = useState<string[]>(talk?.published_to || []);
+    const [publishedTo, setPublishedTo] = useState<string[]>(resource?.published_to || []);
 
     useEffect(() => {
-        if (isEdit && talk) {
+        if (isEdit && resource) {
             const fetchTags = async () => {
-                const tags = await getItemTags('dharma_talk_tags', talk.id, contextTenantId);
+                const tags = await getItemTags('learning_resource_tags', resource.id, contextTenantId);
                 setSelectedTagIds(tags.map((t: any) => t.id));
             };
             fetchTags();
         }
-    }, [isEdit, talk, contextTenantId]);
+    }, [isEdit, resource, contextTenantId]);
 
-    // Xây dựng cây danh mục để hiển thị Select Box (thụt lề cấp bậc)
+    // Cây danh mục (thụt lề cấp bậc)
     const categoryGroups = React.useMemo(() => {
         const buildTree = (cats: any[]) => {
             const options: any[] = [];
@@ -172,9 +168,9 @@ function TalkFormModal({
         };
     }, [categories]);
 
-    // Auto-fetch YouTube info khi URL thay đổi
+    // Auto-fetch YouTube info
     const handleUrlBlur = async () => {
-        if (!url || isEdit) return; // Khi edit không auto-fetch để tránh ghi đè
+        if (!url || isEdit) return;
         const ytPattern = /youtu/i;
         if (!ytPattern.test(url)) return;
 
@@ -184,7 +180,7 @@ function TalkFormModal({
             if (info) {
                 if (!title) setTitle(info.title);
                 if (!thumbnail) setThumbnail(info.thumbnail_url);
-                if (!speaker && info.author_name) setSpeaker(info.author_name);
+                if (!instructor && info.author_name) setInstructor(info.author_name);
             }
         } finally {
             setFetching(false);
@@ -222,7 +218,7 @@ function TalkFormModal({
                 targetStatus = 'published';
             } else if (isPublished && !canPublish) {
                 targetStatus = 'pending_review';
-            } else if (canPublish) { // If not published yet, but user can publish, default to published
+            } else if (canPublish) {
                 targetStatus = 'published';
             }
 
@@ -231,20 +227,20 @@ function TalkFormModal({
                 description_vi: description || null,
                 media_url: url,
                 thumbnail_url: thumbnail || null,
-                speaker_name_vi: speaker || null,
+                instructor_name_vi: instructor || null,
                 topic_vi: topic || null,
                 is_featured: isFeatured,
                 is_active: isActive,
                 order_position: orderPos,
                 category_id: categoryId || null,
                 published_to: publishedTo.length > 0 ? publishedTo : null,
-                tenant_id: contextTenantId || (talk as any)?.tenant_id || (categories.find(c => c.id === categoryId)?.tenant_id) || null,
+                tenant_id: contextTenantId || (resource as any)?.tenant_id || (categories.find(c => c.id === categoryId)?.tenant_id) || null,
                 approval_status: targetStatus,
             };
 
             const result = isEdit
-                ? await updateDharmaTalk(talk!.id, payload, selectedTagIds)
-                : await createDharmaTalk(payload as any, selectedTagIds);
+                ? await updateLearningResource(resource!.id, payload, selectedTagIds)
+                : await createLearningResource(payload as any, selectedTagIds);
 
             if (result.success) {
                 onSaved();
@@ -253,20 +249,6 @@ function TalkFormModal({
                 setError(result.error || 'Có lỗi xảy ra');
             }
         });
-    };
-
-    const handleSubmitForReview = async () => {
-        if (!talk?.id) return;
-        setSubmitLoading(true);
-        const result = await submitDharmaTalkForReview(talk.id);
-        setSubmitLoading(false);
-        if (result.success) {
-            toast.success('Đã gửi pháp thoại để duyệt thành công!');
-            onSaved();
-            onClose();
-        } else {
-            toast.error(result.error || 'Có lỗi khi gửi duyệt');
-        }
     };
 
     return (
@@ -278,9 +260,7 @@ function TalkFormModal({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b">
                     <h2 className="text-xl font-bold text-slate-900">
-                        {isEdit 
-                            ? (isCompany ? 'Cập nhật nội dung đào tạo' : 'Chỉnh sửa Pháp Thoại') 
-                            : (isCompany ? 'Thêm tài liệu E-Learning' : 'Thêm Pháp Thoại mới')}
+                        {isEdit ? 'Cập nhật nội dung đào tạo' : 'Thêm tài liệu E-Learning'}
                     </h2>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
                         <IconClose />
@@ -332,7 +312,7 @@ function TalkFormModal({
                             type="text"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
-                            placeholder={isCompany ? "Tiêu đề video đào tạo / tài liệu SOP" : "Tiêu đề bài pháp thoại"}
+                            placeholder="Tiêu đề video đào tạo / tài liệu SOP"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/50 focus:border-indigo-600"
                             required
                         />
@@ -344,21 +324,21 @@ function TalkFormModal({
                         <textarea
                             value={description}
                             onChange={e => setDescription(e.target.value)}
-                            placeholder={isCompany ? "Mô tả nội dung đào tạo..." : "Mô tả nội dung bài pháp thoại..."}
+                            placeholder="Mô tả nội dung đào tạo..."
                             rows={3}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/50 focus:border-indigo-600 resize-none"
                         />
                     </div>
 
-                    {/* Speaker */}
+                    {/* Instructor */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{isCompany ? 'Người trình bày' : 'Người thuyết pháp'}</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Người trình bày</label>
                         <input
                             type="text"
-                            value={speaker}
-                            onChange={e => setSpeaker(e.target.value)}
+                            value={instructor}
+                            onChange={e => setInstructor(e.target.value)}
                             placeholder="Multi-tenant Ecosystem"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-primary/50 focus:border-gold-primary"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/50"
                         />
                     </div>
 
@@ -382,7 +362,7 @@ function TalkFormModal({
                                 value={topic}
                                 onChange={e => setTopic(e.target.value)}
                                 placeholder="Tùy chọn nhập thêm tag..."
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-primary/50 focus:border-gold-primary"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/50"
                             />
                         </div>
                     </div>
@@ -396,13 +376,13 @@ function TalkFormModal({
                                 value={orderPos}
                                 onChange={e => setOrderPos(Number(e.target.value))}
                                 min={1}
-                                className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gold-primary/50"
+                                className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
                             />
                         </div>
                         <label className="flex items-center gap-2 cursor-pointer select-none">
                             <div
                                 onClick={() => setIsFeatured(!isFeatured)}
-                                className={`relative w-10 h-5 rounded-full transition-colors ${isFeatured ? 'bg-gold-primary' : 'bg-gray-300'}`}
+                                className={`relative w-10 h-5 rounded-full transition-colors ${isFeatured ? 'bg-indigo-600' : 'bg-gray-300'}`}
                             >
                                 <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${isFeatured ? 'translate-x-5' : ''}`} />
                             </div>
@@ -419,6 +399,7 @@ function TalkFormModal({
                         </label>
                     </div>
 
+                    {/* Tags */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Thẻ chủ đề (Tags)</label>
                         <TagInput
@@ -428,7 +409,7 @@ function TalkFormModal({
                         />
                     </div>
 
-                    {/* Broadcasting (Platform Admins only) */}
+                    {/* Broadcasting */}
                     {tenants && tenants.length > 0 && (
                         <div className="pt-2 border-t">
                             <TenantBroadcastSelect
@@ -460,10 +441,10 @@ function TalkFormModal({
                             <button
                                 type="submit"
                                 disabled={isPending}
-                                className="flex-1 py-2.5 bg-coffee-dark text-white rounded-xl text-sm font-medium hover:bg-coffee-dark/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                                className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                             >
                                 {isPending && <IconLoader />}
-                                {isEdit ? 'Lưu cập nhật' : 'Thêm Pháp Thoại'}
+                                {isEdit ? 'Lưu cập nhật' : 'Thêm tài liệu'}
                             </button>
                         ) : (
                             <>
@@ -480,7 +461,7 @@ function TalkFormModal({
                                     type="submit"
                                     data-action="submit_review"
                                     disabled={isPending || submitLoading}
-                                    className="flex-1 py-2.5 bg-gold-primary text-white rounded-xl text-sm font-medium hover:bg-gold-dark transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                                    className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                                 >
                                     {isPending ? <IconLoader /> : <Send className="w-4 h-4" />}
                                     Gửi Duyệt
@@ -495,12 +476,12 @@ function TalkFormModal({
 }
 
 // ─── Main Client Component ────────────────────────────────────────────────────
-export function DharmaTalksClient({ initialTalks, categories, tenants, contextTenantId, currentUserRole, isCompany }: Props) {
+export function LearningResourcesClient({ initialTalks, categories, tenants, contextTenantId, currentUserRole, isCompany }: Props) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const filterTenantId = searchParams.get('tenantId') || '';
 
-    // Filter talks by tenant if in global mode and filter is active
+    // Filter talks by tenant
     const filteredTalks = React.useMemo(() => {
         if (!contextTenantId && filterTenantId) {
             return initialTalks.filter((t: any) => t.tenant_id === filterTenantId);
@@ -508,14 +489,14 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
         return initialTalks;
     }, [initialTalks, contextTenantId, filterTenantId]);
 
-    const [talks, setTalks] = useState<DharmaTalk[]>(filteredTalks);
+    const [talks, setTalks] = useState<LearningResource[]>(filteredTalks);
 
-    // Sync talks when filteredTalks changes (e.g. when search params change)
     useEffect(() => {
         setTalks(filteredTalks);
     }, [filteredTalks]);
+
     const [showForm, setShowForm] = useState(false);
-    const [editingTalk, setEditingTalk] = useState<DharmaTalk | null>(null);
+    const [editingTalk, setEditingTalk] = useState<LearningResource | null>(null);
     const [isPending, startTransition] = useTransition();
     const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
@@ -532,7 +513,7 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
         }
 
         startTransition(async () => {
-            const result = await deleteDharmaTalk(id);
+            const result = await deleteLearningResource(id);
             if (result.success) {
                 setTalks(prev => prev.filter(t => t.id !== id));
                 toast.success('Đã xóa thành công');
@@ -543,10 +524,10 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
         });
     };
 
-    const handleToggleActive = (talk: DharmaTalk) => {
+    const handleToggleActive = (talk: LearningResource) => {
         startTransition(async () => {
             const payload = { is_active: !talk.is_active };
-            const result = await updateDharmaTalk(talk.id, payload);
+            const result = await updateLearningResource(talk.id, payload);
             if (result.success) {
                 setTalks(prev => prev.map(t => t.id === talk.id ? { ...t, is_active: !t.is_active } : t));
                 toast.success('Đã cập nhật trạng thái');
@@ -556,10 +537,10 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
         });
     };
 
-    const handleToggleFeatured = (talk: DharmaTalk) => {
+    const handleToggleFeatured = (talk: LearningResource) => {
         startTransition(async () => {
             const payload = { is_featured: !talk.is_featured };
-            const result = await updateDharmaTalk(talk.id, payload);
+            const result = await updateLearningResource(talk.id, payload);
             if (result.success) {
                 setTalks(prev => prev.map(t => t.id === talk.id ? { ...t, is_featured: !t.is_featured } : t));
                 toast.success('Đã cập nhật tin nổi bật');
@@ -571,20 +552,17 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
 
     return (
         <div className="space-y-6">
-
-
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-playfair font-bold text-gray-900">
-                        {isCompany ? 'Quản lý Video SOP & Đào tạo' : 'Quản lý Pháp Thoại'}
+                        Quản lý Video SOP & Đào tạo
                     </h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        {talks.filter(t => t.is_featured).length} {isCompany ? 'nội dung nổi bật' : 'bài nổi bật'} · {talks.filter(t => t.is_active).length} đang hiển thị
+                        {talks.filter(t => t.is_featured).length} nội dung nổi bật · {talks.filter(t => t.is_active).length} đang hiển thị
                     </p>
                 </div>
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                    {/* Tenant Filter (Only for Global Admin) */}
                     {!contextTenantId && tenants && tenants.length > 0 && (
                         <TenantFilter tenants={tenants} />
                     )}
@@ -593,7 +571,7 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                         className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
                     >
                         <IconPlus />
-                        {isCompany ? 'Thêm tài liệu đào tạo' : 'Thêm Pháp Thoại'}
+                        Thêm tài liệu đào tạo
                     </button>
                 </div>
             </div>
@@ -607,12 +585,12 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
             {/* Talks list */}
             {talks.length === 0 ? (
                 <div className="text-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                    <div className="text-4xl mb-3">📚</div>
+                    <div className="text-4xl mb-3">🎓</div>
                     <p className="text-gray-500 font-medium">
-                        {isCompany ? 'Chưa có tài liệu/video đào tạo nào' : 'Chưa có bài pháp thoại nào'}
+                        Chưa có tài liệu/video đào tạo nào
                     </p>
                     <p className="text-sm text-gray-400 mt-1">
-                        {isCompany ? 'Nhấn "Thêm tài liệu đào tạo" để bắt đầu' : 'Nhấn "Thêm Pháp Thoại" để bắt đầu'}
+                        Nhấn "Thêm tài liệu đào tạo" để bắt đầu
                     </p>
                 </div>
             ) : (
@@ -638,7 +616,6 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                             <IconYT />
                                         </div>
                                     )}
-                                    {/* Play overlay */}
                                     <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                         <div className="w-7 h-7 bg-white/90 rounded-full flex items-center justify-center">
                                             <svg className="w-3.5 h-3.5 text-red-600 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
@@ -663,13 +640,11 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1 flex-shrink-0">
-                                            {/* Featured badge */}
                                             {talk.is_featured && (
-                                                <span className="px-2 py-0.5 bg-gold-primary/10 text-gold-dark text-xs font-medium rounded-full border border-gold-primary/20">
+                                                <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs font-medium rounded-full border border-indigo-100">
                                                     Trang chủ
                                                 </span>
                                             )}
-                                            {/* Order */}
                                             <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
                                                 #{talk.order_position}
                                             </span>
@@ -680,9 +655,9 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                     )}
 
                                     <div className="flex items-center gap-4 mt-2">
-                                        {talk.speaker_name_vi && (
+                                        {talk.instructor_name_vi && (
                                             <span className="text-xs text-gray-400">
-                                                {isCompany ? '👤 ' : '🙏 '}{talk.speaker_name_vi}
+                                                👤 {talk.instructor_name_vi}
                                             </span>
                                         )}
                                         {talk.topic_vi && (
@@ -693,7 +668,6 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
 
                                 {/* Actions */}
                                 <div className="flex flex-col gap-2 flex-shrink-0">
-                                    {/* Toggle active */}
                                     <button
                                         onClick={() => handleToggleActive(talk)}
                                         title={talk.is_active ? 'Đang hiển thị — nhấn để ẩn' : 'Đang ẩn — nhấn để hiện'}
@@ -701,15 +675,13 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                     >
                                         <IconEye active={talk.is_active} />
                                     </button>
-                                    {/* Toggle featured */}
                                     <button
                                         onClick={() => handleToggleFeatured(talk)}
                                         title={talk.is_featured ? 'Đang nổi bật — nhấn để bỏ' : 'Nhấn để đặt nổi bật'}
-                                        className={`p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-sm ${talk.is_featured ? 'text-gold-primary' : 'text-gray-300'}`}
+                                        className={`p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-sm ${talk.is_featured ? 'text-indigo-600' : 'text-gray-300'}`}
                                     >
                                         ★
                                     </button>
-                                    {/* Edit */}
                                     <button
                                         onClick={() => { setEditingTalk(talk); setShowForm(true); }}
                                         className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
@@ -717,7 +689,6 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
                                     >
                                         <IconEdit />
                                     </button>
-                                    {/* Delete */}
                                     <button
                                         onClick={() => handleDelete(talk.id)}
                                         disabled={isPending && confirmingDelete === talk.id}
@@ -734,15 +705,14 @@ export function DharmaTalksClient({ initialTalks, categories, tenants, contextTe
             )}
 
             {showForm && (
-                <TalkFormModal
-                    talk={editingTalk}
+                <ResourceFormModal
+                    resource={editingTalk}
                     categories={categories}
                     tenants={tenants}
                     contextTenantId={contextTenantId}
                     currentUserRole={currentUserRole}
                     onClose={() => { setShowForm(false); setEditingTalk(null); }}
                     onSaved={handleSaved}
-                    isCompany={isCompany}
                 />
             )}
         </div>

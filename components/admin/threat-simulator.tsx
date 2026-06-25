@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { AttackFlowMap } from './security/attack-flow-map';
 
-type Scenario = 'cross_tenant_read' | 'cache_pollution' | 'sql_injection' | 'noisy_neighbor';
+type Scenario = 'cross_tenant_read' | 'jwt_bypass' | 'abac_outside_hours' | 'sql_injection' | 'noisy_neighbor';
 
 interface SimulationResult {
     scenario: Scenario;
@@ -42,12 +42,19 @@ const ATTACK_FLOWS: Record<Scenario, string[]> = {
         'PostgreSQL DB (RLS: tenant_id = auth.jwt())',
         'BLOCKED ❌ (0 rows returned)'
     ],
-    cache_pollution: [
-        'Hacker Request (Tenant B cache key)',
-        'Next.js App Router (Cache Lookup)',
-        'Cache Key Miss (Isolated Namespace)',
-        'PostgreSQL DB RLS (Fallback Validation)',
-        'BLOCKED ❌ (0 leakage)'
+    jwt_bypass: [
+        'Hacker Request (Fake JWT Signature)',
+        'Next.js Auth Middleware',
+        'Supabase Auth Gateway',
+        'Signature Verification Hook',
+        'BLOCKED ❌ (401 Unauthorized)'
+    ],
+    abac_outside_hours: [
+        'Editor Request (Insert Outside Hours)',
+        'Next.js Router',
+        'JWT Validation (Editor Role)',
+        'PostgreSQL DB (ABAC: is_within_business_hours())',
+        'BLOCKED ❌ (42501 Insufficient Privilege)'
     ],
     sql_injection: [
         'Hacker Payload (1\' OR \'1\'=\'1)',
@@ -69,7 +76,7 @@ const SCENARIOS: Record<Scenario, {
     label: string;
     description: string;
     icon: React.ReactNode;
-    color: 'rose' | 'amber' | 'violet';
+    color: 'rose' | 'amber' | 'violet' | 'emerald';
     phase1: string;
     phase2: string;
 }> = {
@@ -81,13 +88,21 @@ const SCENARIOS: Record<Scenario, {
         phase1: 'Tenant A đang cố truy cập dữ liệu Tenant B...',
         phase2: 'PostgreSQL RLS đang xử lý kiểm tra quyền...',
     },
-    cache_pollution: {
-        label: 'Cross-Tenant Cache Poisoning',
-        description: 'Thử làm rò rỉ dữ liệu qua cache chéo tenant',
-        icon: <Database className="w-4 h-4" />,
+    jwt_bypass: {
+        label: 'JWT Bypass & Injection',
+        description: 'Thử vượt qua JWT bằng token giả mạo chữ ký',
+        icon: <Eye className="w-4 h-4" />,
+        color: 'rose',
+        phase1: 'Gửi request với JWT token sửa đổi signature...',
+        phase2: 'Supabase Auth Gateway đang xác thực chữ ký token...',
+    },
+    abac_outside_hours: {
+        label: 'ABAC Time Restriction',
+        description: 'Editor cố ghi dữ liệu ngoài giờ làm việc',
+        icon: <Lock className="w-4 h-4" />,
         color: 'amber',
-        phase1: 'Kẻ tấn công đang gửi HTTP header giả mạo Cache Key...',
-        phase2: 'Kiểm tra Tenant-aware Cache Isolation...',
+        phase1: 'Giả lập Editor gửi lệnh INSERT lúc 23h đêm...',
+        phase2: 'PostgreSQL kiểm tra policy is_within_business_hours()...',
     },
     sql_injection: {
         label: 'SQL Injection',
@@ -98,10 +113,10 @@ const SCENARIOS: Record<Scenario, {
         phase2: 'Parameterized Query đang xử lý escape input...',
     },
     noisy_neighbor: {
-        label: 'Noisy Neighbor connection limits',
+        label: 'Noisy Neighbor limits',
         description: 'Gửi dồn dập truy vấn chiếm dụng DB connection pool',
         icon: <Zap className="w-4 h-4" />,
-        color: 'rose',
+        color: 'emerald',
         phase1: 'Tenant A (Free) gửi dồn dập 8 truy vấn đồng thời...',
         phase2: 'Kiểm tra connection slot limits bảo vệ tài nguyên chi nhánh khác...',
     },
@@ -131,19 +146,34 @@ const CODE_TEMPLATES: Record<Scenario, {
             app: { latency: '80 - 150 ms', complexity: 'O(N) (Duyệt mảng)', security: 'Application Level (Dễ lọt RLS)' }
         }
     },
-    cache_pollution: {
+    jwt_bypass: {
         attack: {
-            title: '🥷 Hacker Payload (HTTP Cache Poisoning)',
-            code: `// Hacker đoán định dạng Cache Key chung và gửi HTTP Header giả mạo\nGET /api/sections/news-events HTTP/1.1\nHost: tenant-a.saas.com\nX-Nextjs-Cache-Key: news-list-TENANT_B_UUID // Cố tình nạp Cache Key Tenant B`
+            title: '🥷 Hacker Payload (JWT Signature Manipulation)',
+            code: `// Kẻ tấn công sửa payload để đổi tenant_id rồi phá hoại chữ ký\nconst badJwt = "header.eyJ0ZW5hbnRfaWQiOiJUZW5hbnRCX1VVSUQifQ.bad_signature";\n\nfetch("/api/news", {\n  headers: { "Authorization": \`Bearer \${badJwt}\` }\n});`
         },
         defense: {
-            title: '🛡️ Next.js Tenant-isolated Cache (Application Layer)',
-            code: `// Sử dụng Tenant-isolated Cache Keys kết hợp RLS Double-check\nconst cacheKey = \`tenant:\${tenantId}:news-list\`;\nconst data = await unstable_cache(\n  async () => fetchNewsFromDB(tenantId),\n  [cacheKey],\n  { tags: [\`tenant:\${tenantId}\`] }\n)();`
+            title: '🛡️ Auth Gateway (JWT Cryptographic Verification)',
+            code: `// Cổng xác thực GoTrue giải mã và kiểm chứng chữ ký số bằng SECRET\n// Nếu chữ ký bị chỉnh sửa, request lập tức bị từ chối trước khi chạm DB\nconst { data: { user }, error } = await supabase.auth.getUser(badJwt);\nif (error) return rejectRequest(401, "JWT signature is invalid");`
         },
         performance: {
-            cache: { latency: '0 - 2 ms (Cache Hit)', complexity: 'O(1) (Cache Store lookup)', security: 'Isolate Cache Store' },
-            rls: { latency: '12 - 30 ms (Cache Miss)', complexity: 'O(log N) optimized (Index Scan)', security: 'DB RLS Fallback Protection' },
-            app: { latency: '95 - 200 ms', complexity: 'O(N)', security: 'Shared Memory (Dễ nhiễm độc)' }
+            cache: { latency: 'N/A (Bypassed)', complexity: 'N/A', security: 'N/A' },
+            rls: { latency: '2 - 5 ms', complexity: 'O(1) (HMAC SHA256)', security: 'Cryptographic Hardening (Tuyệt đối)' },
+            app: { latency: '90 - 180 ms', complexity: 'O(N)', security: 'Application Verification' }
+        }
+    },
+    abac_outside_hours: {
+        attack: {
+            title: '🥷 Hacker Operation (Out-of-Hours Write Attempt)',
+            code: `// Editor cố gắng chèn bản ghi vào lúc 23:00 PM (Ngoài giờ làm việc)\nconst { error } = await supabase\n  .from('news')\n  .insert({ title: 'Tin Khẩn Đêm', content: '...', status: 'draft' });\n// Mong đợi: Bypass kiểm tra thời gian`
+        },
+        defense: {
+            title: '🛡️ PL/pgSQL Context Filter (ABAC Layer)',
+            code: `-- Giới hạn Tenant Editor chỉ tạo sự kiện mới trong khung giờ hành chính\nCREATE POLICY "ABAC_time_restrict_editor_write" ON public.news FOR INSERT\nWITH CHECK (\n    public.get_current_user_role() IN ('super_admin', 'company_editor', 'tenant_admin')\n    OR\n    (public.get_current_user_role() = 'tenant_editor' AND public.is_within_business_hours())\n);`
+        },
+        performance: {
+            cache: { latency: 'N/A (Bypassed)', complexity: 'N/A', security: 'N/A' },
+            rls: { latency: '12 - 30 ms', complexity: 'O(log N) + Function Eval', security: 'Database Context ABAC (Tối mật)' },
+            app: { latency: '100 - 220 ms', complexity: 'O(N)', security: 'Time-check logic chắp vá ở Controller' }
         }
     },
     sql_injection: {
@@ -219,7 +249,6 @@ export function ThreatSimulator() {
             const data = await res.json();
             setResult({ ...data, latency_ms: latency });
 
-            // Refresh các Server Component trên trang (Audit Logs & Stats)
             router.refresh();
 
             if (data.blocked) {
@@ -255,6 +284,12 @@ export function ThreatSimulator() {
             text: 'text-violet-400',
             btn: 'bg-violet-600 hover:bg-violet-500 border-violet-500/50 shadow-violet-500/20',
         },
+        emerald: {
+            border: 'border-emerald-500/30',
+            bg: 'bg-emerald-500/10',
+            text: 'text-emerald-400',
+            btn: 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500/50 shadow-emerald-500/20',
+        },
     };
 
     const codeInfo = CODE_TEMPLATES[activeScenario];
@@ -281,8 +316,8 @@ export function ThreatSimulator() {
             </CardHeader>
 
             <CardContent className="p-7 relative z-10 space-y-6">
-                {/* Scenario Selector */}
-                <div className="grid grid-cols-3 gap-2">
+                {/* Scenario Selector - 5 columns on desktop */}
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
                     {(Object.entries(SCENARIOS) as [Scenario, typeof SCENARIOS[Scenario]][]).map(([key, cfg]) => {
                         const colors = colorMap[cfg.color];
                         const isActive = activeScenario === key;
@@ -291,17 +326,17 @@ export function ThreatSimulator() {
                                 key={key}
                                 onClick={() => !running && setActiveScenario(key)}
                                 disabled={running}
-                                className={`p-3 rounded-xl border text-left transition-all duration-200 ${
+                                className={`p-3 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between ${
                                     isActive
                                         ? `${colors.border} ${colors.bg} ${colors.text}`
                                         : 'border-slate-700/50 bg-slate-800/40 text-slate-500 hover:border-slate-600'
                                 }`}
                             >
-                                <div className="flex items-center gap-1.5 mb-1">
+                                <div className="flex items-center gap-1.5 mb-1 shrink-0">
                                     {cfg.icon}
-                                    <span className="text-[10px] font-black uppercase tracking-wider">{cfg.label}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-wider">{cfg.label}</span>
                                 </div>
-                                <p className="text-[10px] leading-tight opacity-80">{cfg.description}</p>
+                                <p className="text-[9px] leading-tight opacity-80 mt-1">{cfg.description}</p>
                             </button>
                         );
                     })}
@@ -414,9 +449,9 @@ export function ThreatSimulator() {
                                     <tbody className="divide-y divide-slate-900/60 text-slate-300">
                                         <tr className="hover:bg-slate-900/10">
                                             <td className="py-2 font-bold text-slate-400">Cache Layer (Edge)</td>
-                                            <td className="py-2 text-emerald-400 font-mono">{codeInfo.performance.cache.latency}</td>
-                                            <td className="py-2 font-mono">{codeInfo.performance.cache.complexity}</td>
-                                            <td className="py-2 text-slate-400">{codeInfo.performance.cache.security}</td>
+                                            <td className="py-2 text-emerald-400 font-mono">{codeInfo.performance.cache?.latency || '0 - 2 ms'}</td>
+                                            <td className="py-2 font-mono">{codeInfo.performance.cache?.complexity || 'O(1)'}</td>
+                                            <td className="py-2 text-slate-400">{codeInfo.performance.cache?.security || 'Edge Store'}</td>
                                         </tr>
                                         <tr className="bg-amber-500/5 border border-amber-500/20">
                                             <td className="py-2 font-black text-amber-300">Database RLS (Postgres)</td>
@@ -466,7 +501,8 @@ export function ThreatSimulator() {
                             <pre className="text-[10px] font-mono p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-cyan-300 overflow-x-auto whitespace-pre leading-relaxed">
                                 {result?.explain_analyze || {
                                     cross_tenant_read: `EXPLAIN ANALYZE SELECT * FROM news WHERE tenant_id = '66666666-6666-6666-6666-666666666666';\n-- Plan:\n-- Index Scan using news_tenant_id_idx on news (cost=0.29..8.30 rows=1 width=382) (actual time=0.035..0.036 rows=0 loops=1)\n--   Index Cond: (tenant_id = '66666666-6666-6666-6666-666666666666'::uuid)\n--   Filter: (tenant_id = (auth.jwt()->>'tenant_id')::uuid)\n-- Planning Time: 0.145 ms\n-- Execution Time: 0.062 ms`,
-                                    cache_pollution: `-- Cache Store Lookup (O(1) Memory Key Check):\n-- Command: GET "tenant:55555555-5555-5555-5555-555555555555:news-list"\n-- Status: Cache HIT (0.8ms) - Bypasses PostgreSQL engine execution.`,
+                                    jwt_bypass: `-- Gateway Blocked (Invalid Token Signature):\n-- Route: GET /rest/v1/news?tenant_id=eq.66666666-6666-6666-6666-666666666666\n-- Status: 401 Unauthorized (Auth Gateway rejection)\n-- Reason: Signature verification failed. No DB connection slots allocated.`,
+                                    abac_outside_hours: `EXPLAIN INSERT INTO news (title, content, tenant_id, status) VALUES ('Attack Attempt Outside Hours', ...)\n-- Plan:\n-- RLS Policy: "ABAC_time_restrict_editor_write" on news\n--   Filter: (is_within_business_hours() AND (tenant_id = (auth.jwt()->>'tenant_id')::uuid))\n--   Evaluation: is_within_business_hours() -> FALSE\n-- Outcome: Blocked by Attribute-Based Access Control (Lớp 4)`,
                                     sql_injection: `EXPLAIN ANALYZE SELECT * FROM news WHERE title = $1;\n-- Plan:\n-- Index Scan using news_title_idx on news (cost=0.28..8.30 rows=1 width=382) (actual time=0.021..0.022 rows=0 loops=1)\n--   Index Cond: (title = $1::text)\n-- Planning Time: 0.098 ms\n-- Execution Time: 0.039 ms`,
                                     noisy_neighbor: `-- Database Connection Limits (Supavisor Sandbox):\n-- Max pool slots for Tenant Plan [free]: 3 connections\n-- Currently allocated slots: 3 (100% capacity)\n-- Queue length: 5 requests rejected instantly to prevent DB resource starvation.`
                                 }[activeScenario]}
@@ -480,106 +516,106 @@ export function ThreatSimulator() {
                     <div className={`rounded-2xl border p-6 space-y-4 transition-all duration-500 ${
                         result.blocked
                             ? 'bg-emerald-950/40 border-emerald-500/40'
-                              : 'bg-rose-950/40 border-rose-500/40'
-                      }`}>
-                          <div className="flex items-center gap-3">
-                              {result.blocked ? (
-                                  <>
-                                      <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" />
-                                      <div>
-                                          <p className="font-black text-emerald-300 text-base">CHẶN THÀNH CÔNG ✅</p>
-                                          <p className="text-emerald-500 text-xs">
-                                              [{SCENARIOS[result.scenario]?.label}] — Kiến trúc phòng thủ hoạt động đúng thiết kế
-                                          </p>
-                                      </div>
-                                  </>
-                              ) : (
-                                  <>
-                                      <AlertTriangle className="w-8 h-8 text-rose-400 shrink-0" />
-                                      <div>
-                                          <p className="font-black text-rose-300 text-base">CẢNH BÁO RỦI RO ⚠️</p>
-                                          <p className="text-rose-500 text-xs">Phát hiện dữ liệu bị rò rỉ — Cần điều tra ngay!</p>
-                                      </div>
-                                  </>
-                              )}
-                          </div>
-  
-                          <div className="grid grid-cols-3 gap-3">
-                              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
-                                  <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Rows Leaked</p>
-                                  <p className={`text-2xl font-black ${(result.rows_returned ?? result.rows_leaked ?? 0) === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                      {result.rows_returned ?? result.rows_leaked ?? 0}
-                                  </p>
-                              </div>
-                              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
-                                  <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Audit Log</p>
-                                  <p className={`text-2xl font-black ${result.audit_logged ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                      {result.audit_logged ? 'YES' : 'NO'}
-                                  </p>
-                              </div>
-                              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
-                                  <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Latency</p>
-                                  <p className="text-2xl font-black text-amber-400">{result.latency_ms}ms</p>
-                              </div>
-                          </div>
+                            : 'bg-rose-950/40 border-rose-500/40'
+                    }`}>
+                        <div className="flex items-center gap-3">
+                            {result.blocked ? (
+                                <>
+                                    <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" />
+                                    <div>
+                                        <p className="font-black text-emerald-300 text-base">CHẶN THÀNH CÔNG ✅</p>
+                                        <p className="text-emerald-500 text-xs">
+                                            [{SCENARIOS[result.scenario]?.label}] — Kiến trúc phòng thủ hoạt động đúng thiết kế
+                                        </p>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <AlertTriangle className="w-8 h-8 text-rose-400 shrink-0" />
+                                    <div>
+                                        <p className="font-black text-rose-300 text-base">CẢNH BÁO RỦI RO ⚠️</p>
+                                        <p className="text-rose-500 text-xs">Phát hiện dữ liệu bị rò rỉ — Cần điều tra ngay!</p>
+                                    </div>
+                                </>
+                            )}
+                        </div>
 
-                          {/* SOC Rejection Log */}
-                          {result.why_blocked && (
-                              <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-[10px] text-emerald-400 leading-relaxed overflow-x-auto">
-                                  <div className="flex items-center gap-2 mb-2 text-slate-400 font-sans font-bold uppercase tracking-wider text-[9px]">
-                                      <ShieldAlert className="w-3.5 h-3.5 text-emerald-400" />
-                                      <span>🛡️ SOC REJECTION LOG (Why Blocked)</span>
-                                  </div>
-                                  <pre className="whitespace-pre">{result.why_blocked}</pre>
-                              </div>
-                          )}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
+                                <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Rows Leaked</p>
+                                <p className={`text-2xl font-black ${(result.rows_returned ?? result.rows_leaked ?? 0) === 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {result.rows_returned ?? result.rows_leaked ?? 0}
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
+                                <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Audit Log</p>
+                                <p className={`text-2xl font-black ${result.audit_logged ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                    {result.audit_logged ? 'YES' : 'NO'}
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-center">
+                                <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Latency</p>
+                                <p className="text-2xl font-black text-amber-400">{result.latency_ms}ms</p>
+                            </div>
+                        </div>
 
-                          {/* Security Impact & Classification */}
-                          {result.security_impact && (
-                              <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/20 text-xs space-y-2.5">
-                                  <div className="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
-                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                                      <span>⚠️ SECURITY IMPACT & CLASSIFICATION</span>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-3 text-slate-300">
-                                      <div>
-                                          <span className="text-slate-500 block text-[8px] uppercase font-black">Severity Risk</span>
-                                          <span className={`font-black ${
-                                              result.security_impact.risk_level === 'CRITICAL' ? 'text-rose-400 animate-pulse' : 'text-amber-400'
-                                          }`}>
-                                              {result.security_impact.risk_level} (CVSS {result.security_impact.cvss_score})
-                                          </span>
-                                      </div>
-                                      <div>
-                                          <span className="text-slate-500 block text-[8px] uppercase font-black">OWASP Top 10</span>
-                                          <span className="font-semibold text-slate-200">{result.security_impact.owasp_category}</span>
-                                      </div>
-                                      <div className="col-span-2">
-                                          <span className="text-slate-500 block text-[8px] uppercase font-black">MITRE ATT&CK Mapping</span>
-                                          <span className="font-semibold text-slate-200 font-mono text-[10px]">
-                                              <code>{result.security_impact.mitre_id}</code> — {result.security_impact.mitre_name}
-                                          </span>
-                                      </div>
-                                  </div>
-                              </div>
-                          )}
-  
-                          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/30">
-                              <div className="flex items-center gap-2 mb-2">
-                                  <Eye className="w-4 h-4 text-slate-400" />
-                                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Phân tích chi tiết</p>
-                              </div>
-                              <p className="text-sm text-slate-300 leading-relaxed">{result.detail}</p>
-                          </div>
-  
-                          <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
-                              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                              <p className="text-xs text-amber-300/80">
-                                  <strong>ISO 27017:</strong> Sự kiện giả lập này đã được ghi vào Immutable Audit Log với action <code className="text-amber-400">simulate:{result.scenario}</code>
-                              </p>
-                          </div>
-                      </div>
-                  )}
+                        {/* SOC Rejection Log */}
+                        {result.why_blocked && (
+                            <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-[10px] text-emerald-400 leading-relaxed overflow-x-auto">
+                                <div className="flex items-center gap-2 mb-2 text-slate-400 font-sans font-bold uppercase tracking-wider text-[9px]">
+                                    <ShieldAlert className="w-3.5 h-3.5 text-emerald-400" />
+                                    <span>🛡️ SOC REJECTION LOG (Why Blocked)</span>
+                                </div>
+                                <pre className="whitespace-pre">{result.why_blocked}</pre>
+                            </div>
+                        )}
+
+                        {/* Security Impact & Classification */}
+                        {result.security_impact && (
+                            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-700/20 text-xs space-y-2.5">
+                                <div className="flex items-center gap-2 text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                                    <span>⚠️ SECURITY IMPACT & CLASSIFICATION</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-slate-300">
+                                    <div>
+                                        <span className="text-slate-500 block text-[8px] uppercase font-black">Severity Risk</span>
+                                        <span className={`font-black ${
+                                            result.security_impact.risk_level === 'CRITICAL' ? 'text-rose-400 animate-pulse' : 'text-amber-400'
+                                        }`}>
+                                            {result.security_impact.risk_level} (CVSS {result.security_impact.cvss_score})
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-500 block text-[8px] uppercase font-black">OWASP Top 10</span>
+                                        <span className="font-semibold text-slate-200">{result.security_impact.owasp_category}</span>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <span className="text-slate-500 block text-[8px] uppercase font-black">MITRE ATT&CK Mapping</span>
+                                        <span className="font-semibold text-slate-200 font-mono text-[10px]">
+                                            <code>{result.security_impact.mitre_id}</code> — {result.security_impact.mitre_name}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/30">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Eye className="w-4 h-4 text-slate-400" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Phân tích chi tiết</p>
+                            </div>
+                            <p className="text-sm text-slate-300 leading-relaxed">{result.detail}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                            <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                            <p className="text-xs text-amber-300/80">
+                                <strong>ISO 27017:</strong> Sự kiện giả lập này đã được ghi vào Immutable Audit Log với action <code className="text-amber-400">simulate:{result.scenario}</code>
+                            </p>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

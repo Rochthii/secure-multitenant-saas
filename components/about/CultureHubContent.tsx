@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const CULTURE_PAGES = [
     {
         title: "Bản Sắc Văn Hóa Khmer",
-        description: "Tìm hiểu ngôn ngữ, phong tục tập quán và trang phục truyền thống của người Khmer Nam Bộ được gìn giữ qua nhiều thế hệ tại Chi nhánh Chantarangsay.",
+        description: "Tìm hiểu ngôn ngữ, phong tục tập quán và trang phục truyền thống của người Khmer Nam Bộ được gìn giữ qua nhiều thế hệ.",
         link: "/van-hoa/ban-sac-khmer",
         image: "/images/hero-ceremony.jpg",
         icon: Sparkles,

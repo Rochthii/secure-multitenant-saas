@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { approveNews, rejectNews } from '@/app/actions/admin/news';
 import { approveEvent, rejectEvent } from '@/app/actions/admin/events';
-import { approveDharmaTalk, rejectDharmaTalk } from '@/app/actions/admin/dharma-talks';
+import { approveLearningResource, rejectLearningResource } from '@/app/actions/admin/learning-resources';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -48,7 +48,7 @@ export function ApproveRejectButtons({
         if (type === 'events') {
             result = await approveEvent(itemId, note || undefined);
         } else if (type === 'dharma_talks') {
-            result = await approveDharmaTalk(itemId, note || undefined);
+            result = await approveLearningResource(itemId, note || undefined);
         } else {
             result = await approveNews(itemId, note || undefined);
         }
@@ -73,7 +73,7 @@ export function ApproveRejectButtons({
         if (type === 'events') {
             result = await rejectEvent(itemId, note);
         } else if (type === 'dharma_talks') {
-            result = await rejectDharmaTalk(itemId, note);
+            result = await rejectLearningResource(itemId, note);
         } else {
             result = await rejectNews(itemId, note);
         }

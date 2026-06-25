@@ -11,6 +11,10 @@
 > *   **Học viện:** Học viện Công nghệ Bưu chính Viễn thông (PTIT) | **Khoa:** Công nghệ Thông tin  
 > *   **Học viên:** Chăm Rốch Thi | **Năm bảo vệ:** 2026
 
+> [!IMPORTANT]  
+> **Tuyên bố định vị Đề tài (Academic Focus Disclaimer):**  
+> Trọng tâm cốt lõi của Đồ án Tốt nghiệp này tập trung 100% vào các trụ cột kỹ thuật an toàn hệ thống (Secure Software Engineering & Database Security): **Row-Level Security (RLS) Custom Claims, Attribute-Based Access Control (ABAC), Sổ cái bất biến WORM Audit Log, và Isolated Disaster Recovery chống rollback chéo**. Các cơ chế này được tích hợp sâu và bảo vệ cứng ở tầng cơ sở dữ liệu và mạng biên (Edge).
+
 ---
 
 ## 1. Luận điểm khoa học trung tâm (Thesis Scientific Foundation)
@@ -89,12 +93,6 @@ graph TD
     *   *Optimized RLS (Claims):* Đọc tenant_id từ JWT Claims trong RAM Session (Constant-time) kết hợp B-Tree Index. Độ trễ duy trì sự ổn định tuyệt vời (gần như flat từ 1.1 ms đến 3.5 ms ở quy mô 100,000 dòng) nhờ độ phức tạp **O(log N_tenant)** (Indexed B-Tree Scan).
 *   **EXPLAIN (ANALYZE, BUFFERS):** Bóc tách chi tiết cây thực thi truy vấn của PostgreSQL để chứng minh RLS chèn claims RAM và tận dụng Index Scan thay vì Sequential Scan.
 
-### 3.5 Phân hệ Trợ lý AI Dharma Chat & Agentic GraphRAG (Phụ trợ NCKH)
-*   *Mã nguồn:* Thư mục [docs/ai-rag/](file:///e:/PTIT_THESIS_SAAS/docs/ai-rag) & Migration AI Copilot
-*   **RAG (Retrieval Augmented Generation):** Truy vấn tri thức sâu dựa trên kho tài liệu kinh điển PDF/Text (Kinh - Luật - Luận) Phật giáo Nguyên thủy, trích xuất dẫn chứng chính xác và phản hồi tiếng Việt có dẫn nguồn trực quan.
-*   **Neural Conversational Memory:** Ghi nhớ 10 tin nhắn gần nhất và giải mã ngữ cảnh câu hỏi nối tiếp của người dùng.
-*   **GraphRAG (Knowledge Graph RAG):** Xây dựng Đồ thị Tri thức An ninh (Security Knowledge Graph) từ logs để tự động truy vết điểm xâm nhập ban đầu (Patient Zero) và phát hiện các chuỗi tấn công tinh vi (Credential Stuffing xuyên tenant).
-
 ---
 
 ## 4. Bản ánh xạ đề cương & Mã nguồn thực tế (Proposal-to-Code Matrix)
@@ -112,7 +110,7 @@ graph TD
 | **Active SOAR Engine (Tiered)** | Edge IP Blocking, Whitelist checking & Telegram | [20260531110000_soar_tiered_response_active_defense.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531110000_soar_tiered_response_active_defense.sql) |
 | **Tenant Hard Wipe & Offboarding** | Cascade dọn dẹp và phân mảnh DB | [20260517000001_tenant_offboarding_runbook.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260517000001_tenant_offboarding_runbook.sql) |
 | **RLS Performance Benchmarking** | Logarithmic O(log N) Scaling Chart | [page.tsx (performance)](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/page.tsx) |
-| **Threat Simulator Panel** | Giả lập 4 kịch bản, EXPLAIN, Why Blocked | [page.tsx (threat-simulator)](file:///e:/PTIT_THESIS_SAAS/app/admin/threat-simulator/page.tsx) |
+| **Threat Simulator Panel** | Giả lập 5 kịch bản, EXPLAIN, Why Blocked | [page.tsx (threat-simulator)](file:///e:/PTIT_THESIS_SAAS/app/admin/threat-simulator/page.tsx) |
 
 ---
 
@@ -195,14 +193,14 @@ Hệ thống được đối chiếu trực tiếp và đáp ứng các điều 
 ```mermaid
 timeline
     title Lộ trình 2 năm (Enterprise Tier Roadmap)
-    Giai đoạn 1 : Khôi phục cô lập UPSERT : Chạy Benchmark scaling 111k dòng : Viết test case Threat Simulation
+    Giai đoạn 1 : Khôi phục cô lập UPSERT : Chạy Benchmark scaling 111k dòng : Viết 5 test case Threat Simulation
     Giai đoạn 2 : AWS S3 WORM Storage (Object Lock) : Supavisor connection limits per tenant
-    Giai đoạn 3 : Security AI RAG (pgvector log queries) : GraphRAG (Patient Zero / Attack path traversal)
+    Giai đoạn 3 : Phân tán đa vùng (Multi-region Read Replicas) : Dự phòng nóng (Hot Standby)
 ```
 
-1.  **Giai đoạn 1: Củng cố & Thực nghiệm (Hiện tại - v1.4.0):** Hoàn tất benchmark scaling 111,000 dòng, hoàn thiện các API UPSERT khôi phục cô lập, và hoàn chỉnh 4 test case kịch bản Threat Simulation.
+1.  **Giai đoạn 1: Củng cố & Thực nghiệm (Hiện tại - v1.5.0):** Hoàn tất benchmark scaling 111,000 dòng, hoàn thiện các API UPSERT khôi phục cô lập tránh rollback chéo, và hoàn chỉnh 5 kịch bản Threat Simulation an ninh.
 2.  **Giai đoạn 2: Gia cố Hạ tầng Enterprise (Năm 2 - H1):** Tách biệt vật lý Audit Logs ra ngoài DB bằng cách forward sang AWS S3 WORM Storage có bật Object Lock. Thiết lập cấu hình connection pooling giới hạn slot kết nối tối đa cho mỗi tenant trên Supavisor để chống nghẽn chéo hoàn toàn.
-3.  **Giai đoạn 3: Trí tuệ nhân tạo An ninh (Năm 2 - H2):** Triển khai AI RAG truy vấn log an ninh bằng ngôn ngữ tự nhiên và GraphRAG (Knowledge Graph RAG) để nhận diện Attack Path khi xảy ra sự cố bảo mật.
+3.  **Giai đoạn 3: Phân tán đa vùng và High Availability (Năm 2 - H2):** Thiết lập phân tán cơ sở dữ liệu đa phân vùng (Multi-region Read Replicas) để giảm thiểu độ trễ mạng biên toàn cầu và triển khai cơ chế dự phòng nóng (Hot Standby) bảo đảm tính sẵn sàng cao và liên tục của doanh nghiệp.
 
 ---
 

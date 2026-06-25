@@ -8,7 +8,7 @@ import { Newspaper, Calendar, Folder, Tag, FileText, Search, X, Mic, History, Fi
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SearchResult } from '@/lib/search';
 
-const RECENT_SEARCHES_KEY = 'chantarangsay_recent_searches';
+const RECENT_SEARCHES_KEY = 'saas_recent_searches';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TYPE_COLORS: Record<string, string> = {

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { getVietnamTime } from '@/lib/utils/date';
 
 import React from 'react';
@@ -136,7 +136,7 @@ export function AngkorFooter({ settings = {}, domain, isCompany }: { settings?: 
                         {/* Social links */}
                         <div className="flex gap-4">
                             <a
-                                href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                href={settings['facebook_url'] || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-11 h-11 border border-[#8B7355] rounded-none bg-transparent hover:bg-[#8B7355] flex items-center justify-center text-[#D5CDBD] hover:text-white transition-all transform hover:-translate-y-1 shadow-sm"
@@ -173,7 +173,7 @@ export function AngkorFooter({ settings = {}, domain, isCompany }: { settings?: 
                             <span className="font-mono tracking-widest opacity-80">5:00 – 20:00</span>
                         </div>
                         <a
-                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "Chi nhánh Chantarangsay")}`}
+                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-sm font-bold tracking-widest uppercase text-[#8B7355] hover:text-[#D5CDBD] transition-colors group relative"
@@ -205,8 +205,8 @@ export function AngkorFooter({ settings = {}, domain, isCompany }: { settings?: 
                             </li>
                             <li className="flex flex-col gap-1.5">
                                 <span className="font-bold text-[#F4F1EA]">Email</span>
-                                <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="hover:text-[#8B7355] transition-colors relative inline-block group w-max">
-                                    {settings['contact_email'] || 'contact@chantarangsay.org'}
+                                <a href={`mailto:${settings['contact_email'] || ''}`} className="hover:text-[#8B7355] transition-colors relative inline-block group w-max">
+                                    {settings['contact_email'] || ''}
                                     <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#8B7355] transition-all group-hover:w-full"></span>
                                 </a>
                             </li>

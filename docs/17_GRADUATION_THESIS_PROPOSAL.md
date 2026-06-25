@@ -85,12 +85,11 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 | **Security Vault** | SHA-256 Hash-chaining (WORM Vault) | Module lưu trữ sổ cái audit log mật mã học bất biến chống tampering |
 | **Resource Pooler** | Supavisor (Connection Limit Engine) | Tránh starvation, cô lập connection slots theo gói tài khoản của tenant |
 | **Active Alerting** | Telegram Webhook API (bất đồng bộ `net.http_post`) | Kênh bắn cảnh báo SOS thời gian thực cho kỹ sư SOC |
-| **AI (Phụ trợ)** | Deno Edge Functions, Hybrid Search, Concept Traversal | **Phụ trợ:** Trợ lý AI hỏi đáp quy trình và sinh quiz tự động |
 
 ### 3.3 Giới hạn phạm vi
 - Đề tài **tập trung 100% vào kiến trúc bảo mật cốt lõi, cô lập dữ liệu và thực nghiệm hiệu năng**.
 - Không bao gồm phát triển Mobile App và hệ thống GIS/PostGIS.
-- Phân hệ AI/RAG (Trợ lý AI Doanh nghiệp & GraphRAG) chỉ là **tính năng phụ trợ thử nghiệm (Supplementary Feature)** nhằm làm phong phú hệ sinh thái SaaS và tăng trải nghiệm người dùng cuối, hoàn toàn không phải mục tiêu an ninh cốt lõi của đồ án.
+- Không bao gồm các phân hệ phụ trợ không liên quan như trợ lý AI đàm thoại hay đồ thị tri thức GraphRAG, tập trung tối đa nguồn lực vào việc chứng minh tính cô lập CSDL (RLS) và kiểm soát ngữ cảnh (ABAC) cũng như tính toàn vẹn của WORM Ledger.
 - Đánh giá bảo mật dừng ở mức **kiến trúc, thiết kế và giả lập tấn công thực tế (threat simulation)**, không thực hiện penetration testing hệ thống hạ tầng cloud.
 
 ---
@@ -173,7 +172,7 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - **Hướng phát triển chiến lược:**
   - Tích hợp Audit Log Forwarding ra AWS S3 WORM Storage (Object Lock) bên ngoài độc lập.
   - Thiết lập Tenant-scoped Connection Limits trực tiếp trên Supavisor.
-  - Phát triển hệ thống AI RAG & GraphRAG (Knowledge Graph RAG) làm phân hệ phụ trợ truy vấn log an ninh bằng ngôn ngữ tự nhiên và truy vết Attack Path (Patient Zero).
+  - Nghiên cứu và thiết lập phân tán cơ sở dữ liệu đa phân vùng (Multi-region Read Replicas) nhằm tối ưu hóa độ trễ mạng biên và triển khai cơ chế dự phòng nóng (Hot Standby) bảo đảm tính sẵn sàng cao (High Availability) cho nền tảng.
 
 ---
 

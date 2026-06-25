@@ -143,7 +143,7 @@ export async function deleteMedia(tenantId: string, id: string) {
         const publicId = extractPublicIdFromUrl(media.url);
         if (publicId) {
             try {
-                // publicId for Cloudinary includes folders (e.g. "chantarangsay/mcaaron/2026/filename")
+                // publicId for Cloudinary includes folders (e.g. "saas/mcaaron/2026/filename")
                 await cloudinary.uploader.destroy(publicId);
             } catch (cloudError) {
                 console.error('Error deleting from Cloudinary:', cloudError);
@@ -194,7 +194,7 @@ export async function bulkUpdateMediaMetadata(tenantId: string | undefined, medi
 
                 if (Object.keys(mediaData).length > 0) {
                     const { data: oldData } = await supabase.from('media').select('*').eq('id', id).eq('tenant_id', targetTenantId).single();
-                    const { error } = await supabase.from('media').update(mediaData).eq('id', id).eq('tenant_id', targetTenantId);
+                    const { error } = await supabase.from('media').update(mediaData as any).eq('id', id).eq('tenant_id', targetTenantId);
                     
                     if (!error) {
                         await createAuditLog({ user, action: 'update', tableName: 'media', recordId: id, oldData: oldData ?? null, newData: mediaData });

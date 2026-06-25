@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import Image from 'next/image';
@@ -666,7 +666,7 @@ export function TraditionalHeader({
                                 </svg>
                             </a>
                             <a
-                                href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                href={settings['facebook_url'] || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex-1 py-2.5 min-h-[44px] bg-white/5 active:bg-white/10 rounded-lg transition-colors"

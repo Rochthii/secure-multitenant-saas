@@ -2,6 +2,24 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.9.0] - 2026-06-25
+
+### Nâng Cấp Threat Simulator Panel v1.5.0 (Live Demo Readiness)
+- **Tích hợp 5 kịch bản Zero Trust**: Nâng cấp `/api/admin/security/simulate-attack/route.ts` và `components/admin/threat-simulator.tsx` hỗ trợ đầy đủ 5 kịch bản, trong đó có 2 kịch bản mới cực kỳ thực tế:
+  - **Bypass JWT (Lớp 2)**: Gửi request với token giả mạo chữ ký đến REST API của Supabase và nhận lỗi 401 Unauthorized thật từ Supabase Auth Gateway.
+  - **ABAC Time Restriction (Lớp 4)**: Cố tình chèn bài viết ngoài giờ hành chính (23:00) thông qua RPC `simulate_abac_outside_hours_attack(tenant_id)`. RPC sẽ thiết lập mock hour và giả lập context `tenant_editor` trong transaction để trigger lỗi RLS ABAC Policy thật từ database.
+- **Tối ưu Bản Đồ Luồng Phòng Thủ (Zero Trust SVG Map)**: Cập nhật `attack-flow-map.tsx` để điều phối hoạt ảnh hoạt động và chốt chặn nhấp nháy đỏ chính xác tại Lớp Identity & JWT (Node 3) và Lớp Context ABAC (Node 5). Hiển thị Postgres `EXPLAIN` và logs cho cả 5 kịch bản.
+
+### Hoàn Thiện Cơ Chế Disaster Recovery & Isolated UPSERT (Chống Rollback Chéo)
+- **Isolated Restore API**: Cập nhật `/api/admin/backup/restore/route.ts` hỗ trợ nhận tham số `tenant_id`. Khi thực hiện khôi phục cô lập cho tenant được chỉ định (hoặc theo phân quyền của tenant_admin), API sẽ tự động lọc bỏ tất cả dữ liệu chéo của các tenant khác trong file snapshot và chỉ thực hiện `UPSERT` (Insert on Conflict Update) theo khóa chính, giải quyết triệt để bài toán "Rollback chéo" và bảo toàn dữ liệu các chi nhánh khác.
+- **Tích hợp UI Quản trị Lưu trữ**: Cập nhật `app/admin/backup/page.tsx` bổ sung select box lọc khôi phục cho Workspace, bổ sung cảnh báo học thuật chống rollback chéo và thông báo chi tiết số lượng dòng khôi phục/bảo toàn. Ghi nhận audit logs an ninh cụ thể.
+
+### Loại bỏ Hoàn toàn Phân hệ AI RAG & GraphRAG (System Simplification)
+- **Ẩn widget AI khỏi Admin UI**: Gỡ bỏ hoàn toàn `AISecurityCopilotWidget` khỏi file [layout.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/layout.tsx), vô hiệu hóa hoàn toàn khung chat AI đàm thoại trên trang quản trị.
+- **Xóa bỏ tài liệu AI RAG**: Xóa sạch toàn bộ thư mục tài liệu `docs/ai-rag/` chứa các cẩm nang hướng dẫn nạp dữ liệu RAG và GraphRAG.
+- **Dọn dẹp tài liệu đồ án**: Loại bỏ hoàn toàn tất cả các phần nhắc đến AI, RAG, GraphRAG và cơ chế Patient Zero trong các tài liệu tốt nghiệp cốt lõi bao gồm [README.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/README.md), [GRADUATION_WALKTHROUGH.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/GRADUATION_WALKTHROUGH.md), [ACADEMIC_DEFENSE_BLUEPRINT.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/ACADEMIC_DEFENSE_BLUEPRINT.md), [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md) và [17_GRADUATION_THESIS_PROPOSAL.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md).
+- **Thuần khiết hóa Đề tài**: Khẳng định hệ thống tập trung 100% vào kỹ nghệ phần mềm và các chốt chặn an toàn cốt lõi (RLS, ABAC, WORM Ledger, SOAR Active Defense, Isolated Restore).
+
 ## [1.8.0] - 2026-06-02
 
 ### Bộ đệm Edge Cache thông minh & Tối ưu mạng biên (Upstash Redis Edge Cache)

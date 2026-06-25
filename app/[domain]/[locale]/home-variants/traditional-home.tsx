@@ -55,11 +55,11 @@ export default async function TraditionalHome({ locale, tenantId }: { locale: st
 
     // JSON-LD Structured Data
     const organizationSchema = generateOrganizationSchema({
-        name: 'Chi nhánh Chantarangsay',
-        alternateName: 'ចន្ទរង្សី',
+        name: settings['site_name_vi'] || 'Hệ thống',
+        alternateName: settings['site_name_km'] || '',
         url: baseUrl,
         logo: `${baseUrl}/logo.png`,
-        description: 'Ngôi chi nhánh Phật giáo Nam tông Khmer giữa lòng Sài Gòn',
+        description: settings['site_subtitle_vi'] || '',
         address: {
             '@type': 'PostalAddress',
             streetAddress: settings['address'] || '',
@@ -71,7 +71,7 @@ export default async function TraditionalHome({ locale, tenantId }: { locale: st
             '@type': 'ContactPoint',
             telephone: settings['contact_phone'] || '0938 787 165',
             contactType: 'Customer Service',
-            email: settings['contact_email'] || 'contact@chantarangsay.org',
+            email: settings['contact_email'] || '',
         },
     });
 

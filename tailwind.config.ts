@@ -13,7 +13,7 @@ const config: Config = {
       colors: {
         // ─── Khmer Tenant Color System ─────────────────────────────────────
         // All major colors are dynamic — resolved via CSS variables injected
-        // per-tenant in layout.tsx. Fallbacks are the Chantarangsay defaults.
+        // per-tenant in layout.tsx. Fallbacks are the system defaults.
         gold: {
           // --theme-primary-light: lighter tint of the primary accent
           light: 'rgb(var(--theme-primary-light, 253 183 26) / <alpha-value>)',

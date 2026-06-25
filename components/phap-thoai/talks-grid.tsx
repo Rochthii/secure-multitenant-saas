@@ -9,7 +9,7 @@ import { Hash } from 'lucide-react';
 
 import type { Database } from '@/lib/supabase/database.types';
 
-type DharmaTalk = Database['public']['Tables']['dharma_talks']['Row'];
+type DharmaTalk = Database['public']['Tables']['learning_resources']['Row'];
 
 interface TalksGridProps {
     talks: any[];
@@ -91,7 +91,7 @@ export function TalksGrid({ talks, tenantName = 'Multi-tenant Ecosystem', logoUr
                                             "name": tenantName,
                                             "logo": {
                                                 "@type": "ImageObject",
-                                                "url": logoUrl || "https://chantarangsay.org/logo.png"
+                                                "url": logoUrl || "/logo.png"
                                             }
                                         }
                                     })

@@ -33,12 +33,12 @@ export const CACHE_TAGS = {
         tenant: (tenantId: string) => `events-${tenantId}`,
     },
     
-    // Dharma Talks
-    dharmaTalks: {
-        all: 'dharma-talks-all',
-        list: (tenantId: string) => `dharma-talks-${tenantId}`,
-        item: (idOrSlug: string) => `dharma-talk-${idOrSlug}`,
-        tenant: (tenantId: string) => `dharma-talks-${tenantId}`,
+    // Learning Resources
+    learningResources: {
+        all: 'learning-resources-all',
+        list: (tenantId: string) => `learning-resources-${tenantId}`,
+        item: (idOrSlug: string) => `learning-resource-${idOrSlug}`,
+        tenant: (tenantId: string) => `learning-resources-${tenantId}`,
     },
 
     // Hero Slides

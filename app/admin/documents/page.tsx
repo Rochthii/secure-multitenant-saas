@@ -1,6 +1,6 @@
 import React from 'react';
-import { getDharmaTalksAdmin } from '@/app/actions/admin/dharma-talks';
-import { DharmaTalksClient } from '@/app/admin/t/[tenant_id]/documents/dharma-talks-client';
+import { getLearningResourcesAdmin } from '@/app/actions/admin/learning-resources';
+import { LearningResourcesClient } from '@/app/admin/t/[tenant_id]/documents/learning-resources-client';
 import { createClient } from '@/lib/supabase/server';
 import { getUserContext } from '@/lib/permissions';
 import { redirect } from 'next/navigation';
@@ -15,7 +15,7 @@ export default async function GlobalDocumentsAdminPage() {
         redirect('/admin/select-tenant');
     }
 
-    const talks = await getDharmaTalksAdmin(undefined); // No tenant ID filters to global or gets all
+    const talks = await getLearningResourcesAdmin(undefined); // No tenant ID filters to global or gets all
     const supabase = await createClient();
 
     const currentUserRole = ctx.role;
@@ -53,12 +53,13 @@ export default async function GlobalDocumentsAdminPage() {
                     <p className="text-xs text-slate-500 dark:text-zinc-450 mt-1">Danh sách tập trung toàn bộ tài liệu hướng dẫn và video SOP trên toàn hệ thống.</p>
                 </div>
             </div>
-            <DharmaTalksClient
+            <LearningResourcesClient
                 initialTalks={talks as any}
                 categories={categories || []}
                 tenants={tenants || []}
                 contextTenantId={undefined as any}
                 currentUserRole={currentUserRole}
+                isCompany={true}
             />
         </div>
     );

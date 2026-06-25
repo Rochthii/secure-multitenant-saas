@@ -128,13 +128,20 @@ export default async function TagPage({ params }: Props) {
 
     const media = mediaItems?.map((m: any) => m.media).filter(Boolean) || [];
 
-    // Dharma Talks (Dùng cho Học liệu Video & SOP Video)
+    // Learning Resources (Dùng cho Học liệu Video & SOP Video)
     const { data: talkItems } = await (supabase as any)
-        .from('dharma_talk_tags')
-        .select('dharma_talks(*)')
+        .from('learning_resource_tags')
+        .select('learning_resources(*)')
         .eq('tag_id', (tag as any).id);
 
-    const talks = talkItems?.map((t: any) => t.dharma_talks).filter((t: any) => t?.is_active) || [];
+    const talks = (talkItems?.map((t: any) => t.learning_resources).filter((t: any) => t?.is_active) || []).map((t: any) => ({
+        ...t,
+        speaker_name_vi: t.instructor_name_vi || 'Multi-tenant Ecosystem',
+        speaker_name_km: t.instructor_name_km,
+        speaker_name_en: t.instructor_name_en,
+        speaker_name: t.instructor_name_vi || 'Multi-tenant Ecosystem',
+        youtube_url: t.media_url,
+    }));
 
     const hasContent = news.length > 0 || media.length > 0 || talks.length > 0;
 

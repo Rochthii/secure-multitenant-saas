@@ -54,7 +54,7 @@ export default async function TransactionsPage({ params, searchParams }: Transac
 
     if (status && status !== 'all') analyticsQuery = analyticsQuery.eq('status', status as any);
     if (method && method !== 'all') analyticsQuery = analyticsQuery.eq('payment_method', method);
-    if (purpose && purpose !== 'all') analyticsQuery = analyticsQuery.eq('project_id', purpose);
+    if (purpose && purpose !== 'all') analyticsQuery = analyticsQuery.eq('purpose' as any, purpose);
     if (dateFrom) analyticsQuery = analyticsQuery.gte('created_at', dateFrom);
     if (dateTo) analyticsQuery = analyticsQuery.lte('created_at', `${dateTo}T23:59:59`);
     if (q) {
@@ -72,7 +72,7 @@ export default async function TransactionsPage({ params, searchParams }: Transac
     // Apply Filters
     if (status && status !== 'all') query = query.eq('status', status as any);
     if (method && method !== 'all') query = query.eq('payment_method', method);
-    if (purpose && purpose !== 'all') query = query.eq('project_id', purpose);
+    if (purpose && purpose !== 'all') query = query.eq('purpose' as any, purpose);
     if (dateFrom) query = query.gte('created_at', dateFrom);
     if (dateTo) query = query.lte('created_at', `${dateTo}T23:59:59`);
 
@@ -171,8 +171,8 @@ export default async function TransactionsPage({ params, searchParams }: Transac
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-900">
                                                     {(() => {
-                                                        const p = allPurposes.find((x: any) => x.id === transaction.project_id);
-                                                        return p ? p.title : transaction.project_id;
+                                                        const p = allPurposes.find((x: any) => x.id === transaction.purpose);
+                                                        return p ? p.title : transaction.purpose;
                                                     })()}
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-gray-500">

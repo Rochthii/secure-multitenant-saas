@@ -38,7 +38,7 @@ export default function ArchitecturePage() {
             </KhmerHeading>
 
             <p className="text-lg text-center text-gray-600 max-w-3xl mx-auto mb-12">
-                Chi nhánh Chantarangsay là một kiệt tác kiến trúc Khmer Nam tông, lưu giữ
+                Kiến trúc tự viện là một kiệt tác kiến trúc Khmer Nam tông, lưu giữ
                 những nét đẹp tinh tế của nghệ thuật tạo hình dân tộc.
             </p>
 

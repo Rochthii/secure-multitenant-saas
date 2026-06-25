@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
             supabase.from('pages').select('*'),
             supabase.from('about_sections').select('*'),
             supabase.from('hero_slides').select('*'),
-            supabase.from('dharma_talks').select('*'),
+            supabase.from('learning_resources').select('*'),
             supabase.from('faqs').select('*'),
             supabase.from('contact_messages').select('*'),
             supabase.from('newsletter_subscribers').select('*'),

@@ -19,7 +19,7 @@ export async function GET() {
     // Count items accurately for pagination
     let newsQuery = supabase.from('news').select('id', { count: 'exact', head: true }).eq('status', 'published');
     let eventsQuery = supabase.from('events').select('id', { count: 'exact', head: true }).in('status', ['upcoming', 'ongoing', 'completed']);
-    let dharmaQuery = supabase.from('dharma_talks').select('id', { count: 'exact', head: true }).eq('is_active', true);
+    let dharmaQuery = supabase.from('learning_resources').select('id', { count: 'exact', head: true }).eq('is_active', true);
     let projectsQuery = supabase.from('transaction_projects').select('id', { count: 'exact', head: true }).in('status', ['ongoing', 'completed']);
     
     if (tenantId) {
@@ -57,7 +57,7 @@ export async function GET() {
 
     for (let i = 0; i < dharmaPages; i++) {
         sitemapNodes += `    <sitemap>
-        <loc>${baseUrl}/sitemap-dharma.xml?page=${i}</loc>
+        <loc>${baseUrl}/sitemap-documents.xml?page=${i}</loc>
         <lastmod>${now}</lastmod>
     </sitemap>\n`;
     }

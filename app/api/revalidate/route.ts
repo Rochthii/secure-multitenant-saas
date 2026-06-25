@@ -222,12 +222,12 @@ export async function POST(req: NextRequest) {
             case 'dharma_talk_updated': {
                 const data = DharmaTalkUpdatedSchema.parse(payload);
                 // @ts-ignore
-                if (data.id) revalidateTag(CACHE_TAGS.dharmaTalks.item(data.id));
+                if (data.id) revalidateTag(CACHE_TAGS.learningResources.item(data.id));
                 // @ts-ignore
-                if (data.slug) revalidateTag(CACHE_TAGS.dharmaTalks.item(data.slug));
+                if (data.slug) revalidateTag(CACHE_TAGS.learningResources.item(data.slug));
                 if (data.tenantId) {
                     // @ts-ignore
-                    revalidateTag(CACHE_TAGS.dharmaTalks.list(data.tenantId));
+                    revalidateTag(CACHE_TAGS.learningResources.list(data.tenantId));
                 }
                 revalidateAllPaths(['/thuyet-phap'], data);
                 break;

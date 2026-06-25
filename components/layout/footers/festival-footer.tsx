@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { getVietnamTime } from '@/lib/utils/date';
 
 import React from 'react';
@@ -152,7 +152,7 @@ export function FestivalFooter({ settings = {}, domain, isCompany }: { settings?
                         {/* Social links */}
                         <div className="flex gap-3">
                             <a
-                                href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                href={settings['facebook_url'] || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-[#FFF8E7]/60 hover:text-[#FFD700] hover:drop-shadow-[0_0_8px_rgba(255,215,0,0.8)] transition-all"
@@ -188,7 +188,7 @@ export function FestivalFooter({ settings = {}, domain, isCompany }: { settings?
                             <span>5:00 – 20:00</span>
                         </div>
                         <a
-                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "Chi nhánh Chantarangsay")}`}
+                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-sm font-medium text-[#FF4D6D] hover:text-[#FFD700] transition-colors hover:drop-shadow-[0_0_8px_rgba(255,215,0,0.5)]"
@@ -216,8 +216,8 @@ export function FestivalFooter({ settings = {}, domain, isCompany }: { settings?
                             </li>
                             <li className="flex flex-col gap-1">
                                 <span className="font-semibold text-[#FFF8E7]">Email</span>
-                                <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="hover:text-[#FFD700] transition-colors hover:drop-shadow-[0_0_5px_rgba(255,215,0,0.5)]">
-                                    {settings['contact_email'] || 'contact@chantarangsay.org'}
+                                <a href={`mailto:${settings['contact_email'] || ''}`} className="hover:text-[#FFD700] transition-colors hover:drop-shadow-[0_0_5px_rgba(255,215,0,0.5)]">
+                                    {settings['contact_email'] || ''}
                                 </a>
                             </li>
                         </ul>

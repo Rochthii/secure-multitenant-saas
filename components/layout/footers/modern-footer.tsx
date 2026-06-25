@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { getVietnamTime } from '@/lib/utils/date';
 
 import React from 'react';
@@ -159,7 +159,7 @@ export function ModernFooter({ settings = {}, domain, isCompany }: { settings?: 
                             {/* Social links */}
                             <div className="flex gap-3 mt-2">
                                 <a
-                                    href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                    href={settings['facebook_url'] || "#"}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center justify-center w-12 h-12 bg-white/5 hover:bg-white/15 border border-white/5 rounded-full text-white hover:text-white transition-all hover:scale-105"
@@ -200,7 +200,7 @@ export function ModernFooter({ settings = {}, domain, isCompany }: { settings?: 
                             </div>
 
                             <a
-                                href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "Chi nhánh Chantarangsay")}`}
+                                href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "")}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 flex items-center justify-center gap-2 px-5 py-3.5 text-[14px] font-bold text-white bg-white/10 hover:bg-white/20 active:bg-white/30 rounded-xl transition-all"
@@ -237,7 +237,7 @@ export function ModernFooter({ settings = {}, domain, isCompany }: { settings?: 
                                 </li>
 
                                 <li>
-                                    <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="group flex items-start gap-4 p-3 -mx-3 rounded-2xl hover:bg-white/5 transition-all">
+                                    <a href={`mailto:${settings['contact_email'] || ''}`} className="group flex items-start gap-4 p-3 -mx-3 rounded-2xl hover:bg-white/5 transition-all">
                                         <div className="w-10 h-10 rounded-full bg-white/10 group-hover:bg-primary/20 flex items-center justify-center flex-shrink-0 text-white group-hover:text-primary transition-colors">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -246,7 +246,7 @@ export function ModernFooter({ settings = {}, domain, isCompany }: { settings?: 
                                         <div className="flex flex-col gap-0.5 max-w-full">
                                             <span className="text-[12px] font-bold text-gray-500 uppercase">Hộp thư điện tử</span>
                                             <span className="text-[15px] font-semibold text-white group-hover:text-primary transition-colors break-all">
-                                                {settings['contact_email'] || 'contact@chantarangsay.org'}
+                                                {settings['contact_email'] || ''}
                                             </span>
                                         </div>
                                     </a>

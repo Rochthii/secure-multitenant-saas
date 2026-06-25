@@ -142,9 +142,9 @@ export async function deleteTag(tenantId: string, id: string) {
 }
 
 /**
- * Lấy tags của một bản ghi (news, media, dharma_talks)
+ * Lấy tags của một bản ghi (news, media, dharma_talks, learning_resources)
  */
-export async function getItemTags(table: 'news_tags' | 'media_tags' | 'dharma_talk_tags', itemId: string, tenantId?: string) {
+export async function getItemTags(table: 'news_tags' | 'media_tags' | 'dharma_talk_tags' | 'learning_resource_tags', itemId: string, tenantId?: string) {
     const supabase = await createClient();
     const idField = table.replace('_tags', '_id');
 
@@ -174,7 +174,7 @@ export async function getItemTags(table: 'news_tags' | 'media_tags' | 'dharma_ta
  * Cập nhật tags cho một bản ghi
  */
 export async function updateItemTags(
-    table: 'news_tags' | 'media_tags' | 'dharma_talk_tags',
+    table: 'news_tags' | 'media_tags' | 'dharma_talk_tags' | 'learning_resource_tags',
     itemId: string,
     tagIds: string[],
     tenantId?: string
@@ -255,7 +255,7 @@ export async function suggestTags(title: string, content: string, tenantId?: str
 
         // 4. Các từ khóa SEO "vàng" của Chi nhánh (Bộ từ khóa lõi)
         const coreKeywords = [
-            'Chi nhánh Chantarangsay', 'Phật giáo Khmer', 'Văn hóa Khmer',
+            'Tin tức', 'Sự kiện', 'Thông báo',
             'Quận 3', 'Nam tông', 'Lễ hội', 'Từ thiện', 'Sự kiện'
         ];
 

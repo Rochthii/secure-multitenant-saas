@@ -98,11 +98,11 @@ interface ThemePreset {
     colors: ThemeColors;
 }
 
-// ── Tenant Presets (Phật giáo) ───────────────────────────────────────────────────
+// ── Tenant Presets (Layout-based) ───────────────────────────────────────────────────
 
 const PRESETS: ThemePreset[] = [
     {
-        name: 'Chantarangsay',
+        name: 'Amber Classic',
         colors: {
             primary: '#F59E0B', secondary: '#5C4033', accent: '#FF8C00',
             text: '#2C1810', bgStart: '#FEF9F3', bgEnd: '#FDF5EB',
@@ -110,7 +110,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'Phù Ly (Đỏ Kim)',
+        name: 'Royal Crimson',
         colors: {
             primary: '#D4AF37', secondary: '#8B1E1E', accent: '#C59A28',
             text: '#3A1F1F', bgStart: '#F5F0E6', bgEnd: '#EBE2CD',
@@ -118,7 +118,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: "Kh'leang (Xanh Lá)",
+        name: 'Forest Emerald',
         colors: {
             primary: '#2F6F4E', secondary: '#E8C547', accent: '#E8C547',
             text: '#132B1E', bgStart: '#FFFFFF', bgEnd: '#F0F5F2',
@@ -126,7 +126,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'Hộ Phòng (Tím)',
+        name: 'Royal Violet',
         colors: {
             primary: '#5A3E8E', secondary: '#F2D16B', accent: '#F2D16B',
             text: '#271744', bgStart: '#F5F0E6', bgEnd: '#EBE2D0',
@@ -136,7 +136,7 @@ const PRESETS: ThemePreset[] = [
 
     // ── Preset màu theo từng Layout Style ───────────────────────────────────
     {
-        name: 'modern — Ánh Trăng Rằm',
+        name: 'modern — Ánh Trăng',
         colors: {
             primary: '#C8B560', secondary: '#6FB3D3', accent: '#A89040',
             text: '#E8E4D9', bgStart: '#0D1B2A', bgEnd: '#162032',
@@ -144,7 +144,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'minimal — Vedanā Thuần Khiết',
+        name: 'minimal — Thuần Khiết',
         colors: {
             primary: '#B8860B', secondary: '#8A7A6A', accent: '#9A7209',
             text: '#1C1C1A', bgStart: '#FAFAF8', bgEnd: '#F3F0EA',
@@ -152,7 +152,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'lotus — Champa Neak',
+        name: 'lotus — Warm Coral',
         colors: {
             primary: '#C73B2A', secondary: '#F4A028', accent: '#E8896A',
             text: '#2D1A0E', bgStart: '#FDF6EE', bgEnd: '#FAF0E2',
@@ -160,7 +160,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'angkor — Prasat Khmer',
+        name: 'angkor — Heritage',
         colors: {
             primary: '#D4A843', secondary: '#7A5C3A', accent: '#4A8C6F',
             text: '#F0E8D0', bgStart: '#2C1A0A', bgEnd: '#1E1106',
@@ -168,7 +168,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'zen — Anapanasati',
+        name: 'zen — Nature Green',
         colors: {
             primary: '#2D6A4F', secondary: '#74C69D', accent: '#D4A843',
             text: '#1B4332', bgStart: '#F2F7F0', bgEnd: '#E8F2E5',
@@ -176,7 +176,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'sunrise — Bình Minh Mekong',
+        name: 'sunrise — Morning',
         colors: {
             primary: '#E05C1A', secondary: '#F4A028', accent: '#BD4291',
             text: '#2A1506', bgStart: '#FFF8F0', bgEnd: '#FFF0E0',
@@ -184,7 +184,7 @@ const PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'festival — Bon Khmer',
+        name: 'festival — Neon Night',
         colors: {
             primary: '#FFD700', secondary: '#FF4D6D', accent: '#39D5A0',
             text: '#FFF8E7', bgStart: '#12023A', bgEnd: '#1A0550',
@@ -362,7 +362,7 @@ export function LiveThemeEditor({ initialSettings, tenantType = 'tenant' }: { in
             <div className="bg-slate-900/20 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-5 shadow-none mb-8">
                 <div className="flex items-center gap-3 mb-5">
                     <h3 className="text-base font-bold text-white flex items-center gap-2">
-                        <span>🎨</span> {isCompany ? 'Bộ màu Doanh nghiệp Premium' : 'Bộ màu Phật giáo Premium'}
+                        <span>🎨</span> {isCompany ? 'Bộ màu Doanh nghiệp Premium' : 'Bộ màu hệ thống Premium'}
                     </h3>
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/[0.06] text-slate-300 border border-white/[0.08]">
                         {activePresetsList.length} Themes {isCompany ? 'chuyên nghiệp' : 'nghiên cứu'}

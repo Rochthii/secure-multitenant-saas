@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { getVietnamTime } from '@/lib/utils/date';
 
 import React from 'react';
@@ -132,7 +132,7 @@ export function ZenFooter({ settings = {}, domain, isCompany }: { settings?: Rec
                         {/* Social links */}
                         <div className="flex gap-4">
                             <a
-                                href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                href={settings['facebook_url'] || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-white border border-[#E1E7E3] hover:border-[#4A6B5D] flex items-center justify-center text-[#86968D] hover:text-[#4A6B5D] transition-all duration-300 hover:shadow-md hover:-translate-y-1"
@@ -169,7 +169,7 @@ export function ZenFooter({ settings = {}, domain, isCompany }: { settings?: Rec
                             <span className="font-light text-[#6B7C73] tracking-wide">5:00 – 20:00</span>
                         </div>
                         <a
-                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "Chi nhánh Chantarangsay")}`}
+                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-[13px] font-medium text-[#4A6B5D] hover:text-[#2C3E35] transition-colors group"
@@ -200,8 +200,8 @@ export function ZenFooter({ settings = {}, domain, isCompany }: { settings?: Rec
                             </li>
                             <li className="flex flex-col gap-1.5">
                                 <span className="font-medium text-[#2C3E35]">Email</span>
-                                <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="hover:text-[#4A6B5D] transition-colors relative inline-block w-max group">
-                                    {settings['contact_email'] || 'contact@chantarangsay.org'}
+                                <a href={`mailto:${settings['contact_email'] || ''}`} className="hover:text-[#4A6B5D] transition-colors relative inline-block w-max group">
+                                    {settings['contact_email'] || ''}
                                     <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-[#4A6B5D] transition-all duration-300 group-hover:w-full"></span>
                                 </a>
                             </li>

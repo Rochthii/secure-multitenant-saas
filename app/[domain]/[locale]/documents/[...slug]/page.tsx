@@ -10,7 +10,7 @@ import { getCachedDharmaTalksByCategoryGroup, getCachedDharmaTalksPage } from '@
 import { FileText, FolderOpen } from 'lucide-react';
 
 type Category = Database['public']['Tables']['categories']['Row'];
-type DharmaTalk = Database['public']['Tables']['dharma_talks']['Row'];
+type DharmaTalk = Database['public']['Tables']['learning_resources']['Row'];
 
 type Props = {
     params: Promise<{ slug: string[]; locale: string; domain: string }>;

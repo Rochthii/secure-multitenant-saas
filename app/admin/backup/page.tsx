@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Loader2, History, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Download, Loader2, History, CheckCircle2, XCircle, Clock, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -31,6 +31,7 @@ export default function BackupPage() {
     const [loading, setLoading] = useState(false);
     const [selectedTable, setSelectedTable] = useState<string>('all');
     const [selectedTenantId, setSelectedTenantId] = useState<string>('all');
+    const [selectedRestoreTenantId, setSelectedRestoreTenantId] = useState<string>('all');
     const [tenants, setTenants] = useState<Tenant[]>([]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -109,7 +110,7 @@ export default function BackupPage() {
                 : null;
             const tableSuffix = selectedTable !== 'all' ? `-${selectedTable}` : '';
             const tenantSuffix = tenantName ? `-tenant-${tenantName}` : '';
-            const filename = `chantarangsay-backup-${dateStr}${tenantSuffix}${tableSuffix}.json`;
+            const filename = `saas-backup-${dateStr}${tenantSuffix}${tableSuffix}.json`;
 
             // Download — phải append, click rồi cleanup mới thực sự tải file
             const url = URL.createObjectURL(blob);
@@ -132,7 +133,11 @@ export default function BackupPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!confirm('CẢNH BÁO: Phục hồi (Restore) sẽ GHI ĐÈ dữ liệu hiện tại bằng dữ liệu trong file JSON. Bạn có chắc chắn muốn tiếp tục?')) {
+        const confirmMsg = selectedRestoreTenantId !== 'all'
+            ? `CẢNH BÁO: Phục hồi CÔ LẬP sẽ chỉ chèn/ghi đè dữ liệu của chi nhánh được chọn và tự động bỏ qua toàn bộ dữ liệu của chi nhánh khác trong file JSON. Bạn có chắc chắn muốn tiếp tục?`
+            : `CẢNH BÁO NGUY HIỂM: Phục hồi TOÀN CỤC sẽ ghi đè toàn bộ dữ liệu hệ thống trong file JSON bao gồm cả dữ liệu của tất cả chi nhánh. Bạn có chắc chắn muốn tiếp tục?`;
+
+        if (!confirm(confirmMsg)) {
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -142,7 +147,13 @@ export default function BackupPage() {
         formData.append('backup_file', file);
 
         try {
-            const res = await fetch('/api/admin/backup/restore', {
+            const params = new URLSearchParams();
+            if (selectedRestoreTenantId !== 'all') {
+                params.set('tenant_id', selectedRestoreTenantId);
+            }
+            const url = `/api/admin/backup/restore${params.toString() ? '?' + params.toString() : ''}`;
+
+            const res = await fetch(url, {
                 method: 'POST',
                 body: formData
             });
@@ -150,7 +161,11 @@ export default function BackupPage() {
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || 'Failed to restore');
 
-            toast.success(`Phục hồi thành công! Đã ghi đè ${result.total || 0} bản ghi.`);
+            if (result.isolated) {
+                toast.success(`Khôi phục cô lập thành công! Đã cập nhật ${result.total || 0} bản ghi. Đã bỏ qua và bảo toàn ${result.skipped || 0} bản ghi của các chi nhánh khác chống Rollback chéo.`);
+            } else {
+                toast.success(`Phục hồi toàn cục thành công! Đã ghi đè ${result.total || 0} bản ghi.`);
+            }
         } catch (error: any) {
             toast.error(error.message || 'Lỗi phục hồi dữ liệu');
         } finally {
@@ -306,6 +321,33 @@ export default function BackupPage() {
                                     ⚠️ Cảnh Báo Nguy Hiểm: Thao tác này sẽ tự động thay đổi vĩnh viễn dữ liệu hiện có bằng bản gốc nằm trong file. Nếu upload nhầm file có thể dẫn đến lệch trạng thái toàn hệ thống. Hãy thực sự cẩn trọng!
                                 </p>
                             </div>
+
+                            {/* Chọn Workspace để khôi phục cô lập */}
+                            {tenants.length > 0 && (
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Lọc phục hồi cho Workspace (Tenant)</label>
+                                    <select
+                                        value={selectedRestoreTenantId}
+                                        onChange={(e) => setSelectedRestoreTenantId(e.target.value)}
+                                        className="w-full max-w-xs border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-950 rounded-xl p-2.5 text-sm text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-rose-500 outline-none transition-all"
+                                        disabled={loading || restoring}
+                                    >
+                                        <option value="all">Tự động khôi phục toàn cục (Global)</option>
+                                        {tenants.map((t) => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                    {selectedRestoreTenantId !== 'all' ? (
+                                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                                            <ShieldCheck className="w-3.5 h-3.5" /> Isolated Disaster Recovery (UPSERT) - Chống Rollback chéo
+                                        </p>
+                                    ) : (
+                                        <p className="text-xs text-rose-500 font-semibold">
+                                            ⚠ Cảnh báo: Khôi phục toàn cục có thể thay đổi dữ liệu của tất cả chi nhánh
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-6">
@@ -325,7 +367,7 @@ export default function BackupPage() {
                                 {restoring ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                                        Đang tải và chèn dữ liệu...
+                                        Đang phục hồi...
                                     </>
                                 ) : (
                                     "Tải lên File JSON & Phục hồi"

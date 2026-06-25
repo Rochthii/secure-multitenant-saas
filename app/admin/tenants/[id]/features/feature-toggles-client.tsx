@@ -16,7 +16,7 @@ interface FeatureTogglesClientProps {
 
 const MODULE_DEF = [
     { id: 'news_events', name: 'Tin tức & Bài viết', icon: Newspaper, desc: 'Quản lý và hiển thị tin tức, bài đăng.' },
-    { id: 'dharma_talks', name: 'Khoá tu & Lịch học', icon: Heart, desc: 'Phân hệ quản lý các khóa tu học, lịch giảng pháp.' },
+    { id: 'dharma_talks', name: 'Tài liệu & SOP Đào tạo', icon: Heart, desc: 'Phân hệ quản lý các tài liệu hướng dẫn, video SOP và tài liệu đào tạo nội bộ.' },
     { id: 'transactions', name: 'Giao dịch (Thanh toán)', icon: CreditCard, desc: 'Cho phép thanh toán, quyên góp. TẮT NẾU CÓ SỰ CỐ BẢO MẬT (Incident).', isCritical: true },
     { id: 'digital_library', name: 'Thư viện số', icon: Library, desc: 'Tài liệu, kinh sách, tài nguyên media.' },
     { id: 'registrations', name: 'Form Đăng ký', icon: CalendarCheck, desc: 'Đăng ký tham gia sự kiện, làm công quả.' },

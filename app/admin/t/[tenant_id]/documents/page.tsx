@@ -1,13 +1,13 @@
 import React from 'react';
-import { getDharmaTalksAdmin } from '@/app/actions/admin/dharma-talks';
-import { DharmaTalksClient } from './dharma-talks-client';
+import { getLearningResourcesAdmin } from '@/app/actions/admin/learning-resources';
+import { LearningResourcesClient } from './learning-resources-client';
 import { getTenant } from '@/app/actions/admin/tenants';
 import { createClient } from '@/lib/supabase/server';
-import { GraduationCap, BookOpen } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 
-export default async function PhapAmAdminPage({ params }: { params: Promise<{ tenant_id: string }> }) {
+export default async function LearningResourcesAdminPage({ params }: { params: Promise<{ tenant_id: string }> }) {
     const { tenant_id } = await params;
-    const talks = await getDharmaTalksAdmin(tenant_id);
+    const talks = await getLearningResourcesAdmin(tenant_id);
     const { tenant } = await getTenant(tenant_id);
     const isCompany = true;
     
@@ -43,21 +43,19 @@ export default async function PhapAmAdminPage({ params }: { params: Promise<{ te
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
-                            {isCompany ? <GraduationCap className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                            <GraduationCap className="w-6 h-6" />
                         </div>
                         <h1 className="text-3xl font-playfair font-black text-slate-900">
-                            {isCompany ? 'Hệ thống E-Learning & Đào tạo' : 'Quản lý Pháp Thoại & Tư liệu'}
+                            Hệ thống E-Learning & Đào tạo
                         </h1>
                     </div>
                     <p className="text-slate-500 text-sm max-w-xl">
-                        {isCompany 
-                            ? 'Quản lý các khóa đào tạo nội bộ, video hướng dẫn nghiệp vụ và tài liệu kỹ thuật dành cho nhân sự.' 
-                            : 'Số hóa và quản lý các bài giảng pháp âm, tài liệu Phật giáo và tư liệu truyền thống của cơ sở.'}
+                        Quản lý các khóa đào tạo nội bộ, video hướng dẫn nghiệp vụ và tài liệu kỹ thuật dành cho nhân sự.
                     </p>
                 </div>
             </div>
 
-            <DharmaTalksClient
+            <LearningResourcesClient
                 initialTalks={talks as any}
                 categories={categories || []}
                 tenants={[]}

@@ -33,7 +33,7 @@ export async function uploadReceipt(formData: FormData) {
 
         // Generate filename
         const fileName = `receipt-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-        const folderPath = `chantarangsay/receipts/${new Date().getFullYear()}`;
+        const folderPath = `saas/receipts/${new Date().getFullYear()}`;
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);

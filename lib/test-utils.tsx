@@ -94,7 +94,7 @@ export function createMockEvent(overrides = {}) {
     start_date: new Date('2026-05-15').toISOString(),
     start_time: '09:00',
     event_date: new Date('2026-05-15').toISOString(),
-    location: 'Chi nhánh Chantarangsay',
+    location: 'Hội trường chính',
     max_participants: 100,
     current_participants: 25,
     registration_deadline: new Date('2026-05-10').toISOString(),

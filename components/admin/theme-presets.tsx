@@ -21,7 +21,7 @@ interface ThemePreset {
 
 const THEME_PRESETS: ThemePreset[] = [
     {
-        name: 'Chi nhánh Chantarangsay',
+        name: 'Amber Classic',
         colors: {
             primary: '#F59E0B',
             secondary: '#5C4033',
@@ -35,7 +35,7 @@ const THEME_PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'Chi nhánh Phù Ly',
+        name: 'Royal Crimson',
         colors: {
             primary: '#D4AF37',  // Vàng kim
             secondary: '#8B1E1E', // Đỏ sẫm
@@ -49,7 +49,7 @@ const THEME_PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: "Chi nhánh Kh'leang",
+        name: 'Forest Emerald',
         colors: {
             primary: '#2F6F4E',   // Xanh lá đậm
             secondary: '#E8C547', // Vàng nhạt
@@ -63,7 +63,7 @@ const THEME_PRESETS: ThemePreset[] = [
         }
     },
     {
-        name: 'Chi nhánh Hộ Phòng Cũ',
+        name: 'Royal Violet',
         colors: {
             primary: '#5A3E8E',   // Tím chủ đạo
             secondary: '#F2D16B', // Vàng nhạt

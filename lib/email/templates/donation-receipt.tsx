@@ -48,7 +48,7 @@ export function TransactionReceipt({
                                 Hệ thống Quản trị
                             </Text>
                             <Text style={{ fontSize: '16px', color: '#B8860B', margin: '0' }}>
-                                BIÊN NHẬN CÚNG DƯỜNG
+                                BIÊN NHẬN ĐÓNG GÓP
                             </Text>
                         </Section>
 
@@ -109,15 +109,15 @@ export function TransactionReceipt({
 
                         {/* Thank You Message */}
                         <Text style={{ fontSize: '16px', color: '#333', lineHeight: '1.8', textAlign: 'center', fontStyle: 'italic' }}>
-                            Giao dịch thanh toán của quý Nhân sự sẽ được sử dụng vào việc hoằng dương Phật pháp,
-                            duy trì hoạt động của chi nhánh, và các hoạt động từ thiện phục vụ cộng đồng.
+                            Giao dịch thanh toán của quý Nhân sự sẽ được sử dụng vào việc duy trì hoạt động của tổ chức
+                            và các hoạt động phục vụ cộng đồng.
                         </Text>
 
                         <Hr style={{ margin: '30px 0', borderColor: '#eee' }} />
 
                         {/* Blessing */}
                         <Text style={{ fontSize: '15px', color: '#B8860B', textAlign: 'center', fontWeight: 'bold' }}>
-                            🙏 សាធុ! សាធុ! សាធុ!
+                            🙏 Xin chân thành cảm ơn!
                         </Text>
                         <Text style={{ fontSize: '14px', color: '#666', textAlign: 'center', fontStyle: 'italic', marginTop: '10px' }}>
                             Cầu chúc quý Nhân sự luôn an lạc, hạnh phúc, vạn sự như ý
@@ -126,7 +126,7 @@ export function TransactionReceipt({
                         {/* CTA */}
                         <Section style={{ textAlign: 'center', margin: '30px 0' }}>
                             <Button
-                                href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://chantarangsay.org'}/vi/transactions`}
+                                href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://nexus-corp-ptit.vercel.app'}/vi/transactions`}
                                 style={{
                                     backgroundColor: '#B8860B',
                                     color: 'white',
@@ -137,7 +137,7 @@ export function TransactionReceipt({
                                     fontWeight: 'bold',
                                 }}
                             >
-                                Xem Lịch Sử Cúng Dường
+                                Xem Lịch Sử Đóng Góp
                             </Button>
                         </Section>
 

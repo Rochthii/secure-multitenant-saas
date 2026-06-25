@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 
-// ID của Chi nhánh Chantarangsay được lấy làm hệ quy chiếu (Master Template)
+// ID của Master Tenant được lấy làm hệ quy chiếu (Master Template)
 const MASTER_TENANT_ID = '55555555-5555-5555-5555-555555555555';
 
 export async function provisionDefaultCategoriesForNewTenant(newTenantId: string) {

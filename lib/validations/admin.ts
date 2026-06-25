@@ -256,15 +256,15 @@ export const SiteSettingsSchema = z.object({
 }).strip();
 
 export type SiteSettingsInput = z.infer<typeof SiteSettingsSchema>;
-// ─── DHARMA TALKS ────────────────────────────────────────────────────────────
-export const DharmaTalkSchema = z.object({
+// ─── LEARNING RESOURCES ───────────────────────────────────────────────────────
+export const LearningResourceSchema = z.object({
     title_vi: z.string().min(1, 'Tiêu đề tiếng Việt là bắt buộc').max(500),
     title_km: z.string().max(500).optional().nullable(),
     title_en: z.string().max(500).optional().nullable(),
     description_vi: z.string().max(5000).optional().nullable(),
     media_url: z.string().url('URL video không hợp lệ').min(1, 'URL video là bắt buộc'),
     thumbnail_url: z.union([z.string().url(), z.literal('')]).optional().nullable(),
-    speaker_name_vi: z.string().max(255).optional().nullable(),
+    instructor_name_vi: z.string().max(255).optional().nullable(),
     topic_vi: z.string().max(255).optional().nullable(),
     duration_minutes: z.number().int().positive().optional().nullable(),
     slug: z.string().regex(/^[a-z0-9-]+$/, 'Slug chỉ được chứa chữ thường, số và dấu gạch ngang').optional().nullable(),
@@ -277,7 +277,7 @@ export const DharmaTalkSchema = z.object({
     published_to: z.array(flexUuid).optional().nullable(),
 }).strip();
 
-export type DharmaTalkInput = z.infer<typeof DharmaTalkSchema>;
+export type LearningResourceInput = z.infer<typeof LearningResourceSchema>;
 
 // ─── DONATION PROJECTS ────────────────────────────────────────────────────────
 export const TransactionProjectSchema = z.object({

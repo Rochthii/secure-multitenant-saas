@@ -761,7 +761,7 @@ export interface Database {
         }
         Relationships: []
       }
-      dharma_talks: {
+      learning_resources: {
         Row: {
           id: string
           title_vi: string
@@ -772,11 +772,11 @@ export interface Database {
           description_en: string | null
           media_type: string
           media_url: string
-          thumbnail_url: string
+          thumbnail_url: string | null
           duration_minutes: number | null
-          speaker_name_vi: string
-          speaker_name_km: string | null
-          speaker_name_en: string | null
+          instructor_name_vi: string | null
+          instructor_name_km: string | null
+          instructor_name_en: string | null
           topic_vi: string | null
           topic_km: string | null
           topic_en: string | null
@@ -789,6 +789,9 @@ export interface Database {
           updated_at: string | null
           category_id: string | null
           tenant_id: string | null
+          slug: string | null
+          published_to: string[] | null
+          approval_status: string | null
         }
         Insert: {
           id?: string
@@ -800,11 +803,11 @@ export interface Database {
           description_en?: string | null
           media_type: string
           media_url: string
-          thumbnail_url: string
+          thumbnail_url?: string | null
           duration_minutes?: number | null
-          speaker_name_vi: string
-          speaker_name_km?: string | null
-          speaker_name_en?: string | null
+          instructor_name_vi?: string | null
+          instructor_name_km?: string | null
+          instructor_name_en?: string | null
           topic_vi?: string | null
           topic_km?: string | null
           topic_en?: string | null
@@ -817,6 +820,9 @@ export interface Database {
           updated_at?: string | null
           category_id?: string | null
           tenant_id?: string | null
+          slug?: string | null
+          published_to?: string[] | null
+          approval_status?: string | null
         }
         Update: {
           id?: string
@@ -828,11 +834,11 @@ export interface Database {
           description_en?: string | null
           media_type?: string
           media_url?: string
-          thumbnail_url?: string
+          thumbnail_url?: string | null
           duration_minutes?: number | null
-          speaker_name_vi?: string
-          speaker_name_km?: string | null
-          speaker_name_en?: string | null
+          instructor_name_vi?: string | null
+          instructor_name_km?: string | null
+          instructor_name_en?: string | null
           topic_vi?: string | null
           topic_km?: string | null
           topic_en?: string | null
@@ -845,10 +851,13 @@ export interface Database {
           updated_at?: string | null
           category_id?: string | null
           tenant_id?: string | null
+          slug?: string | null
+          published_to?: string[] | null
+          approval_status?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "dharma_talks_category_id_fkey"
+            foreignKeyName: "learning_resources_category_id_fkey"
             columns: ["category_id"]
             referencedRelation: "categories"
             referencedColumns: ["id"]
@@ -1305,19 +1314,19 @@ export interface Database {
         }
         Relationships: []
       }
-      dharma_talk_tags: {
+      learning_resource_tags: {
         Row: {
-          dharma_talk_id: string
+          learning_resource_id: string
           tag_id: string
           tenant_id: string | null
         }
         Insert: {
-          dharma_talk_id: string
+          learning_resource_id: string
           tag_id: string
           tenant_id?: string | null
         }
         Update: {
-          dharma_talk_id?: string
+          learning_resource_id?: string
           tag_id?: string
           tenant_id?: string | null
         }

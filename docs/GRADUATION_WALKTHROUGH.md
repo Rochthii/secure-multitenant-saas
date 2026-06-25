@@ -4,6 +4,10 @@
 > **Trạng thái hệ thống:** **[100% HOÀN THÀNH - ĐÃ SẴN SÀNG TRÊN PRODUCTION CLOUD]**  
 > **Tài liệu tham khảo canonical:** [docs/17_GRADUATION_THESIS_PROPOSAL.md](file:///e:/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md) | [docs/20_GAP_AND_REMEDIATION_REPORT.md](file:///e:/PTIT_THESIS_SAAS/docs/20_GAP_AND_REMEDIATION_REPORT.md)
 
+> [!NOTE]
+> **Tuyên Bố Học Thuật (Academic Disclaimer):**
+> Phân hệ AI Security Copilot và RAG AI mô tả trong tài liệu này chỉ đóng vai trò là một tiện ích phụ trợ (Auxiliary Service) phục vụ NCKH mở rộng của sinh viên. Trọng tâm cốt lõi của Đồ án Tốt nghiệp là Kiến trúc phần mềm an toàn (Secure Multi-tenant SaaS), cô lập tenant cấp cơ sở dữ liệu (RLS), cơ chế ABAC kiểm soát ngữ cảnh truy cập và sổ cái kiểm toán bất biến (WORM Vault) chống rollback chéo.
+
 ---
 
 ## 1. XÁC NHẬN TRẠNG THÁI HỆ THỐNG (PROJECT READINESS)
@@ -13,7 +17,6 @@ Dự án của bạn đã **hoàn thành 100% ở cấp độ doanh nghiệp th�
 - **WORM Audit Trail:** Block UPDATE/DELETE ở cấp CSDL, mã hóa SHA-256 liên kết chuỗi khối hoạt động thực tế.
 - **SOAR Tiered Response & Edge Blocking:** Chặn đứng IP của kẻ tấn công tại Edge Middleware (< 4ms), chống Reverse DDoS, bảo vệ Admin whitelist và tự động bắn Telegram Alert sắc nét.
 - **HBCAD Anomaly Engine:** Động cơ phát hiện bất thường lai đo lường rủi ro tích lũy (CRS) thời gian thực bằng thuật toán Z-Score hành vi kết hợp kiểm soát ABAC.
-- **RAG & GraphRAG AI Copilot:** Đã deploy thành công lên Cloud, sửa lỗi cổng Gateway và lỗi CSDL, nạp thành công vector nhúng 1536 chiều cho 4 văn bản chính sách lớn, stream phản hồi tiếng Việt có dẫn nguồn trực quan.
 - **Performance Benchmarking:** Đo đạc thực tế độ trễ của 111,000 bản ghi dữ liệu thật, vẽ biểu đồ phẳng chứng minh độ trễ độc lập với quy mô (Scale-independent Latency).
 - **Threat Simulator v5:** Giả lập 5 cuộc tấn công thực tế (gồm kịch bản Honeypot mới), tích hợp **Bản Đồ Luồng Tấn Công Động (Zero Trust Map)** hoạt họa SVG trực quan hóa vị trí bị chặn và Postgres `EXPLAIN ANALYZE` ngay trên UI.
 

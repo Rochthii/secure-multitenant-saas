@@ -8,24 +8,24 @@ import { createAuditLog } from '@/lib/audit';
 import { updateItemTags } from './tags';
 import { z } from 'zod';
 import { generateSlug } from '@/lib/utils';
-import { DharmaTalkSchema, BatchOrderSchema, formatZodError, DharmaTalkInput } from '@/lib/validations/admin';
+import { LearningResourceSchema, BatchOrderSchema, formatZodError, LearningResourceInput } from '@/lib/validations/admin';
 import { executeSafeAction } from '@/lib/utils/action-handler';
 
 import { CACHE_TAGS } from '@/lib/cache/tags';
 
-function revalidateDharmaCache(tenantId?: string | null) {
+function revalidateLearningCache(tenantId?: string | null) {
     if (tenantId) {
         // @ts-ignore
-        revalidateTag(CACHE_TAGS.dharmaTalks.list(tenantId));
+        revalidateTag(CACHE_TAGS.learningResources.list(tenantId));
         // @ts-ignore
         revalidateTag(CACHE_TAGS.system.dashboardStats(tenantId));
         // @ts-ignore
-        revalidateTag('dharma-talks');
+        revalidateTag('learning-resources');
     } else {
         // @ts-ignore
-        revalidateTag(CACHE_TAGS.dharmaTalks.all);
+        revalidateTag(CACHE_TAGS.learningResources.all);
         // @ts-ignore
-        revalidateTag('dharma-talks');
+        revalidateTag('learning-resources');
         // @ts-ignore
         revalidateTag(CACHE_TAGS.system.dashboardStatsGlobal);
     }
@@ -79,19 +79,18 @@ export async function fetchYouTubeInfo(url: string): Promise<{
 }
 
 /**
- * Lấy danh sách tất cả dharma talks (admin page — không cache)
- * FIXED: thêm requireEditor() để ngăn unauthenticated read
+ * Lấy danh sách tất cả tài liệu học tập / SOP (admin page — không cache)
  */
-export async function getDharmaTalksAdmin(tenantId?: string) {
+export async function getLearningResourcesAdmin(tenantId?: string) {
     await requireEditor();
     const supabase = await createClient();
 
     let query = (supabase as any)
-        .from('dharma_talks')
+        .from('learning_resources')
         .select('*');
 
     if (tenantId) {
-        // Bao gồm bài viết của chính chi nhánh này HOẶC bài từ chi nhánh khác được broadcast tới
+        // Bao gồm tài liệu của chính chi nhánh này HOẶC tài liệu được broadcast tới
         query = query.or(`tenant_id.eq.${tenantId},published_to.cs.{${tenantId}}`);
     }
 
@@ -100,24 +99,22 @@ export async function getDharmaTalksAdmin(tenantId?: string) {
         .order('created_at', { ascending: false });
 
     if (error) {
-        console.error('getDharmaTalksAdmin error:', error);
+        console.error('getLearningResourcesAdmin error:', error);
         return [];
     }
     return data || [];
 }
 
 /**
- * Tạo dharma talk mới
- * FIXED: requireEditor() thay vì requireAdmin() — editor có thể thêm nội dung
+ * Tạo tài liệu học tập mới
  */
-export const createDharmaTalk = executeSafeAction(async (input: DharmaTalkInput, tagIds?: string[]) => {
+export const createLearningResource = executeSafeAction(async (input: LearningResourceInput, tagIds?: string[]) => {
     const user = await requireEditor();
-    await requirePermission('dharma-talks', 'create');
+    await requirePermission('dharma-talks', 'create'); // Dùng chung permission key để tránh sửa DB permission table
     const supabase = await createClient();
     const context = await getUserContext();
 
-    // FIXED: Runtime validation thay vì chỉ TypeScript type check
-    const parsed = DharmaTalkSchema.safeParse(input);
+    const parsed = LearningResourceSchema.safeParse(input);
     if (!parsed.success) {
         return { success: false, error: formatZodError(parsed.error) };
     }
@@ -126,7 +123,6 @@ export const createDharmaTalk = executeSafeAction(async (input: DharmaTalkInput,
     const thumbnail = parsed.data.thumbnail_url ||
         (videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null);
 
-    // Tự động gán tenant_id: Ưu tiên input > Category > User Role
     let finalTenantId = parsed.data.tenant_id;
 
     if (context && !['super_admin', 'company_editor'].includes(context.role) && context.tenantId) {
@@ -140,8 +136,8 @@ export const createDharmaTalk = executeSafeAction(async (input: DharmaTalkInput,
         media_type: 'video',
         media_url: parsed.data.media_url,
         thumbnail_url: thumbnail,
-        speaker_name_vi: parsed.data.speaker_name_vi || 'Multi-tenant Ecosystem',
-        speaker_name_km: null,
+        instructor_name_vi: parsed.data.instructor_name_vi || 'Multi-tenant Ecosystem',
+        instructor_name_km: null,
         topic_vi: parsed.data.topic_vi || null,
         duration_minutes: parsed.data.duration_minutes || null,
         is_active: parsed.data.is_active ?? true,
@@ -154,71 +150,64 @@ export const createDharmaTalk = executeSafeAction(async (input: DharmaTalkInput,
         published_to: parsed.data.published_to || null,
     };
     const { data, error } = await (supabase as any)
-        .from('dharma_talks')
+        .from('learning_resources')
         .insert(payload)
         .select('id')
         .single();
 
     if (error) {
-        console.error('createDharmaTalk error:', error);
+        console.error('createLearningResource error:', error);
         return { success: false, error: error.message };
     }
 
     await createAuditLog({
         user,
         action: 'create',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: (data as any).id,
         newData: payload,
         tenantId: payload.tenant_id,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidateDharmaCache(parsed.data.tenant_id);
+    revalidatePath('/admin/documents');
+    revalidateLearningCache(parsed.data.tenant_id);
 
-    // --- TAGS INTEGRATION ---
     if (tagIds && tagIds.length > 0) {
-        await updateItemTags('dharma_talk_tags', data.id, tagIds, parsed.data.tenant_id || undefined);
+        await updateItemTags('learning_resource_tags', data.id, tagIds, parsed.data.tenant_id || undefined);
     }
-    // -----------------------
 
     return { success: true, id: data.id };
 });
 
 /**
- * Cập nhật dharma talk
- * FIXED: requireEditor() + fetch oldData cho audit log
+ * Cập nhật tài liệu học tập
  */
-export const updateDharmaTalk = executeSafeAction(async (id: string, input: Partial<DharmaTalkInput>, tagIds?: string[]) => {
+export const updateLearningResource = executeSafeAction(async (id: string, input: Partial<LearningResourceInput>, tagIds?: string[]) => {
     const user = await requireEditor();
     await requirePermission('dharma-talks', 'update');
-    await enforceTenantScopeForRecord('dharma_talks', id);
+    await enforceTenantScopeForRecord('learning_resources', id);
     const supabase = await createClient();
 
-    // Validate các field được truyền vào
-    const parsed = DharmaTalkSchema.partial().safeParse(input);
+    const parsed = LearningResourceSchema.partial().safeParse(input);
     if (!parsed.success) {
         return { success: false, error: formatZodError(parsed.error) };
     }
 
-    // FIXED: Fetch oldData trước khi update để audit log đầy đủ
     const { data: oldData } = await (supabase as any)
-        .from('dharma_talks').select('*').eq('id', id).single();
+        .from('learning_resources').select('*').eq('id', id).single();
 
     if (!oldData) {
-        return { success: false, error: 'Không tìm thấy bài giảng' };
+        return { success: false, error: 'Không tìm thấy tài liệu hướng dẫn' };
     }
 
-    // CHẶN: Admin chi nhánh không được sửa bài của Admin Tổng hoặc bài được broadcast tới
     const rootId = '55555555-5555-5555-5555-555555555555';
     const scope = await getTenantScope();
     const isGlobalPost = !oldData.tenant_id || oldData.tenant_id === rootId;
     
     if (scope && isGlobalPost) {
-        return { success: false, error: 'Bạn không có quyền chỉnh sửa bài giảng của hệ thống. Vui lòng liên hệ Admin Tổng.' };
+        return { success: false, error: 'Bạn không có quyền chỉnh sửa tài liệu của hệ thống. Vui lòng liên hệ Admin Tổng.' };
     }
 
-    // Nếu URL thay đổi, tự động cập nhật thumbnail
     let thumbnail = parsed.data.thumbnail_url;
     if (parsed.data.media_url && !parsed.data.thumbnail_url) {
         const videoId = extractYouTubeId(parsed.data.media_url);
@@ -230,65 +219,60 @@ export const updateDharmaTalk = executeSafeAction(async (id: string, input: Part
     if (payload.category_id === '') payload.category_id = null;
     if (payload.tenant_id === '') payload.tenant_id = null;
 
-    // Tự động gán tenant_id từ danh mục nếu chưa có (Admin tổng sửa bài)
     if (!payload.tenant_id && payload.category_id) {
         const { data: catData } = await (supabase as any).from('categories').select('tenant_id').eq('id', payload.category_id).single();
         if (catData?.tenant_id) {
             payload.tenant_id = catData.tenant_id;
         }
     }
-    // ensure published_to is handled correctly
     if (payload.published_to !== undefined && payload.published_to?.length === 0) payload.published_to = null;
 
-    // Xóa các trường không có trong schema cache DB
     delete payload.approval_status;
 
     const { error } = await (supabase as any)
-        .from('dharma_talks')
+        .from('learning_resources')
         .update(payload)
         .eq('id', id);
 
     if (error) {
-        console.error('updateDharmaTalk error:', error);
+        console.error('updateLearningResource error:', error);
         return { success: false, error: error.message };
     }
 
     await createAuditLog({
         user,
         action: 'update',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: id,
         oldData: oldData ?? null,
         newData: payload,
         tenantId: payload.tenant_id || (oldData as any).tenant_id,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidatePath(`/admin/dharma-talks/${id}`);
-    revalidateDharmaCache(payload.tenant_id || oldData?.tenant_id);
+    revalidatePath('/admin/documents');
+    revalidatePath(`/admin/documents/${id}`);
+    revalidateLearningCache(payload.tenant_id || oldData?.tenant_id);
 
-    // --- TAGS INTEGRATION ---
     if (tagIds) {
-        await updateItemTags('dharma_talk_tags', id, tagIds, (payload.tenant_id || oldData?.tenant_id) || undefined);
+        await updateItemTags('learning_resource_tags', id, tagIds, (payload.tenant_id || oldData?.tenant_id) || undefined);
     }
-    // -----------------------
 
     return { success: true };
 });
 
 /**
- * Xóa dharma talk — giữ requireAdmin()
+ * Xóa tài liệu học tập
  */
-export const deleteDharmaTalk = executeSafeAction(async (id: string) => {
+export const deleteLearningResource = executeSafeAction(async (id: string) => {
     const user = await requireAdmin();
     await requirePermission('dharma-talks', 'delete');
-    await enforceTenantScopeForRecord('dharma_talks', id);
+    await enforceTenantScopeForRecord('learning_resources', id);
     const supabase = await createClient();
 
-    const { data: oldData } = await (supabase as any).from('dharma_talks').select('*').eq('id', id).single();
+    const { data: oldData } = await (supabase as any).from('learning_resources').select('*').eq('id', id).single();
     
     if (!oldData) {
-        return { success: false, error: 'Không tìm thấy bài giảng hoặc bạn không có quyền xóa.' };
+        return { success: false, error: 'Không tìm thấy tài liệu học tập hoặc bạn không có quyền xóa.' };
     }
 
     const scope = await getTenantScope();
@@ -297,54 +281,52 @@ export const deleteDharmaTalk = executeSafeAction(async (id: string) => {
     const isBroadcastedToMe = scope && oldData.published_to?.includes(scope);
 
     if (!isOwner && isBroadcastedToMe) {
-        // LOGIC "XÓA ẢO": Chỉ gỡ tên chi nhánh khỏi danh sách nhận tin
         const newPublishedTo = (oldData.published_to || []).filter((tid: string) => tid !== scope);
         const { error: updateError } = await (supabase as any)
-            .from('dharma_talks')
+            .from('learning_resources')
             .update({ published_to: newPublishedTo.length > 0 ? newPublishedTo : null })
             .eq('id', id);
 
-        if (updateError) return { success: false, error: 'Lỗi khi gỡ bài giảng hệ thống: ' + updateError.message };
+        if (updateError) return { success: false, error: 'Lỗi khi gỡ tài liệu hệ thống: ' + updateError.message };
 
         await createAuditLog({
-            user, action: 'update', tableName: 'dharma_talks',
+            user, action: 'update', tableName: 'learning_resources',
             recordId: id, oldData, newData: { published_to: newPublishedTo },
             tenantId: scope,
         });
 
-        revalidatePath('/admin/dharma-talks');
-        revalidateDharmaCache(scope);
-        return { success: true, message: 'Đã gỡ bài giảng hệ thống khỏi danh sách của bạn.' };
+        revalidatePath('/admin/documents');
+        revalidateLearningCache(scope);
+        return { success: true, message: 'Đã gỡ tài liệu hệ thống khỏi danh sách của bạn.' };
     }
 
-    const { error } = await (supabase as any).from('dharma_talks').delete().eq('id', id);
+    const { error } = await (supabase as any).from('learning_resources').delete().eq('id', id);
 
     if (error) {
-        console.error('deleteDharmaTalk error:', error);
-        if (error.code === '23503') return { success: false, error: 'Bài giảng này đang được tham chiếu, không thể xóa' };
+        console.error('deleteLearningResource error:', error);
+        if (error.code === '23503') return { success: false, error: 'Tài liệu này đang được tham chiếu, không thể xóa' };
         return { success: false, error: error.message };
     }
 
     await createAuditLog({
         user,
         action: 'delete',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: id,
         oldData: oldData ?? null,
         tenantId: oldData?.tenant_id || scope,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidateDharmaCache(oldData?.tenant_id);
+    revalidatePath('/admin/documents');
+    revalidateLearningCache(oldData?.tenant_id);
 
     return { success: true };
 });
 
 /**
  * Cập nhật thứ tự (order_position) hàng loạt
- * FIXED: requireEditor() thay vì requireAdmin()
  */
-export const reorderDharmaTalks = executeSafeAction(async (items: { id: string; order_position: number }[]) => {
+export const reorderLearningResources = executeSafeAction(async (items: { id: string; order_position: number }[]) => {
     const user = await requireEditor();
     await requirePermission('dharma-talks', 'update');
     const supabase = await createClient();
@@ -355,100 +337,99 @@ export const reorderDharmaTalks = executeSafeAction(async (items: { id: string; 
     }
 
     const { error } = await (supabase as any)
-        .from('dharma_talks')
+        .from('learning_resources')
         .upsert(parsed.data.map(i => ({ id: i.id, order_position: i.order_position })), { onConflict: 'id' });
 
     if (error) {
-        console.error('Reorder dharma talks error:', error);
-        return { success: false, error: 'Có lỗi khi sắp xếp bài giảng: ' + error.message };
+        console.error('Reorder learning resources error:', error);
+        return { success: false, error: 'Có lỗi khi sắp xếp tài liệu: ' + error.message };
     }
 
-    // Fetch tenant_id of first item for revalidation and audit log
     let batchTenantId = null;
     if (items.length > 0) {
-        const { data } = await (supabase as any).from('dharma_talks').select('tenant_id').eq('id', items[0].id).single();
+        const { data } = await (supabase as any).from('learning_resources').select('tenant_id').eq('id', items[0].id).single();
         batchTenantId = data?.tenant_id;
     }
 
     await createAuditLog({
         user,
         action: 'update',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: 'batch_reorder',
         newData: { reordered_count: items.length, items },
         tenantId: batchTenantId,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidateDharmaCache(batchTenantId);
+    revalidatePath('/admin/documents');
+    revalidateLearningCache(batchTenantId);
 
     return { success: true };
 });
 
-export const submitDharmaTalkForReview = executeSafeAction(async (id: string) => {
+export const submitLearningResourceForReview = executeSafeAction(async (id: string) => {
     const user = await requireEditor();
     await requirePermission('dharma-talks', 'update');
-    await enforceTenantScopeForRecord('dharma_talks', id);
+    await enforceTenantScopeForRecord('learning_resources', id);
     const supabase = await createClient();
     const { error } = await (supabase as any)
-        .from('dharma_talks')
+        .from('learning_resources')
         .update({ approval_status: 'pending_review' })
         .eq('id', id);
 
     if (error) return { success: false, error: 'Có lỗi khi gửi duyệt' };
-    revalidatePath('/admin/dharma-talks');
-    const { data: oldData } = await (supabase as any).from('dharma_talks').select('tenant_id').eq('id', id).single();
-    revalidateDharmaCache(oldData?.tenant_id);
+    revalidatePath('/admin/documents');
+    const { data: oldData } = await (supabase as any).from('learning_resources').select('tenant_id').eq('id', id).single();
+    revalidateLearningCache(oldData?.tenant_id);
     return { success: true };
 });
 
-export const approveDharmaTalk = executeSafeAction(async (id: string, note?: string) => {
+export const approveLearningResource = executeSafeAction(async (id: string, note?: string) => {
     const user = await requireAdmin();
     await requirePermission('dharma-talks', 'update');
-    await enforceTenantScopeForRecord('dharma_talks', id);
+    await enforceTenantScopeForRecord('learning_resources', id);
     const supabase = await createClient();
-    const { data: oldData } = await (supabase as any).from('dharma_talks').select('*').eq('id', id).single();
-    const { error } = await (supabase as any).from('dharma_talks').update({ approval_status: 'published' }).eq('id', id);
+    const { data: oldData } = await (supabase as any).from('learning_resources').select('*').eq('id', id).single();
+    const { error } = await (supabase as any).from('learning_resources').update({ approval_status: 'published' }).eq('id', id);
 
     if (error) return { success: false, error: 'Có lỗi khi duyệt bài: ' + error.message };
 
     await createAuditLog({
         user,
         action: 'approve',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: id,
         oldData,
         newData: { approval_status: 'published', note },
         tenantId: oldData?.tenant_id,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidatePath(`/admin/dharma-talks/${id}`);
-    revalidateDharmaCache(oldData?.tenant_id);
+    revalidatePath('/admin/documents');
+    revalidatePath(`/admin/documents/${id}`);
+    revalidateLearningCache(oldData?.tenant_id);
     return { success: true };
 });
 
-export const rejectDharmaTalk = executeSafeAction(async (id: string, note: string) => {
+export const rejectLearningResource = executeSafeAction(async (id: string, note: string) => {
     const user = await requireAdmin();
     await requirePermission('dharma-talks', 'update');
-    await enforceTenantScopeForRecord('dharma_talks', id);
+    await enforceTenantScopeForRecord('learning_resources', id);
     const supabase = await createClient();
-    const { data: oldData } = await (supabase as any).from('dharma_talks').select('*').eq('id', id).single();
-    const { error } = await (supabase as any).from('dharma_talks').update({ approval_status: 'rejected' }).eq('id', id);
+    const { data: oldData } = await (supabase as any).from('learning_resources').select('*').eq('id', id).single();
+    const { error } = await (supabase as any).from('learning_resources').update({ approval_status: 'rejected' }).eq('id', id);
 
     if (error) return { success: false, error: 'Có lỗi khi từ chối bài: ' + error.message };
 
     await createAuditLog({
         user,
         action: 'reject',
-        tableName: 'dharma_talks',
+        tableName: 'learning_resources',
         recordId: id,
         oldData,
         newData: { approval_status: 'rejected', note },
         tenantId: oldData?.tenant_id,
     });
 
-    revalidatePath('/admin/dharma-talks');
-    revalidateDharmaCache(oldData?.tenant_id);
+    revalidatePath('/admin/documents');
+    revalidateLearningCache(oldData?.tenant_id);
     return { success: true };
 });

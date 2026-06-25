@@ -139,7 +139,7 @@ export function LotusFooter({ settings = {}, domain, isCompany }: { settings?: R
                         {/* Social links */}
                         <div className="flex gap-4">
                             <a
-                                href={settings['facebook_url'] || "https://facebook.com/chuachantarangsay"}
+                                href={settings['facebook_url'] || "#"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-yellow-600 hover:text-white transition-all transform hover:scale-110"
@@ -175,7 +175,7 @@ export function LotusFooter({ settings = {}, domain, isCompany }: { settings?: R
                             <span className="text-white/70 font-mono tracking-wide">5:00 – 20:00</span>
                         </div>
                         <a
-                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "Chi nhánh Chantarangsay")}`}
+                            href={settings['map_direction_url'] || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings['address'] || "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-sm font-bold text-yellow-500 hover:text-yellow-400 transition-colors group"
@@ -203,8 +203,8 @@ export function LotusFooter({ settings = {}, domain, isCompany }: { settings?: R
                             </li>
                             <li className="flex flex-col gap-1">
                                 <span className="font-bold text-white">Email</span>
-                                <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="text-white/70 hover:text-yellow-500 transition-colors">
-                                    {settings['contact_email'] || 'contact@chantarangsay.org'}
+                                <a href={`mailto:${settings['contact_email'] || ''}`} className="text-white/70 hover:text-yellow-500 transition-colors">
+                                    {settings['contact_email'] || ''}
                                 </a>
                             </li>
                         </ul>

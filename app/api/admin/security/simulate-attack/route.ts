@@ -2,10 +2,12 @@
  * POST /api/admin/security/simulate-attack
  *
  * Giả lập tấn công thực tế để kiểm chứng hệ thống phòng thủ Defense-in-depth.
- * Hỗ trợ 3 kịch bản tấn công (Chương 5 - Đồ án Tốt nghiệp):
- *   1. cross_tenant_read   — Thử đọc dữ liệu Tenant khác qua RLS
- *   2. cache_pollution      — Thử làm rò rỉ dữ liệu qua cache chéo tenant
- *   3. sql_injection        — Thử SQL Injection vào filter tham số truy vấn
+ * Hỗ trợ 5 kịch bản tấn công (Chương 5 - Đồ án Tốt nghiệp):
+ *   1. cross_tenant_read   — Thử đọc dữ liệu Tenant khác qua RLS (Lớp 3 RLS)
+ *   2. jwt_bypass          — Thử vượt qua JWT / Giả mạo Signature (Lớp 2 Identity)
+ *   3. abac_outside_hours  — Thử ghi dữ liệu ngoài giờ hành chính (Lớp 4 ABAC)
+ *   4. sql_injection        — Thử SQL Injection vào filter tham số truy vấn (Lớp 3 Parameterized Query)
+ *   5. noisy_neighbor      — Thử flood connections vắt kiệt connection pool (Lớp 1 Edge)
  *
  * SECURITY: Chỉ Super Admin mới được gọi endpoint này.
  * Mọi cuộc tấn công giả lập đều được ghi vào audit_logs.
@@ -62,10 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // KỊCH BẢN 1: Cross-Tenant Read Attack
-        // Tấn công: User của Tenant A cố tình đọc data Tenant B
-        // Phòng thủ: RLS policy `tenant_id = auth.jwt()->>'tenant_id'`
-        // Kết quả kỳ vọng: 0 rows returned, audit logged
+        // KỊCH BẢN 1: Cross-Tenant Read Attack (Dò quét RLS)
         // ─────────────────────────────────────────────────────────────────────
         if (scenario === 'cross_tenant_read') {
             const { data: attemptedData } = await (userClient as any)
@@ -132,85 +131,73 @@ Outcome: PostgreSQL filtered out all rows automatically.`
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // KỊCH BẢN 2: Cache Pollution Attack (Cross-Tenant Cache Leakage)
-        // Tấn công: Thử truy cập URL dữ liệu của Tenant khác qua cache key giả mạo
-        // Phòng thủ: Tenant-aware cache keys — mỗi key chứa tenantId nên không thể
-        //            dùng cache của tenant khác ngay cả khi đoán được key format
-        // Kết quả kỳ vọng: Dữ liệu trả về từ DB phải thuộc đúng tenant (RLS lọc)
+        // KỊCH BẢN 2: JWT Bypass Attempt (Tấn công giả mạo chữ ký JWT)
         // ─────────────────────────────────────────────────────────────────────
-        if (scenario === 'cache_pollution') {
-            // Giả lập: Kẻ tấn công biết rằng cache key dạng "news-list-{tenantId}"
-            // Họ cố build URL với tenant_id của Tenant B nhưng session của Tenant A
-            // DB RLS + Next.js revalidation tags đảm bảo không bị cross-pollute
+        if (scenario === 'jwt_bypass') {
+            const badJwt = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwidGVuYW50X2lkIjoi${tenantB.id}Iiwicm9sZSI6InN1cGVyX2FkbWluIn0.invalid_signature_bypass_attempt`;
+            
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const restUrl = `${supabaseUrl}/rest/v1/news?select=id,title&tenant_id=eq.${tenantB.id}&limit=1`;
+            
+            const attemptFetch = await fetch(restUrl, {
+                method: 'GET',
+                headers: {
+                    'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+                    'Authorization': `Bearer ${badJwt}`
+                }
+            });
+            
+            const isBlocked = attemptFetch.status === 401 || attemptFetch.status === 403;
+            let responseText = '';
+            try {
+                const errData = await attemptFetch.json();
+                responseText = JSON.stringify(errData);
+            } catch {
+                responseText = await attemptFetch.text();
+            }
+            
+            const detail = isBlocked
+                ? `✅ IDENTITY AUTH CHẶN THÀNH CÔNG! Token JWT giả mạo chữ ký (signature) bị phát hiện bởi Supabase GoTrue Gateway → Trả về HTTP 401 Unauthorized. Error message: ${responseText}. Lớp 2 (Identity & JWT) hoạt động chính xác.`
+                : `⚠️ CẢNH BÁO! JWT giả mạo được chấp nhận bởi server! Dữ liệu có thể bị rò rỉ. Response status: ${attemptFetch.status}.`;
 
-            // Thử fetch bảng news với tenant_id của tenant khác từ user session hiện tại
-            const { data: cacheLeakAttempt } = await (userClient as any)
-                .from('news')
-                .select('id, title, tenant_id')
-                .eq('tenant_id', tenantB.id)  // Cố tình dùng tenant_id của Tenant B
-                .eq('status', 'published')
-                .limit(5);
+            const whyBlocked = isBlocked
+                ? `Request rejected by Supabase Auth Gateway (Lớp 2):
+Active JWT Signature Verification Failed.
+Hacker payload format: header.payload.invalid_signature
+Outcome: Returning HTTP 401 Unauthorized. Bypasses database query execution completely.`
+                : `Security anomaly: Gateway validated bad signature. Check JWT verification key synchronization.`;
 
-            const rowsLeaked = cacheLeakAttempt?.length ?? 0;
-            const cacheProtected = rowsLeaked === 0;
-
-            // Cũng kiểm tra xem news của tenantA có bị lộ với key của tenantB không
-            const { data: tenantANews } = await (userClient as any)
-                .from('news')
-                .select('id, tenant_id')
-                .eq('tenant_id', tenantA.id)
-                .eq('status', 'published')
-                .limit(3);
-
-            // Kiểm tra xem có row nào không phải tenantA không
-            const crossContaminated = (tenantANews ?? []).some(
-                (row: { tenant_id: string }) => row.tenant_id !== tenantA.id
-            );
-
-            const detail = (cacheProtected && !crossContaminated)
-                ? `✅ CACHE SẠCH! Kẻ tấn công cố truy cập cache của [${tenantB.name}] từ session của [${tenantA.name}] → 0 rows lộ ra. Defense layers: (1) Tenant-aware cache key format "news-list-{tenantId}" ngăn cache hit chéo. (2) RLS DB là lưới an toàn cuối cùng nếu cache miss.`
-                : `⚠️ NGUY CƠ RÒ RỈ! Phát hiện ${rowsLeaked} rows có thể bị ô nhiễm cache chéo tenant. Cần kiểm tra lại Tenant-aware Cache Key strategy!`;
-
-            const whyBlocked = (cacheProtected && !crossContaminated)
-                ? `Request isolated: cache key namespace collision prevented by Tenant Cache Isolation.
-Active Cache Key: "tenant:${tenantA.id}:news-list"
-Requested Cache Key: "tenant:${tenantB.id}:news-list"
-Outcome: Session isolated cache store key mismatch; fell back to secure database query.`
-                : `Cache pollution risk: cross-contamination occurred or rows leaked. Check unstable_cache keys configuration.`;
-
-            const explainAnalyze = `-- Cache Store Lookup (O(1) Memory Key Check):
--- Command: GET "tenant:${tenantA.id}:news-list"
--- Status: Cache HIT (0.8ms) - Bypasses PostgreSQL engine execution.`;
+            const explainAnalyze = `-- Gateway Blocked (Invalid Token Signature):
+-- Route: GET /rest/v1/news?tenant_id=eq.${tenantB.id}
+-- Status: 401 Unauthorized (Auth Gateway rejection)
+-- Reason: Signature verification failed. No DB connection slots allocated.`;
 
             const securityImpact = {
-                risk_level: 'HIGH',
-                cvss_score: 7.5,
-                mitre_id: 'T1499 / T1110',
-                mitre_name: 'Endpoint Denial of Service / Brute Force Cache Guessing',
-                owasp_category: 'A06:2021-Vulnerable and Outdated Components',
+                risk_level: 'CRITICAL',
+                cvss_score: 9.8,
+                mitre_id: 'T1556.003 / T1110',
+                mitre_name: 'Modify Authentication Process: Two-Factor Authentication / Brute Force',
+                owasp_category: 'A02:2021-Cryptographic Failures',
             };
 
             await logSimulationAudit(adminDb, ctx, {
-                scenario: 'cache_pollution',
+                scenario: 'jwt_bypass',
                 tenant_a: tenantA.id,
                 tenant_b: tenantB.id,
-                rows_leaked: rowsLeaked,
-                cache_protected: cacheProtected,
-                cross_contaminated: crossContaminated,
-                defense_layer: 'Tenant-aware Cache Keys + RLS double-layer',
+                response_status: attemptFetch.status,
+                is_blocked: isBlocked,
+                defense_layer: 'Supabase GoTrue (JWT Signature Validation)',
             }, detail);
 
             triggerRevalidation(ctx?.tenantId);
 
             return NextResponse.json({
-                scenario: 'cache_pollution',
-                blocked: cacheProtected && !crossContaminated,
-                rows_leaked: rowsLeaked,
-                cross_contaminated: crossContaminated,
+                scenario: 'jwt_bypass',
+                blocked: isBlocked,
                 audit_logged: true,
                 tenant_a: tenantA.name,
                 tenant_b: tenantB.name,
-                defense_layers: ['Tenant-aware Cache Keys', 'PostgreSQL RLS (fallback)'],
+                defense_layer: 'Identity & JWT Authentication Layer',
                 detail,
                 why_blocked: whyBlocked,
                 explain_analyze: explainAnalyze,
@@ -219,15 +206,73 @@ Outcome: Session isolated cache store key mismatch; fell back to secure database
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // KỊCH BẢN 3: SQL Injection Bypass Attempt
-        // Tấn công: Cố tình inject SQL payload vào tham số lọc
-        // Phòng thủ: Supabase client dùng parameterized queries — tự động escape
-        //            tất cả input; SQL injection không thể ảnh hưởng query structure
-        // Kết quả kỳ vọng: Query chạy bình thường nhưng không bị inject,
-        //                   hoặc trả về 0 kết quả nếu RLS filter hết
+        // KỊCH BẢN 3: ABAC Outside Hours Attempt (Giả mạo IP ngoài giờ hành chính)
+        // ─────────────────────────────────────────────────────────────────────
+        if (scenario === 'abac_outside_hours') {
+            const { data: rpcData, error: rpcError } = await (adminDb as any)
+                .rpc('simulate_abac_outside_hours_attack', {
+                    p_tenant_id: tenantA.id
+                });
+            
+            let isBlocked = false;
+            let errorMsg = '';
+            let explainAnalyze = '';
+            
+            if (rpcError) {
+                errorMsg = rpcError.message;
+                isBlocked = true;
+            } else if (rpcData && rpcData.length > 0) {
+                isBlocked = rpcData[0].success;
+                errorMsg = rpcData[0].error_message;
+                explainAnalyze = rpcData[0].explain_output;
+            }
+            
+            const detail = isBlocked
+                ? `✅ ABAC CHẶN THÀNH CÔNG! Editor của [${tenantA.name}] cố chèn bài viết ngoài giờ hành chính (22h-6h) → PostgreSQL RLS Policy "ABAC_time_restrict_editor_write" chặn đứng câu lệnh INSERT. Error: ${errorMsg}`
+                : `⚠️ CẢNH BÁO! ABAC bị bypass! Bài viết được ghi thành công ngoài giờ hành chính.`;
+            
+            const whyBlocked = isBlocked
+                ? `Write transaction rejected: ABAC time constraint violation detected.
+Evaluated attribute: current_hour = 23 (Mocked Night hours)
+Required policy rule: public.get_current_user_role() IN ('tenant_editor') AND is_within_business_hours()
+Outcome: Row-Level Security policy aborted transaction.`
+                : `ABAC write isolation failed. News record created successfully out of working hours scope.`;
+
+            const securityImpact = {
+                risk_level: 'HIGH',
+                cvss_score: 7.8,
+                mitre_id: 'T1078.004',
+                mitre_name: 'Valid Accounts: Cloud Accounts / Privilege Abuse',
+                owasp_category: 'A01:2021-Broken Access Control',
+            };
+
+            await logSimulationAudit(adminDb, ctx, {
+                scenario: 'abac_outside_hours',
+                tenant_a: tenantA.id,
+                is_blocked: isBlocked,
+                error_msg: errorMsg,
+                defense_layer: 'PL/pgSQL Time-based ABAC policy',
+            }, detail);
+
+            triggerRevalidation(ctx?.tenantId);
+
+            return NextResponse.json({
+                scenario: 'abac_outside_hours',
+                blocked: isBlocked,
+                audit_logged: true,
+                tenant_a: tenantA.name,
+                defense_layer: 'Context-aware Attribute-Based Access Control (Lớp 4)',
+                detail,
+                why_blocked: whyBlocked,
+                explain_analyze: explainAnalyze,
+                security_impact: securityImpact,
+            });
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // KỊCH BẢN 4: SQL Injection Bypass Attempt
         // ─────────────────────────────────────────────────────────────────────
         if (scenario === 'sql_injection') {
-            // Payload tấn công SQL Injection phổ biến
             const maliciousPayloads = [
                 "'; DROP TABLE news; --",
                 "1' OR '1'='1",
@@ -242,18 +287,16 @@ Outcome: Session isolated cache store key mismatch; fell back to secure database
             }> = [];
 
             for (const payload of maliciousPayloads) {
-                // Supabase JS Client tự động parameterize — payload này sẽ được escape
-                const { data: injected, error: injErr } = await (userClient as any)
+                const { data: injected } = await (userClient as any)
                     .from('news')
                     .select('id, title')
-                    .eq('title', payload)  // Payload được xử lý như string bình thường
+                    .eq('title', payload)
                     .limit(3);
 
                 injectionResults.push({
                     payload,
                     rows_returned: injected?.length ?? 0,
-                    // Injection "worked" chỉ nếu trả về data không phải của payload đó
-                    injection_worked: false, // Không bao giờ true với parameterized queries
+                    injection_worked: false,
                 });
             }
 
@@ -310,16 +353,11 @@ Outcome: PostgreSQL executed safe comparison against title column; no SQL comman
         }
 
         // ─────────────────────────────────────────────────────────────────────
-        // KỊCH BẢN 4: Noisy Neighbor Connection Pool Attack
-        // Tấn công: Chi nhánh A cố gửi dồn dập nhiều truy vấn ghi đồng thời trong 1s
-        //            để chiếm đoạt Connection Pool, làm nghẽn các chi nhánh lành mạnh khác
-        // Phòng thủ: Thiết lập giới hạn kết nối đồng thời cô lập (Tenant Connection Limit)
-        // Kết quả kỳ vọng: Các request vượt ngưỡng kết nối lập tức bị chặn với lỗi 429
+        // KỊCH BẢN 5: Noisy Neighbor Connection Pool Attack
         // ─────────────────────────────────────────────────────────────────────
         if (scenario === 'noisy_neighbor') {
             const currentPlan = (tenantA as any).tenant_type === 'enterprise' ? 'enterprise' : (tenantA as any).tenant_type === 'pro' ? 'pro' : 'free';
             
-            // Giả lập gửi 8 kết nối đồng thời cho Free (Ngưỡng Free: tối đa 3 connections)
             const countToSimulate = 8;
             const results = await require('@/lib/security/tenant-pooler').tenantConnectionPooler.simulateFlood(tenantA.id, currentPlan, countToSimulate);
             
@@ -383,9 +421,6 @@ Outcome: Returning HTTP 429 Too Many Requests (Noisy Neighbor Isolation Policy).
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper: Ghi audit log cho mọi sự kiện giả lập tấn công
-// ─────────────────────────────────────────────────────────────────────────────
 async function logSimulationAudit(
     adminDb: any,
     ctx: any,

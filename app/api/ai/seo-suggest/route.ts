@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'AI chưa được cấu hình (thiếu GEMINI_API_KEY)' }, { status: 503 });
         }
 
-        const prompt = `Bạn là chuyên gia SEO cho website của Chi nhánh Phật giáo Nam Tông Khmer Chantarangsay tại Việt Nam.
+        const prompt = `Bạn là chuyên gia SEO cho website.
         
 Dựa trên tiêu đề và nội dung bài viết dưới đây, hãy tạo ra:
 1. meta_title (tối đa 60 ký tự, hấp dẫn, có từ khóa)

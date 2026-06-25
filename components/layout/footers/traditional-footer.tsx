@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { getVietnamTime } from '@/lib/utils/date';
 
 import React from 'react';
@@ -218,7 +218,7 @@ export function TraditionalFooter({
                                     </a>
                                 </li>
                                 <li>
-                                    <a href={`mailto:${settings['contact_email'] || 'contact@chantarangsay.org'}`} className="flex items-center gap-3 min-h-[44px] text-sm text-gray-400 hover:text-white active:text-white transition-colors break-all">
+                                    <a href={`mailto:${settings['contact_email'] || ''}`} className="flex items-center gap-3 min-h-[44px] text-sm text-gray-400 hover:text-white active:text-white transition-colors break-all">
                                         <svg className="w-4 h-4 flex-shrink-0 text-gold-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>

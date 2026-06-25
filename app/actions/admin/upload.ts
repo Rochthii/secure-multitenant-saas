@@ -80,7 +80,7 @@ export async function uploadImage(formData: FormData, tenantIdProp?: string) {
             .maybeSingle();
 
         const tenantFolder = tenantIdProp || roleData?.tenant_id || 'global';
-        const folderPath = `chantarangsay/${tenantFolder}/${new Date().getFullYear()}`;
+        const folderPath = `saas/${tenantFolder}/${new Date().getFullYear()}`;
 
         // Convert File to ArrayBuffer then to Buffer
         const arrayBuffer = await file.arrayBuffer();
@@ -176,7 +176,7 @@ export async function uploadMedia(formData: FormData, tenantIdProp?: string) {
                 .maybeSingle();
 
             const tenantFolder = tenantIdProp || roleData?.tenant_id || 'global';
-            const folderPath = `chantarangsay/${tenantFolder}/${new Date().getFullYear()}`;
+            const folderPath = `saas/${tenantFolder}/${new Date().getFullYear()}`;
 
             // Convert File to ArrayBuffer
             const arrayBuffer = await file.arrayBuffer();

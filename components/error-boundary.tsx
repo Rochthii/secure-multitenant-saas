@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
                     <div className="max-w-md w-full text-center">
-                        {/* Buddha Icon */}
+                        {/* Alert Icon */}
                         <div className="mb-6">
                             <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500" />
                         </div>
@@ -81,7 +81,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                         {/* Contact Info */}
                         <p className="mt-8 text-sm text-gray-500">
-                            Cần trợ giúp? Liên hệ: <a href="mailto:contact@chantarangsay.org" className="text-gold-primary hover:underline">contact@chantarangsay.org</a>
+                            Cần trợ giúp? Vui lòng liên hệ quản trị viên hệ thống.
                         </p>
                     </div>
                 </div>

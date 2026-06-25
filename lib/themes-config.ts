@@ -18,7 +18,7 @@ export interface ColorTheme {
     };
 }
 
-export const BUDDHIST_THEMES: ColorTheme[] = [
+export const SYSTEM_THEMES: ColorTheme[] = [
     // ── 1. PRESET THEO PHONG CÁCH THIẾT KẾ ─────────────────────────────────────
     {
         id: 'modern-moon',
@@ -274,5 +274,6 @@ export const BUDDHIST_THEMES: ColorTheme[] = [
     }
 ];
 
-export const SYSTEM_THEMES = BUDDHIST_THEMES;
+/** @deprecated Use SYSTEM_THEMES directly */
+export const BUDDHIST_THEMES = SYSTEM_THEMES;
 

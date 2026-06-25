@@ -77,7 +77,7 @@ export default async function EventsListPage(props: EventsPageProps) {
     }
 
     if (categoryFilter && categoryFilter !== 'all') {
-        dbQuery = dbQuery.eq('category_id', categoryFilter);
+        dbQuery = dbQuery.eq('category_id' as any, categoryFilter);
     }
 
     const { data: events, count } = await dbQuery

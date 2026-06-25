@@ -1,5 +1,3 @@
-
-
 /**
  * /api/admin/backup/restore — RESTORE ROUTE
  * 
@@ -7,6 +5,7 @@
  * - Requires admin/super_admin role
  * - Reads JSON file, validates schema
  * - Upserts data into tables
+ * - Supports Isolated Restore (Disaster Recovery) by tenant_id to prevent cross-rollback
  */
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
@@ -24,7 +23,16 @@ export async function POST(request: Request) {
         const scope = await getTenantScope();
         const supabase = await createClient();
 
-        // 1. Get file from FormData
+        // 1. Lấy tenant_id cần khôi phục cô lập từ URL query parameter
+        const { searchParams } = new URL(request.url);
+        const targetTenantId = searchParams.get('tenant_id') || null;
+
+        // Xác định effectiveTenantId:
+        // - Nếu là tenant_admin: ép buộc dùng scope của họ
+        // - Nếu là super_admin: dùng targetTenantId đã chọn (nếu có)
+        const effectiveTenantId = scope || (targetTenantId !== 'all' ? targetTenantId : null);
+
+        // 2. Get file from FormData
         const formData = await request.formData();
         const file = formData.get('backup_file') as File;
         
@@ -32,7 +40,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No file provided' }, { status: 400 });
         }
 
-        // 2. Parse JSON
+        // 3. Parse JSON
         const textWrapper = await file.text();
         const backupData = JSON.parse(textWrapper);
 
@@ -42,26 +50,34 @@ export async function POST(request: Request) {
 
         const dataTree = backupData.data;
 
-        // Ensure user is authorized to restore into specific scope if tenant
+        // Kiểm tra phân quyền phục hồi chéo
         if (scope && backupData.scope && backupData.scope !== `tenant:${scope}`) {
             return NextResponse.json({ error: `You only have permission to restore files scoped to tenant_id: ${scope}` }, { status: 403 });
         }
 
-        // 3. Upsert data safely via chunks to avoid DB overload/timeout
+        // 4. Upsert data safely via chunks to avoid DB overload/timeout
         const CHUNK_SIZE = 500;
         let totalUpserted = 0;
+        let totalSkipped = 0;
 
         for (const [table, records] of Object.entries(dataTree)) {
             const arr = records as any[];
             if (!arr || arr.length === 0) continue;
 
-            // Security: Enforce tenant scope on all records before UPSERT
+            // Lọc dữ liệu cô lập nghiêm ngặt:
+            // Nếu có effectiveTenantId (khôi phục cô lập cho 1 tenant):
+            // - Chỉ giữ lại những dòng có tenant_id khớp với effectiveTenantId.
+            // - Bỏ qua toàn bộ các dòng khác để tránh Rollback chéo sang Tenant khác.
             const safeRecords = arr.filter(record => {
-               if (scope) {
-                   return record.tenant_id === scope;
-               }
-               return true; // global admins can restore anything
+                if (effectiveTenantId) {
+                    const match = record.tenant_id === effectiveTenantId;
+                    if (!match) totalSkipped++;
+                    return match;
+                }
+                return true; // global admins restore all if not isolated filter
             });
+
+            if (safeRecords.length === 0) continue;
 
             for (let i = 0; i < safeRecords.length; i += CHUNK_SIZE) {
                 const chunk = safeRecords.slice(i, i + CHUNK_SIZE);
@@ -78,20 +94,36 @@ export async function POST(request: Request) {
             }
         }
 
-        // 4. Audit Log
+        // 5. Ghi Audit Log chi tiết để đảm bảo tính minh bạch học thuật
+        const isIsolated = !!effectiveTenantId;
+        const detailsMessage = isIsolated 
+            ? `Khôi phục thảm họa cô lập (Isolated Disaster Recovery) hoàn tất cho Tenant ID: [${effectiveTenantId}]. Đã khôi phục (UPSERT) thành công ${totalUpserted} bản ghi. Đã lọc bỏ và bảo toàn ${totalSkipped} bản ghi của các chi nhánh khác chống Rollback chéo.`
+            : `Khôi phục toàn cục hệ thống (Global Restore) hoàn tất. Đã khôi phục (UPSERT) thành công ${totalUpserted} bản ghi.`;
+
         await createAuditLog({
             user: { id: ctx.userId, email: ctx.email },
             action: 'restore',
             tableName: 'system',
             newData: {
                 total_records_upserted: totalUpserted,
+                total_records_skipped: totalSkipped,
+                is_isolated_recovery: isIsolated,
+                target_tenant_id: effectiveTenantId || 'global',
                 original_version: backupData.version,
                 source_exported_by: backupData.exported_by,
-                scope_restored: scope || 'global',
+                scope_restored: effectiveTenantId ? `tenant:${effectiveTenantId}` : 'global',
+                message: detailsMessage
             },
         });
 
-        return NextResponse.json({ success: true, total: totalUpserted });
+        return NextResponse.json({ 
+            success: true, 
+            total: totalUpserted,
+            skipped: totalSkipped,
+            isolated: isIsolated,
+            target_tenant_id: effectiveTenantId,
+            message: detailsMessage
+        });
 
     } catch (err: any) {
         console.error('RESTORE ERROR:', err);

@@ -21,16 +21,15 @@ export async function GET(request: Request) {
     const start = page * ITEMS_PER_SITEMAP;
     const end = start + ITEMS_PER_SITEMAP - 1;
 
-    // Query slug field for SEO-friendly URLs (fallback to id if no slug)
-    let query = supabase.from('dharma_talks').select('id, slug, updated_at').eq('is_active', true).range(start, end);
+    let query = supabase.from('learning_resources').select('id, slug, updated_at').eq('is_active', true).range(start, end);
     if (tenantId) {
         query = query.or(`tenant_id.eq.${tenantId},published_to.cs.{${tenantId}}`);
     }
 
-    const { data: dharma } = await query;
+    const { data: resources } = await query;
 
-    // Build URLs with hreflang alternates — prefer slug over UUID
-    const urlsXml = (dharma || []).map((item: any) => {
+    // Build URLs with hreflang alternates
+    const urlsXml = (resources || []).map(item => {
         const itemSlug = item.slug || item.id;
 
         const hreflangLinks = LOCALES.map(locale =>
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
         <loc>${escapeXml(`${baseUrl}/vi/documents/${itemSlug}`)}</loc>
         <lastmod>${item.updated_at ? new Date(item.updated_at).toISOString() : new Date().toISOString()}</lastmod>
         <changefreq>weekly</changefreq>
-        <priority>0.7</priority>
+        <priority>0.6</priority>
 ${hreflangLinks}
 ${xDefault}
     </url>`;

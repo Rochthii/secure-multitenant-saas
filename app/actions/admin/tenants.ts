@@ -152,7 +152,7 @@ export async function createTenant(formData: FormData): Promise<{ success: boole
         if (syncNews || syncDharma) {
             const syncModules = [];
             if (syncNews) syncModules.push('news');
-            if (syncDharma) syncModules.push('dharma_talks');
+            if (syncDharma) syncModules.push('learning_resources');
             await syncGlobalContent(data.id, syncModules);
         }
 
@@ -268,7 +268,7 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
         if (syncNews || syncDharma) {
             const syncModules = [];
             if (syncNews) syncModules.push('news');
-            if (syncDharma) syncModules.push('dharma_talks');
+            if (syncDharma) syncModules.push('learning_resources');
             await syncGlobalContent(id, syncModules);
         }
 
@@ -353,9 +353,9 @@ export async function syncGlobalContent(tenantId: string, modules: string[]): Pr
                 // @ts-ignore
                 revalidateTag(`news-${tenantId}`);
             }
-            if (moduleName === 'dharma_talks') {
+            if (moduleName === 'learning_resources') {
                 // @ts-ignore
-                revalidateTag(`dharma-talks-${tenantId}`);
+                revalidateTag(`learning-resources-${tenantId}`);
             }
         }
 

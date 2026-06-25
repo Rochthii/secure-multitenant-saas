@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { GripVertical, Save, RotateCcw, Plus, Trash2, Smartphone, Monitor, Settings, Palette, Check, LayoutGrid, AlertTriangle, User, ExternalLink, BarChart3, Clock, Search, List, Eye, EyeOff, Info, Pipette, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { BUDDHIST_THEMES, ColorTheme } from '@/lib/themes-config';
+import { SYSTEM_THEMES, ColorTheme } from '@/lib/themes-config';
 import { updateTenantTheme, updateTenantLayoutStyle } from '@/app/actions/admin/tenants';
 import { ColorPicker } from '@/components/ui/color-picker';
 import {
@@ -1115,7 +1115,7 @@ export function LayoutDesignerClient({
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                        {BUDDHIST_THEMES.map((theme) => {
+                        {SYSTEM_THEMES.map((theme) => {
                             const isSelected = JSON.stringify(currentThemeColors) === JSON.stringify(theme.colors);
                             return (
                                 <button

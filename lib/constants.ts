@@ -2,8 +2,7 @@
  * SITE_URL — Ưu tiên env var NEXT_PUBLIC_SITE_URL.
  * Trailing slash được tự loại bỏ.
  *
- * ► Hiện tại: set NEXT_PUBLIC_SITE_URL=https://chua-chantarangsay-new.vercel.app trong Vercel
- * ► Khi mua domain: đổi thành https://chantarangsay.org → redeploy → xong
+ * ► Hiện tại: set NEXT_PUBLIC_SITE_URL trong Vercel
  * Không cần sửa code.
  */
 export const SITE_URL =

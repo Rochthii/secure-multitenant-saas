@@ -75,7 +75,7 @@ export default async function AboutDetailPage({ params }: { params: Promise<{ do
                 <div className="relative h-[60vh] lg:h-[70vh] flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 bg-coffee-dark">
                         <Image
-                            src={section.image_url || settings['site_about_hero'] || "https://chuaadida.com/upload/tintuc/du-lich-tam-linh-chua-chantarangsay-1-1634547437-564343.jpg"}
+                            src={section.image_url || settings['site_about_hero'] || "/images/hero-ceremony.jpg"}
                             alt={section.title_vi}
                             fill
                             className="object-cover opacity-60 mix-blend-overlay scale-105"

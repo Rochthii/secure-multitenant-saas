@@ -86,7 +86,7 @@ export async function GET(request: Request) {
                 fetchTable('pages'),
                 fetchTable('about_sections'),
                 fetchTable('hero_slides'),
-                fetchTable('dharma_talks'),
+                fetchTable('learning_resources'),
                 fetchTable('faqs'),
                 fetchTable('contact_messages'),
             ]);

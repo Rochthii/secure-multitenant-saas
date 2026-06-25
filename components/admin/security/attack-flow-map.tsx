@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { User, Globe, Fingerprint, Shield, ShieldAlert, Cpu } from 'lucide-react';
 
-type Scenario = 'cross_tenant_read' | 'cache_pollution' | 'sql_injection' | 'noisy_neighbor';
+type Scenario = 'cross_tenant_read' | 'jwt_bypass' | 'abac_outside_hours' | 'sql_injection' | 'noisy_neighbor';
 
 interface SimulationResult {
     scenario: Scenario;
@@ -75,14 +75,16 @@ export function AttackFlowMap({ activeScenario, running, phase, result }: Attack
     // Xác định Node nào sẽ là chốt chặn (block) cho từng Scenario
     const getBlockedNodeForScenario = (scen: Scenario): number => {
         switch (scen) {
-            case 'cache_pollution':
-                return 2; // Edge Cache Layer chặn chéo Cache Poisoning
+            case 'jwt_bypass':
+                return 3; // Chặn tại lớp Identity & JWT
+            case 'abac_outside_hours':
+                return 5; // Chặn tại lớp Context ABAC
             case 'noisy_neighbor':
-                return 2; // Connection Limit bảo vệ tại cổng Route/Pooler
+                return 2; // Connection Limit bảo vệ tại Edge
             case 'sql_injection':
-                return 4; // RLS / Parameterized Query chặn SQL Injection
+                return 4; // Parameterized Query chặn SQL Injection ở DB
             case 'cross_tenant_read':
-                return 4; // DB RLS chặn đứng truy cập chéo tenant
+                return 4; // DB RLS chặn chéo tenant
             default:
                 return 4;
         }

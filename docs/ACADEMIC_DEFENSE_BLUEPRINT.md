@@ -139,8 +139,7 @@ flowchart TD
     style Conclusion fill:#f7fcf7,stroke:#10b981,stroke-width:2px
 ```
 
-* **Spotlight chính của Đề tài:** multi-tenant isolation, database RLS, immutable auditability (WORM Vault), active defense (SOAR).
-* **Vị trí của AI/RAG:** Được định vị rõ ràng là **phân hệ phụ trợ (Supplementary Feature) / Phụ lục (Appendix)** để tăng cường khả năng quan sát (observability) và hỗ trợ vận hành bằng ngôn ngữ tự nhiên, tuyệt đối không được để AI lấn át spotlight kỹ thuật an ninh hệ thống.
+* **Spotlight chính của Đề tài:** multi-tenant isolation, database RLS, immutable auditability (WORM Vault), active defense (SOAR). Hệ thống tập trung hoàn toàn vào kỹ nghệ phần mềm và kiến trúc bảo mật đám mây, triệt tiêu các phân hệ không liên quan.
 
 ---
 

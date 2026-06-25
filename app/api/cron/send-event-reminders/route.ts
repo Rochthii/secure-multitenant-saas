@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
             start_time: string | null;
             location: string | null;
             thumbnail_url: string | null;
+            tenant_id: string;
         };
 
         type Registration = {
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
         const { data: events, error: eventsError } = await supabase
             .from('events')
-            .select('id, title_vi, start_time, location, thumbnail_url')
+            .select('id, title_vi, start_time, location, thumbnail_url, tenant_id')
             .eq('start_date', tomorrowStr)
             .returns<Event[]>();
 
@@ -147,6 +148,14 @@ export async function POST(request: NextRequest) {
                     const timeStr = event.start_time
                         ? event.start_time.slice(0, 5)
                         : '08:00'; // Default if missing
+                    
+                    // Get organization name from database
+                    const { data: tenant } = await (supabase as any)
+                        .from('tenants')
+                        .select('name')
+                        .eq('id', event.tenant_id)
+                        .single();
+                    const orgName = tenant?.name || 'Hệ thống';
 
                     // Check if API key is present before sending
                     if (!process.env.RESEND_API_KEY) {
@@ -158,24 +167,24 @@ export async function POST(request: NextRequest) {
                     const { data: emailData, error: emailError } = await resend.emails.send({
                         from: 'Hệ thống <noreply@system.com>', // Update with your verifying domain
                         to: reg.email,
-                        subject: `Nháº¯c háº¹n: Sá»± kiá»‡n "${event.title_vi}" diá»…n ra vÃ o ngÃ y mai`,
+                        subject: `Nhắc hẹn: Sự kiện "${event.title_vi}" diễn ra vào ngày mai`,
                         html: `
                             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                                <h2 style="color: #D4AF37;">Nháº¯c háº¹n tham dá»± sá»± kiá»‡n</h2>
-                                <p>Xin chÃ o <strong>${reg.full_name}</strong>,</p>
-                                <p>ChÃ¹a Chantarangsay xin trÃ¢n trá»ng nháº¯c báº¡n vá» sá»± kiá»‡n sáº½ diá»…n ra vÃ o ngÃ y mai:</p>
+                                <h2 style="color: #D4AF37;">Nhắc hẹn tham dự sự kiện</h2>
+                                <p>Xin chào <strong>${reg.full_name}</strong>,</p>
+                                <p>${orgName} xin trân trọng nhắc bạn về sự kiện sẽ diễn ra vào ngày mai:</p>
                                 
                                 <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #D4AF37; margin: 20px 0;">
                                     <h3 style="margin-top: 0;">${event.title_vi}</h3>
-                                    <p><strong>ðŸ•’ Thá»i gian:</strong> ${timeStr}, ngÃ y ${format(tomorrow, 'dd/MM/yyyy', { locale: vi })}</p>
-                                    <p><strong>ðŸ“ Äá»‹a Ä‘iá»ƒm:</strong> ${event.location || 'ChÃ¹a Chantarangsay'}</p>
+                                    <p><strong>🕒 Thời gian:</strong> ${timeStr}, ngày ${format(tomorrow, 'dd/MM/yyyy', { locale: vi })}</p>
+                                    <p><strong>📍 Địa điểm:</strong> ${event.location || orgName}</p>
                                 </div>
                                 
-                                <p>Ráº¥t mong Ä‘Æ°á»£c Ä‘Ã³n tiáº¿p báº¡n táº¡i sá»± kiá»‡n.</p>
-                                <p>TrÃ¢n trá»ng,<br/>Ban tá»• chá»©c ChÃ¹a Chantarangsay</p>
+                                <p>Rất mong được đón tiếp bạn tại sự kiện.</p>
+                                <p>Trân trọng,<br/>Ban tổ chức ${orgName}</p>
                                 
                                 <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
-                                <p style="font-size: 12px; color: #888;">Email nÃ y Ä‘Æ°á»£c gá»­i tá»± Ä‘á»™ng. Vui lÃ²ng khÃ´ng tráº£ lá»i email nÃ y.</p>
+                                <p style="font-size: 12px; color: #888;">Email này được gửi tự động. Vui lòng không trả lời email này.</p>
                             </div>
                         `
                     });

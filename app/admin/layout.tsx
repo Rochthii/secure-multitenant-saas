@@ -27,7 +27,6 @@ export const metadata = {
 
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
-import { AISecurityCopilotWidget } from '@/components/admin/ai-security-copilot-widget';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const supabase = await createClient();
@@ -151,7 +150,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 >
                     {children}
                 </AdminLayoutClient>
-                <AISecurityCopilotWidget tenantId={tenantId} />
                 <Toaster />
             </body>
         </html>
