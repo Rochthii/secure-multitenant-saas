@@ -426,7 +426,7 @@ Lưu ý: Không cần tạo bảng số liệu bằng markdown trong phần ph�
     doc.setFont(fontName, "normal");
     doc.setTextColor(100, 116, 139); // Slate-500
     doc.text(pdfText(`TỔ CHỨC: ${tenantName}  |  TIÊU CHUẨN: ISO 27001 & ISO 27017`), 25, 28);
-    doc.text(pdfText(`THỜI GIAN XUẤT BẢN: ${new Date().toLocaleString('vi-VN')}`), 25, 33);
+    doc.text(pdfText(`THỜI GIAN XUẤT BẢN: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`), 25, 33);
 
     // --- VISUAL CARDS ROW ---
     // Card 1: Security Health Score
@@ -620,7 +620,7 @@ Lưu ý: Không cần tạo bảng số liệu bằng markdown trong phần ph�
     );
     formData.append(
         'caption', 
-        `📊 *BÁO CÁO SOC HEALTH REPORT ${reportPeriodText} (PDF)*\n🏢 *Tổ chức:* ${tenantName}\n🛡️ *Hệ thống:* PTIT Thesis Secure SAAS\n🚀 *Chế độ:* Tự động quét kiểm toán định kỳ (${reportType.toUpperCase()})\n📅 *Thời gian:* ${new Date().toLocaleString('vi-VN')}\n💾 _Tệp báo cáo PDF đính kèm tự động đã được gửi bên dưới!_`
+        `📊 *BÁO CÁO SOC HEALTH REPORT ${reportPeriodText} (PDF)*\n🏢 *Tổ chức:* ${tenantName}\n🛡️ *Hệ thống:* PTIT Thesis Secure SAAS\n🚀 *Chế độ:* Tự động quét kiểm toán định kỳ (${reportType.toUpperCase()})\n📅 *Thời gian:* ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}\n💾 _Tệp báo cáo PDF đính kèm tự động đã được gửi bên dưới!_`
     );
     formData.append('parse_mode', 'Markdown');
 
