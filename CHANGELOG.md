@@ -2,6 +2,18 @@
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
+## [1.10.0] - 2026-06-26
+
+### Cô Lập Kết Nối & Chống "Người Hàng Xóm Ồn Ào" (Supavisor Connection Limits)
+- **Database Migration ([20260626100000_update_get_tenant_routing_config.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260626100000_update_get_tenant_routing_config.sql)):** Cập nhật RPC `get_tenant_routing_config` trả về thêm `tenant_type` (Plan) và `name` phục vụ cho việc tính toán hạn mức kết nối ở Edge/Middleware.
+- **Phần Giải cấu hình ở Edge ([edge-defense.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/edge-defense.ts)):** Cập nhật hàm `checkEdgeDefense` để phân giải thêm `tenantId`, `tenantPlan`, `tenantName`, hỗ trợ local mode (bỏ qua check whitelist IP nhưng vẫn load cấu hình để chạy simulator local).
+- **Chuyển tiếp Headers ở Middleware ([middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts)):** Đọc cấu hình từ Edge Defense và luôn đính kèm các thông tin tenant qua các headers (`x-tenant-id`, `x-tenant-plan`, `x-tenant-name`, `x-client-ip`) cho mọi request được xử lý trên server.
+- **Dynamic Resource Limiter ở Connection Client ([server.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/supabase/server.ts)):** Tích hợp custom `fetch` bọc trong `createClient()`. Trước khi thực thi bất kỳ truy vấn nào, client tự động kiểm tra hạn mức kết nối qua `tenantConnectionPooler.acquireSlot()` (Free = 3, Pro = 10, Enterprise = 40). 
+  - Chặn đứng các truy vấn vượt ngưỡng và trả về mã lỗi `HTTP 429 Too Many Requests` thật.
+  - Sử dụng admin client để ghi nhận audit log an ninh `connection_exhaustion_attempt` với mức độ `warning` kèm chi tiết connection slot vào database.
+  - Hỗ trợ trì hoãn giả lập connection giữ slot trong 1.2s cho các requests từ simulator.
+- **Nâng cấp Sandbox giả lập tấn công ([simulate-attack/route.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/api/admin/security/simulate-attack/route.ts)):** Cập nhật kịch bản `noisy_neighbor` thực hiện bắn 8 HTTP requests thật song song tới endpoint `/api/search` công khai để kiểm chứng và đếm số lượng response (200 vs 429) thực tế, chứng minh tính hiệu quả của phòng vệ.
+
 ## [1.9.0] - 2026-06-25
 
 ### Nâng Cấp Threat Simulator Panel v1.5.0 (Live Demo Readiness)

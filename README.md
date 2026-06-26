@@ -45,9 +45,11 @@ graph TD
 ```
 
 ### Chi tiết cơ chế hoạt động của từng lớp:
-1.  **Lớp 1: Edge Security (Smart Router & Intranet Lockdown)**
-    *   *Mã nguồn:* [middleware.ts](file:///e:/PTIT_THESIS_SAAS/middleware.ts)
-    *   *Cơ chế:* Next.js Middleware thực thi tại Edge Runtime (<4ms) phân tích host/subdomain từ header để định tuyến động (`Smart Router`). Đồng thời truy vấn động danh sách IP an toàn của Tenant từ cơ sở dữ liệu (được cache 30s) để thực thi khóa mạng nội bộ (`Intranet Lockdown`), chặn IP lạ truy cập phân khu quản trị.
+1.  **Lớp 1: Edge Security (Smart Router & Connection Pooler)**
+    *   *Mã nguồn:* [middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts), [server.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/supabase/server.ts)
+    *   *Cơ chế:* 
+        * Next.js Middleware thực thi tại Edge Runtime (<4ms) phân tích host/subdomain từ header để định tuyến động (`Smart Router`). Đồng thời truy vấn động danh sách IP an toàn của Tenant để thực thi khóa mạng nội bộ (`Intranet Lockdown`), chặn IP lạ truy cập phân khu quản trị.
+        * Đồng thời áp dụng **Dynamic Resource Limiter** tại custom `fetch` của Connection Client, tự động kiểm duyệt connection slots của từng tenant theo hạn mức Plan (Free: 3, Pro: 10, Enterprise: 40) thông qua in-memory pooler, ngắt kết nối và trả về lỗi `HTTP 429 Too Many Requests` nhằm bảo vệ pool cơ sở dữ liệu chung khỏi bị cạn kiệt bởi tấn công "Người hàng xóm ồn ào" (Noisy Neighbor).
 2.  **Lớp 2: Identity Authentication (Xác thực danh tính trong bộ nhớ)**
     *   *Mã nguồn:* Supabase Auth & JWT Custom Claims
     *   *Cơ chế:* Thông tin ID khách hàng (`tenant_id`) và vai trò phân quyền (`role`) được nhúng trực tiếp và ký số mật mã học vào JWT payload khi đăng nhập. RLS Engine trích xuất trực tiếp thông tin này từ bộ nhớ RAM của Postgres Session (`auth.jwt()`) giúp đạt tốc độ xử lý thời gian hằng số (**Constant-time in-memory lookup**), bypass hoàn toàn các phép `JOIN` bảng quyền hạn tốn kém.

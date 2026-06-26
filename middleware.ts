@@ -97,13 +97,45 @@ export default async function middleware(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (hostname !== 'localhost:3000') {
-        const defenseResult = await checkEdgeDefense(clientIp, hostname, supabaseUrl, supabaseAnonKey);
-        isSuspended = defenseResult.isSuspended;
-        isIpBlocked = defenseResult.isIpBlocked;
-        allowedIps = defenseResult.allowedIps;
-        blockReason = defenseResult.blockReason;
+    // Xác định lookup domain cho Edge Defense & Connection Pooler
+    let lookupHostname = hostname;
+    if (hostname.includes('localhost') || hostname.includes('127.0.0.1') || hostname === '[::1]') {
+        lookupHostname = 'nexus-corp-ptit.vercel.app';
+        if (tenantParam) {
+            if (HOSTNAME_MAP[tenantParam]) {
+                lookupHostname = HOSTNAME_MAP[tenantParam];
+            } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantParam)) {
+                lookupHostname = tenantParam;
+            } else if (tenantParam.includes('.')) {
+                lookupHostname = tenantParam;
+            }
+        }
     }
+
+    let tenantId = '';
+    let tenantPlan = 'free';
+    let tenantName = '';
+
+    const defenseResult = await checkEdgeDefense(clientIp, lookupHostname, supabaseUrl, supabaseAnonKey);
+    isSuspended = defenseResult.isSuspended;
+    isIpBlocked = defenseResult.isIpBlocked;
+    allowedIps = defenseResult.allowedIps;
+    blockReason = defenseResult.blockReason;
+
+    if (defenseResult.tenantId) {
+        tenantId = defenseResult.tenantId;
+        tenantPlan = defenseResult.tenantPlan || 'free';
+        tenantName = defenseResult.tenantName || '';
+    }
+
+    // Thiết lập request headers chuyển tiếp thông tin tenant và IP
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-tenant-id', tenantId);
+    requestHeaders.set('x-tenant-plan', tenantPlan);
+    if (tenantName) {
+        requestHeaders.set('x-tenant-name', tenantName);
+    }
+    requestHeaders.set('x-client-ip', clientIp);
 
     // 5. Kiểm tra và áp dụng các bộ lọc chặn an ninh biên
     const lockdownStatus = isSuspended ? 'SUSPENDED' 
@@ -128,7 +160,11 @@ export default async function middleware(request: NextRequest) {
         if (hasLocalePrefix) {
             return NextResponse.redirect(new URL(`${pathNoLocale}${search}`, request.url));
         }
-        const response = NextResponse.next();
+        const response = NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            }
+        });
         response.headers.set('x-pathname', pathname);
         return response;
     }
@@ -155,7 +191,14 @@ export default async function middleware(request: NextRequest) {
     }
 
     // Rewrite request ngầm vào directory của tenant cụ thể
-    const response = NextResponse.rewrite(new URL(`/${hostname}${targetPath}${search}`, request.url));
+    const response = NextResponse.rewrite(
+        new URL(`/${hostname}${targetPath}${search}`, request.url),
+        {
+            request: {
+                headers: requestHeaders,
+            }
+        }
+    );
 
     // Đồng bộ các Header từ next-intl
     const intlLocale = intlResponse.headers.get('x-next-intl-locale');

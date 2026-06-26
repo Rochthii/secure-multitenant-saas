@@ -41,9 +41,11 @@ graph TD
 ```
 
 ### 🔒 Chi tiết hoạt động của từng lớp:
-1. **Lớp 1: Edge Security (Phân vùng mạng ở Edge)**
-   - *Công nghệ:* Next.js Middleware chạy trên Edge Runtime (<4ms).
-   - *Cơ chế:* Phân tích subdomain/host của yêu cầu (Smart Router). Kiểm tra trạng thái IP block và Whitelist từ **Edge Cache (Upstash Redis)** trong < 2ms với cơ chế tự động dự phòng **Local Memory Cache** khi chạy offline, triệt tiêu hoàn toàn tải truy vấn trực tiếp vào PostgreSQL. Nếu phát hiện IP lạ truy cập phân khu quản trị của Tenant hoặc IP có trong blocklist của SOAR, chặn ngay lập tức (Intranet Lockdown).
+1. **Lớp 1: Edge Security (Phân vùng mạng ở Edge & Connection Pooler)**
+   - *Công nghệ:* Next.js Middleware chạy trên Edge Runtime (<4ms) kết hợp Database Connection Client Wrapper.
+   - *Cơ chế:* 
+     * Phân tích subdomain/host của yêu cầu (Smart Router). Kiểm tra trạng thái IP block và Whitelist từ **Edge Cache (Upstash Redis)** trong < 2ms với cơ chế tự động dự phòng **Local Memory Cache** khi chạy offline, triệt tiêu hoàn toàn tải truy vấn trực tiếp vào PostgreSQL. Nếu phát hiện IP lạ truy cập phân khu quản trị của Tenant hoặc IP có trong blocklist của SOAR, chặn ngay lập tức (Intranet Lockdown).
+     * Áp dụng **Dynamic Resource Limiter** ở custom `fetch` của client kết nối DB. Trước khi thực thi bất kỳ truy vấn nào, hệ thống tự động kiểm tra số lượng connection đồng thời thông qua in-memory `TenantConnectionPooler` mô phỏng cấu hình Supavisor (Free: 3, Pro: 10, Enterprise: 40). Nếu vượt quá hạn mức, ngắt kết nối ngay lập tức và trả về mã lỗi `HTTP 429 Too Many Requests`, bảo vệ an toàn connection pool của database chung khỏi bị vắt kiệt bởi cuộc tấn công "Người hàng xóm ồn ào" (Noisy Neighbor).
 2. **Lớp 2: Identity Authentication (Xác thực danh tính trong bộ nhớ)**
    - *Công nghệ:* Supabase Auth & JWT Custom Claims.
    - *Cơ chế:* Cung cấp ID định danh `tenant_id` và vai trò `role` được ký số bằng chữ ký mật mã học của JWT. RLS sẽ đọc trực tiếp các claims này từ biến bộ nhớ RAM của Postgres Session (`auth.jwt()`) giúp triệt tiêu độ trễ JOIN bảng dữ liệu đặc quyền.
@@ -163,6 +165,15 @@ Dưới đây là các câu hỏi cực hiểm mà các thầy cô trong Hội �
   > * *Với IP lạ bên ngoài tấn công, SOAR tự động chèn IP đó vào danh sách đen `blocked_ips` để Edge Middleware chặn đứng ngay tại biên Edge Runtime ($< 4\text{ms}$) mà không ảnh hưởng đến người dùng hợp pháp khác.*
   > * *Với người dùng nội bộ đã đăng nhập phá hoại, SOAR tự động khóa tài khoản User đó.*
   > * *Em cũng thiết lập cơ chế kiểm tra IP Whitelist để tuyệt đối **không tự khóa nhầm Admin** của hệ thống."*
+
+### 💬 Câu hỏi 5: "Hệ thống của em giải quyết bài toán Noisy Neighbor (người hàng xóm ồn ào) ở tầng tài nguyên như thế nào nếu một tenant bị DDoS hoặc gửi lượng truy vấn khổng lồ làm vắt kiệt kết nối DB?"
+* **Kịch bản trả lời đanh thép:**
+  > *"Thưa thầy cô, nếu một tenant bị tấn công DDoS ở tầng ứng dụng hoặc cố tình vắt kiệt số lượng kết nối tới DB, các tenant khác sẽ bị cạn kiệt kết nối cơ sở dữ liệu và sập chéo (Denial of Service).*
+  > 
+  > *Để giải quyết triệt để và thực thi mục tiêu Giai đoạn 2 của đồ án, em đã cấu hình **Động cơ Supavisor Connection Pooling kết hợp Dynamic Resource Limiter** ở lớp kết nối cơ sở dữ liệu:*
+  > * *Ở lớp Middleware và Database Connection Client, trước khi thực hiện bất kỳ câu truy vấn REST nào tới DB, hệ thống tự động gọi `acquireSlot()` để kiểm duyệt connection slots theo Plan (Free = 3, Pro = 10, Enterprise = 40).*
+  > * *Nếu vượt quá hạn mức, truy vấn bị từ chối ngay lập tức, trả về lỗi `HTTP 429 Too Many Requests` và ghi audit log `connection_exhaustion_attempt` để SOC cảnh báo.*
+  > * *Nhờ đó, pool kết nối cơ sở dữ liệu luôn được cô lập tài nguyên phần cứng thành công cho từng khách hàng, bảo vệ tuyệt đối các chi nhánh lành mạnh khác khỏi bị sập chéo."*
 
 ---
 

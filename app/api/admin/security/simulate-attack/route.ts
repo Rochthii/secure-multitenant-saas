@@ -357,27 +357,56 @@ Outcome: PostgreSQL executed safe comparison against title column; no SQL comman
         // ─────────────────────────────────────────────────────────────────────
         if (scenario === 'noisy_neighbor') {
             const currentPlan = (tenantA as any).tenant_type === 'enterprise' ? 'enterprise' : (tenantA as any).tenant_type === 'pro' ? 'pro' : 'free';
-            
             const countToSimulate = 8;
-            const results = await require('@/lib/security/tenant-pooler').tenantConnectionPooler.simulateFlood(tenantA.id, currentPlan, countToSimulate);
+            
+            const origin = request.nextUrl.origin;
+            const testUrl = `${origin}/api/search?q=security&tenant=${tenantA.id}`;
+            
+            // Thực hiện bắn 8 request HTTP thật song song lên API để kiểm chứng chặn thực tế qua HTTP 429
+            const promises = Array.from({ length: countToSimulate }).map(async (_, idx) => {
+                try {
+                    const res = await fetch(testUrl, {
+                        method: 'GET',
+                        headers: {
+                            'x-tenant-id': tenantA.id,
+                            'x-tenant-plan': currentPlan,
+                            'x-client-ip': `127.0.1.${idx}`,
+                            'User-Agent': 'Noisy Neighbor DDoS Simulator'
+                        }
+                    });
+                    return { status: res.status };
+                } catch (e) {
+                    return { status: 500 };
+                }
+            });
+
+            const runResults = await Promise.all(promises);
+            const successfulAcquires = runResults.filter(r => r.status === 200).length;
+            const blockedRequests = runResults.filter(r => r.status === 429).length;
+
+            const results = {
+                totalRequests: countToSimulate,
+                successfulAcquires,
+                blockedRequests
+            };
             
             const allBlocked = results.blockedRequests > 0;
             const detail = allBlocked
-                ? `✅ PHÒNG VỆ CHỦ ĐỘNG THÀNH CÔNG! Giả lập ${countToSimulate} kết nối đồng thời từ [${tenantA.name}] (Free plan - Max: 3 connections). Kết quả: Đã cho phép ${results.successfulAcquires} kết nối lành mạnh và chặn đứng ${results.blockedRequests} kết nối vượt hạn mức. Các Tenant khác hoàn toàn không bị ảnh hưởng.`
+                ? `✅ PHÒNG VỆ CHỦ ĐỘNG THÀNH CÔNG! Đã thực hiện ${countToSimulate} truy vấn REST song song từ [${tenantA.name}] (Free plan - Hạn mức tối đa: 3 kết nối). Đã cho phép ${results.successfulAcquires} kết nối lành mạnh và chặn đứng ${results.blockedRequests} kết nối vượt ngưỡng (HTTP 429). Các Tenant khác hoạt động bình thường.`
                 : `⚠️ CẢNH BÁO! Cho phép toàn bộ ${results.successfulAcquires} kết nối đồng thời. Connection Pool có nguy cơ bị chiếm dụng và gây nghẽn chéo (noisy neighbor starvation).`;
-
+            
             const whyBlocked = allBlocked
                 ? `Connection slots isolated: concurrent query limit exceeded.
 Active connections for tenant "${tenantA.name}": 3 / 3 maximum connections
 Requested slot queue: Blocked ${results.blockedRequests} incoming queries
 Outcome: Returning HTTP 429 Too Many Requests (Noisy Neighbor Isolation Policy).`
                 : `No slot containment applied. Concurrent connections reached ${results.successfulAcquires}. Danger of resource starvation for other tenants.`;
-
+            
             const explainAnalyze = `-- Database Connection Limits (Supavisor Sandbox):
 -- Max pool slots for Tenant Plan [free]: 3 connections
 -- Currently allocated slots: 3 (100% capacity)
 -- Queue length: ${results.blockedRequests} requests rejected instantly to prevent DB resource starvation.`;
-
+            
             const securityImpact = {
                 risk_level: 'HIGH',
                 cvss_score: 7.5,

@@ -126,14 +126,31 @@ Khi phát triển ứng dụng Next.js App Router hiệu năng cao, việc sử 
 
 ---
 
-## 🚀 HƯỚNG PHÁT TRIỂN & TỐI ƯU KIẾN TRÚC BẢO MẬT (v1.4.0 — ĐÃ TRIỂN KHAI)
+## 🛢️ CHỦ ĐỀ 5: CÔ LẬP TÀI NGUYÊN PHẦN CỨNG - SUPAVISOR CONNECTION LIMITS VS NOISY NEIGHBOR
 
-Để nâng cấp hệ thống đạt tiêu chuẩn quốc tế dành cho môi trường doanh nghiệp quy mô lớn (Enterprise SaaS), đồ án vạch ra 2 hướng nghiên cứu và phát triển chiến lược dưới đây:
+Trong hệ thống multi-tenant SaaS dùng chung một instance database (Shared DB - Shared Schema), việc một tenant bị DDoS vắt kiệt kết nối PostgreSQL làm các tenant lành mạnh khác sập chéo (Denial of Service) là một mối đe dọa cực kỳ nghiêm trọng.
+
+### Giải pháp kỹ thuật đã triển khai (v1.10.0):
+Hệ thống đã tích hợp **Động cơ Supavisor Connection Pooling kết hợp Dynamic Resource Limiter** ở lớp kết nối cơ sở dữ liệu:
+1.  **Định nghĩa Connection Limits theo Plan:** 
+    Thiết lập hạn mức connection pooler dựa trên Plan của Tenant:
+    - `free`: Tối đa 3 kết nối đồng thời.
+    - `pro`: Tối đa 10 kết nối đồng thời.
+    - `enterprise`: Tối đa 40 kết nối đồng thời.
+2.  **Kiểm soát chốt chặn tại Connection Client Wrapper ([server.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/supabase/server.ts)):**
+    - Khi server khởi tạo Supabase Client qua `createServerClient`, một custom `fetch` interceptor được cấu hình để tự động kiểm duyệt yêu cầu thông qua `tenantConnectionPooler.acquireSlot()`.
+    - Nếu số kết nối đồng thời của tenant vượt quá quota, client ngắt kết nối ngay lập tức tại tầng ứng dụng (trước khi PostgreSQL phải gánh tải), trả về mã lỗi `HTTP 429 Too Many Requests`.
+    - Một admin client riêng biệt (không chịu giới hạn) được tạo bất đồng bộ để ghi nhận nhật ký kiểm toán `connection_exhaustion_attempt` kèm theo chi tiết connection slot vào bảng `audit_logs`.
+    - Sau khi truy vấn hoàn thành, slot kết nối được giải phóng qua `releaseSlot()` trong khối `finally`.
+
+Giải pháp này hoàn thành triệt để mục tiêu an ninh phần cứng, loại bỏ hoàn toàn hiện tượng cạn kiệt tài nguyên chéo chéo (noisy neighbor starvation) trong các kịch bản DDoS cường độ cao.
+
+---
+
+## 🚀 HƯỚNG PHÁT TRIỂN & TỐI ƯU KIẾN TRÚC BẢO MẬT (v1.6.0 — ĐÃ TRIỂN KHAI)
+
+Để nâng cấp hệ thống đạt tiêu chuẩn quốc tế dành cho môi trường doanh nghiệp quy mô lớn (Enterprise SaaS), đồ án vạch ra hướng nghiên cứu và phát triển chiến lược dưới đây:
 
 ### 1. Giải pháp lưu trữ Audit Log bất biến vật lý ngoài CSDL (WORM Storage)
 *   **Hạn chế hiện tại:** Dù đã chặn `UPDATE/DELETE` bằng Database Triggers tại bảng `audit_logs`, nhưng dữ liệu kiểm toán vẫn được lưu trữ trên cùng một cơ sở dữ liệu vật lý với ứng dụng. Nếu kẻ tấn công chiếm được quyền Super Admin cao nhất hoặc can thiệp trực tiếp vào file log của PostgreSQL vật lý (bằng cách vô hiệu hóa trigger), tính bất biến sẽ bị phá vỡ.
 *   **Hướng giải quyết:** Tích hợp cơ chế **Audit Log Forwarding** bất đồng bộ qua hàng đợi thông điệp (Message Queue như RabbitMQ/Kafka). Hệ thống sẽ chuyển tiếp dòng log tức thời đến một dịch vụ lưu trữ ngoài độc lập, ví dụ như AWS S3 cấu hình **Object Lock** theo chuẩn WORM (Write Once, Read Many). Khi đã được ghi, không một ai (kể cả Root Admin của hạ tầng cloud) có thể chỉnh sửa hay xóa log cho đến khi hết thời gian lưu trữ quy định (retention period).
-
-### 2. Kiểm soát và cô lập tài nguyên ghi chống Noisy Neighbor (Tenant-scoped Connection Limits)
-*   **Hạn chế hiện tại:** Hệ thống đã áp dụng Rate Limiting ở tầng API mutation để giảm tải. Tuy nhiên, nếu một Tenant bị tấn công từ chối dịch vụ (DDoS) dồn dập, lượng request ghi quá lớn vẫn có thể chiếm đoạt toàn bộ Connection Pool trống của database dùng chung, gây nghẽn (starvation) cho các Tenant lành mạnh khác.
-*   **Hướng giải quyết:** Thiết lập chính sách giới hạn kết nối nghiêm ngặt ở tầng **Supavisor (Connection Pooler)** của Supabase. Áp dụng cơ chế phân bổ Connection Pool động theo tỷ lệ hoặc gán cứng giới hạn tối đa cho mỗi Tenant (ví dụ: tối đa 10 connections đồng thời cho mỗi `tenant_id`). Nếu Tenant A vượt ngưỡng kết nối, hàng đợi yêu cầu của họ sẽ bị từ chối hoặc xếp hàng chờ tại pooler, đảm bảo tài nguyên kết nối trống của Tenant B hoàn toàn không bị ảnh hưởng.
