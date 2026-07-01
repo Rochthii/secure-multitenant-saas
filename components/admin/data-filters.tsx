@@ -1,25 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useDebouncedCallback } from 'use-debounce';
 
 export function SearchInput({ placeholder }: { placeholder: string }) {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-    const handleSearch = useDebouncedCallback((term: string) => {
-        const params = new URLSearchParams(searchParams);
-        if (term) {
-            params.set('q', term);
-        } else {
-            params.delete('q');
-        }
-        router.replace(`?${params.toString()}`);
-    }, 300);
+    const handleSearch = useCallback((term: string) => {
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            const params = new URLSearchParams(searchParams);
+            if (term) {
+                params.set('q', term);
+            } else {
+                params.delete('q');
+            }
+            router.replace(`?${params.toString()}`);
+        }, 300);
+    }, [searchParams, router]);
 
     return (
         <div className="relative flex-1 max-w-sm">

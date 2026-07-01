@@ -1,7 +1,7 @@
-# BẢN ĐỒ PHẢN BIỆN HỌC THUẬT & ĐỊNH HƯỚNG RESEARCH ENGINEER
+﻿# BẢN ĐỒ PHẢN BIỆN HỌC THUẬT & ĐỊNH HƯỚNG RESEARCH ENGINEER
 > **Đề tài:** Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tảng đa khách hàng (Secure Multi-tenant SaaS)  
 > **Tác giả:** Chăm Rốch Thi  
-> **Tài liệu Canonical:** [docs/22_PERFORMANCE_VS_SECURITY_MATRIX.md](file:///e:/PTIT_THESIS_SAAS/docs/22_PERFORMANCE_VS_SECURITY_MATRIX.md) | [walkthrough.md](file:///C:/Users/Admin/.gemini/antigravity-ide/brain/a39e26a0-e2ad-4846-b461-1bad46873798/walkthrough.md)
+> **Tài liệu Canonical:** [docs/22_PERFORMANCE_VS_SECURITY_MATRIX.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/22_PERFORMANCE_VS_SECURITY_MATRIX.md) | [walkthrough.md](file:///C:/Users/Admin/.gemini/antigravity-ide/brain/a39e26a0-e2ad-4846-b461-1bad46873798/walkthrough.md)
 
 ---
 

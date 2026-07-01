@@ -1,4 +1,4 @@
-# Đề Cương Đồ Án Tốt Nghiệp
+﻿# Đề Cương Đồ Án Tốt Nghiệp
 
 > **Học viện:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)  
 > **Khoa:** Công nghệ Thông tin  
@@ -148,13 +148,13 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Triển khai Edge Middleware Smart Router động và Intranet Lockdown IP check động dựa trên database.
 - Triển khai hệ thống RLS Policies tối ưu hóa trên PostgreSQL.
 - Triển khai các hàm kiểm tra thuộc tính ABAC (giờ hành chính, IP nội bộ).
-- Triển khai module mã hóa sổ cái audit logs bất biến [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts).
-- Triển khai module điều phối giới hạn kết nối [tenant-pooler.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) của Supavisor.
+- Triển khai module mã hóa sổ cái audit logs bất biến [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts).
+- Triển khai module điều phối giới hạn kết nối [tenant-pooler.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) của Supavisor.
 - Triển khai trigger SOAR `soc_active_alert_trigger` và webhook Telegram Bot (`CHR(10)` ngắt dòng).
 - Triển khai Dashboard Threat Simulator v5 hỗ trợ giả lập **5 kịch bản tấn công thực tế** tích hợp **Bản Đồ Luồng Tấn Công Động SVG** tương tác thời gian thực, PostgreSQL EXPLAIN ANALYZE và terminal giải thích lý do chặn (Why Blocked).
 - Triển khai trang Performance Benchmarking trên 111,000 dòng dữ liệu thật, giải quyết triệt để các lỗi kiểu TypeScript của Recharts Tooltip.
-- Triển khai **API bẫy Honeypot chủ động** [`/api/security/honeypot-decoy`](file:///e:/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts): ghi kiểm toán `risk_score=100` và tự động gọi RPC `block_ip` chặn IP tại Edge (< 4ms) ngay khi attacker kích hoạt bẫy.
-- Triển khai **Bộ thẩm định pháp lý Forensic WORM Chain Auditor** tích hợp trong [`worm-vault-widget.tsx`](file:///e:/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx): quét SHA-256 từng block, kiểm tra `prev_hash` continuity và đối chiếu chéo PostgreSQL để phát hiện bất kỳ hành vi can thiệp sổ cái nào.
+- Triển khai **API bẫy Honeypot chủ động** [`/api/security/honeypot-decoy`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts): ghi kiểm toán `risk_score=100` và tự động gọi RPC `block_ip` chặn IP tại Edge (< 4ms) ngay khi attacker kích hoạt bẫy.
+- Triển khai **Bộ thẩm định pháp lý Forensic WORM Chain Auditor** tích hợp trong [`worm-vault-widget.tsx`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx): quét SHA-256 từng block, kiểm tra `prev_hash` continuity và đối chiếu chéo PostgreSQL để phát hiện bất kỳ hành vi can thiệp sổ cái nào.
 
 ### Chương 5: Đánh giá & Thực nghiệm đo lường
 - **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ.
@@ -203,11 +203,11 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 
 Hệ thống đã được hiện thực hóa xuất sắc với các kết quả cụ thể:
 - **Mục 2.2.4 & 4.3 (SOC Dashboard & Audit Log):** Hoàn thành Cyber SOC Dashboard hiển thị log an ninh, tích hợp widget IP Blocklist thời gian thực hỗ trợ gỡ chặn và tính năng kết xuất báo cáo Excel, xuất dữ liệu JSON độc lập cho từng Tenant phục vụ Disaster Recovery.
-- **Mục 2.2.5 (Noisy Neighbor / Connection Limit):** Tích hợp module điều phối [tenant-pooler.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) cô lập slots kết nối của Supavisor và điều tiết lưu lượng API ghi (Rate Limiting).
+- **Mục 2.2.5 (Noisy Neighbor / Connection Limit):** Tích hợp module điều phối [tenant-pooler.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) cô lập slots kết nối của Supavisor và điều tiết lưu lượng API ghi (Rate Limiting).
 - **Mục 2.2.6 & 4.3 (Active SOAR Engine & Chống Reverse DDoS):** Hoàn thành nâng cấp **SOAR Active Defense Engine** lên mô hình **Phản ứng Phân tầng (Tiered SOAR Response)**. Khi phát hiện IP lạ vi phạm an ninh $\ge 3$ lần/phút, SOAR tự động chèn IP đó vào danh sách cấm `blocked_ips` để Edge Middleware (`middleware.ts`) đọc trực tiếp cấu hình từ bộ đệm Edge Cache (Upstash Redis hoặc Local Memory Cache dự phòng) và chặn đứng ngay tại Edge Runtime ($<3\text{ms}$), triệt tiêu hoàn toàn lỗ hổng Reverse DDoS tự hủy dịch vụ của bản cũ. Hệ thống đối chiếu Whitelist để tuyệt đối **không tự khóa nhầm Admin** hợp pháp.
 - **Mục 2.2.6 (Dynamic Telegram Webhook SOC Alerts):** Hoàn thành tích hợp cảnh báo đỏ khẩn cấp kèm Attack Path trực tiếp về Telegram cá nhân của Admin qua `net.http_post` bất đồng bộ, tối ưu hóa loại bỏ ký tự `%0A` thừa bằng phép nối chuỗi `CHR(10)`.
 - **HBCAD Anomaly Engine (Mới):** Cài đặt thành công động cơ phát hiện bất thường lai dựa trên chỉ số rủi ro tích lũy (CRS) thời gian thực kết hợp ABAC, độ lệch chuẩn tần suất lịch sử của User ($Z$-Score thống kê baseline) và điểm phạt chuỗi hành vi độc hại liên tiếp (SPP), thay thế hoàn toàn các ngưỡng phát hiện tĩnh đơn giản.
-- **Mục 2.2.3 & 4.3 (Immutable Audit Logs - ISO 27017 CLD.12.4.1):** Áp dụng database trigger chặn hoàn toàn lệnh `UPDATE` hoặc `DELETE` tác động lên bảng `audit_logs` của toàn bộ người dùng, kết hợp module lưu trữ băm SHA-256 chuỗi khối [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts).
+- **Mục 2.2.3 & 4.3 (Immutable Audit Logs - ISO 27017 CLD.12.4.1):** Áp dụng database trigger chặn hoàn toàn lệnh `UPDATE` hoặc `DELETE` tác động lên bảng `audit_logs` của toàn bộ người dùng, kết hợp module lưu trữ băm SHA-256 chuỗi khối [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts).
 - **Chương 5 (Performance Benchmarking):** Thiết lập môi trường đo lường hiệu năng thật 100% trên **111,000 bản ghi dữ liệu seed thực tế** trên Supabase Cloud. Vẽ biểu đồ so sánh phân kỳ hiệu năng rõ rệt giữa Custom JWT Claims (tối ưu hóa overhead xác thực bằng cơ chế Constant-time trong RAM) và RLS JOIN (phương pháp JOIN truyền thống tốn kém), khắc phục triệt để lỗi TypeScript trên giao diện.
 - **Threat Simulator v5 & Sơ đồ luồng SVG Zero Trust (v1.8.0):** Mở rộng lên **5 kịch bản tấn công** giả lập thực tế. Kịch bản 5 là **Honeypot Decoy Trap**: khi kịch bản được kích hoạt, hệ thống ghi nhận ngay IP thực, ghi audit log `risk_score=100`, gọi RPC `block_ip`, phát cảnh báo giọng nói AI trên SOC Dashboard. Toàn bộ kịch bản được trực quan hóa động trên **Bản Đồ Luồng Tấn Công SVG** tương tác thời gian thực, cho phép quan sát chấm sáng di chuyển và nhấp nháy viền đỏ báo động tại đúng Node bị chặn đứng.
 - **Bản Đồ Ma Trận Học Thuật Tương Tác & SOC Live Fire QR (v1.8.0):** Xây dựng component ma trận học thuật tương tác 4x4, trình bày chi tiết độ phức tạp thuật toán lý thuyết ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và đối chiếu chính sách an toàn **ISO/IEC 27017 CLD**. Tích hợp động cơ sinh mã QR động dựa trên HTTP Host headers của yêu cầu Next.js, tự động trỏ mã QR về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud), giúp hội đồng quét mã QR để trực tiếp tấn công và trải nghiệm Middleware chặn IP tức thời ngay tại môi trường local.

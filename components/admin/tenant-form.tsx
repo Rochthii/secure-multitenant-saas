@@ -192,7 +192,7 @@ export function TenantForm({ mode, tenant, role, formMode }: TenantFormProps) {
                         {/* ======================================================
                             TAB 1: THÔNG TIN CƠ BẢN
                            ====================================================== */}
-                        <TabsContent value="basic" className="space-y-4 outline-none">
+                        <TabsContent value="basic" forceMount className="space-y-4 outline-none data-[state=inactive]:hidden">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Tên Workspace */}
                                 <div className="space-y-1.5">
@@ -379,7 +379,7 @@ export function TenantForm({ mode, tenant, role, formMode }: TenantFormProps) {
                         {/* ======================================================
                             TAB 2: THIẾT KẾ & GIAO DIỆN
                            ====================================================== */}
-                        <TabsContent value="design" className="space-y-5 outline-none">
+                        <TabsContent value="design" forceMount className="space-y-5 outline-none data-[state=inactive]:hidden">
                             <div className="space-y-1.5">
                                 <Label className="text-base font-bold flex items-center gap-2 text-white">
                                     <LayoutTemplate className="w-5 h-5 text-violet-400" />
@@ -448,7 +448,7 @@ export function TenantForm({ mode, tenant, role, formMode }: TenantFormProps) {
                         {/* ======================================================
                             TAB 3: QUẢN TRỊ SAAS & GÓI DỊCH VỤ
                            ====================================================== */}
-                        <TabsContent value="saas" className="space-y-6 outline-none">
+                        <TabsContent value="saas" forceMount className="space-y-6 outline-none data-[state=inactive]:hidden">
                             {/* Gói Dịch vụ */}
                             <div className="space-y-3">
                                 <Label className="text-base font-bold flex items-center gap-2 text-white">
@@ -588,7 +588,7 @@ export function TenantForm({ mode, tenant, role, formMode }: TenantFormProps) {
                         {/* ======================================================
                             TAB 4: BẢO MẬT & CẢNH BÁO SOC
                            ====================================================== */}
-                        <TabsContent value="security" className="space-y-6 outline-none">
+                        <TabsContent value="security" forceMount className="space-y-6 outline-none data-[state=inactive]:hidden">
                             {/* Trạng thái vòng đời */}
                             <div className="space-y-3">
                                 <Label className="text-base font-bold flex items-center gap-2 text-white">

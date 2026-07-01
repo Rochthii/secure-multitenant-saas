@@ -28,16 +28,23 @@ Dự án của bạn đã **hoàn thành 100% ở cấp độ doanh nghiệp th�
 
 ```mermaid
 graph TD
-    Request[Yêu cầu truy cập từ Internet] --> L1[Lớp 1: Edge Security <br> Smart Router & IP Whitelisting]
-    L1 -- Hợp lệ --> L2[Lớp 2: Identity Authentication <br> JWT Claims Parsing]
-    L2 -- Hợp lệ --> L3[Lớp 3: Database Isolation <br> PostgreSQL RLS Policies]
-    L3 -- Hợp lệ --> L4[Lớp 4: Context Authorization <br> ABAC Engine: Time & IP Check]
-    L4 -- Hợp lệ --> Database[(CSDL Cô lập an toàn)]
-    
-    style L1 fill:#f8fafc,stroke:#3b82f6,stroke-width:2px
-    style L2 fill:#f8fafc,stroke:#10b981,stroke-width:2px
-    style L3 fill:#f8fafc,stroke:#f59e0b,stroke-width:2px
-    style L4 fill:#f8fafc,stroke:#ef4444,stroke-width:2px
+    classDef edgeSec fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#38bdf8,stroke-dasharray: 5 5;
+    classDef identAuth fill:#0f172a,stroke:#34d399,stroke-width:2px,color:#34d399;
+    classDef dbIso fill:#0f172a,stroke:#fbbf24,stroke-width:2px,color:#fbbf24;
+    classDef ctxAuth fill:#0f172a,stroke:#f87171,stroke-width:2px,color:#f87171;
+    classDef dbSecure fill:#1e1b4b,stroke:#a78bfa,stroke-width:3px,color:#c084fc;
+
+    Request["🌐 Yêu cầu từ Client (Internet)"] --> L1["🛡️ LỚP 1: EDGE SECURITY <br> Smart Router, WAF, Connection Pooler & IP Whitelist"]
+    L1 -->|Allow / < 4ms| L2["🔑 LỚP 2: AUTHENTICATION <br> JWT Claims Parsing (RAM Context Lookup)"]
+    L2 -->|Valid Token| L3["⚙️ LỚP 3: DATABASE ISOLATION <br> PostgreSQL Row-Level Security (RLS) Rules"]
+    L3 -->|Tenant Verified| L4["⏰ LỚP 4: CONTEXT ABAC <br> Dynamic IP & Time restrictions (Trigger Engine)"]
+    L4 -->|Rules Pass| Database[("💾 SECURE DATA SILO <br> Tenant Isolated Tables")]
+
+    class L1 edgeSec;
+    class L2 identAuth;
+    class L3 dbIso;
+    class L4 ctxAuth;
+    class Database dbSecure;
 ```
 
 ### 🔒 Chi tiết hoạt động của từng lớp:
@@ -95,15 +102,15 @@ Giúp đồ án vượt qua điểm yếu của "Ngưỡng tĩnh thô sơ" bằn
 
 Để kết quả đo đạc đạt độ tin cậy khoa học cao và có khả năng tái lặp (Reproducibility), môi trường thử nghiệm và phương pháp luận được thiết lập chi tiết như sau:
 
-| Thành phần | Thông tin cấu hình chi tiết / Trạng thái |
+| 🖥️ Thành phần | ⚙️ Thông tin cấu hình chi tiết / Trạng thái hoạt động |
 | :--- | :--- |
-| **Hệ quản trị CSDL** | PostgreSQL 16.3 (chạy trực tiếp trên nền tảng Supabase Cloud) |
-| **Cấu hình Máy chủ DB** | Gói Cloud VPS tiêu chuẩn: 2 vCPU, 1GB RAM (In-memory Shared Buffers 256MB), SSD Storage (GP3) |
-| **Connection Pooler** | Supavisor (Transaction Mode), giới hạn 15 kết nối đồng thời cho mỗi Tenant |
-| **Quy mô dữ liệu kiểm thử** | **111,000 dòng dữ liệu thật** (Synthetic Enterprise SaaS Data) được sinh ngẫu nhiên qua SEED script |
-| **Trạng thái Cache (DB)** | Thực nghiệm đo lường trong cả 2 trạng thái:<br>1. **Hot Read (Warm Cache):** Dữ liệu nằm sẵn trong `Shared Buffers` RAM ($98\%$ Cache hit).<br>2. **Cold Read:** Truy cập dữ liệu cũ nằm trên SSD để đo đạc chi phí I/O vật lý. |
-| **Cơ chế Index CSDL** | Chỉ mục **B-Tree Index** được đánh cứng trên trường phân vùng `tenant_id` và trường khóa chính `id` của toàn bộ các bảng nghiệp vụ. |
-| **Công cụ sinh tải & Giám sát** | Công cụ đo hiệu năng `k6` (giả lập 10 - 100 Virtual Users kết nối đồng thời) kết hợp trực tiếp với PostgreSQL Extension **`pg_stat_statements`** để ghi nhận thời gian thực thi SQL thuần túy (Query Execution Time), chừa bỏ hoàn toàn độ trễ đường truyền Internet (Network Latency). |
+| **🗄️ Hệ quản trị CSDL** | **PostgreSQL 16.3** (Chạy thực tế trên môi trường Cloud của **Supabase**) |
+| **⚙️ Máy chủ Cơ sở dữ liệu** | VPS Tiêu chuẩn: **2 vCPU \| 1GB RAM** (Shared Buffers 256MB), SSD Storage GP3 |
+| **🎯 Connection Pooler** | **Supavisor** (Transaction Mode), giới hạn cứng 15 slots kết nối đồng thời/Tenant |
+| **📊 Quy mô dữ liệu kiểm thử** | **111,000 dòng dữ liệu thật** (Synthetic Enterprise SaaS Data) seed qua script `npm run seed:all` |
+| **⚡ Trạng thái Cache (DB)** | Thực nghiệm đo lường song song trên 2 trạng thái:<br>1. 🔴 **Hot Read (Warm Cache):** Đã nạp RAM Shared Buffers ($98\%$ Cache hit).<br>2. 🔵 **Cold Read:** Truy xuất vật lý từ SSD để đo lường chi phí I/O thô. |
+| **🔑 Cơ chế Indexing** | **B-Tree Index** chuyên biệt đánh cứng trên trường phân vùng `tenant_id` và trường khóa chính `id` |
+| **📈 Công cụ đo & Giám sát** | Công cụ **k6** (giả lập 10-100 VUs) tích hợp PostgreSQL Extension **`pg_stat_statements`** để đo thời gian thực thi SQL thuần túy (Query Execution Time), loại trừ 100% độ trễ đường truyền Internet. |
 
 ### 📈 Kết quả Đo đạc Latency & Đánh giá Độ phức tạp
 * **Baseline 1 (App-side Filter):** Lọc ở tầng ứng dụng. Khi dữ liệu phình to lên 100,000 dòng, thời gian xử lý và độ trễ tăng vọt dốc ngược theo độ phức tạp $O(N)$ do tốn tài nguyên truyền tải (Network I/O) và bộ nhớ của trình duyệt.

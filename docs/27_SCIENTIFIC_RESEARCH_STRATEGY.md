@@ -49,7 +49,7 @@ graph TD
 ---
 
 ### 💾 NCKH 2: Mật mã học ứng dụng và Nhật ký kiểm toán bất biến
-*   **Tên đề tài:** *"Ứng dụng hàm băm mật mã học liên kết chuỗi (SHA-256 Hash-chaining) trong việc xây dựng sổ cái kiểm toán bất biến (WORM Vault) đáp ứng tiêu chuẩn an toàn đám mây ISO/IEC 27017"*
+*   **Tên đề tài:** *"Ứng dụng hàm băm mật mã học liên kết chuỗi (SHA-256 Hash-chaining) và Cây Merkle trong việc xây dựng sổ cái kiểm toán bất biến (WORM Vault) đáp ứng tiêu chuẩn an toàn đám mây ISO/IEC 27017"*
 *   **Mục tiêu nghiên cứu:** Thiết kế giải pháp ngăn chặn tuyệt đối hành vi sửa đổi hoặc xóa nhật ký kiểm toán (Audit Trail) từ những tài khoản có đặc quyền cao (Super Admin) hoặc khi cơ sở dữ liệu vật lý bị tấn công trực tiếp.
 *   **Ánh xạ mã nguồn:** 
     *   Thư viện mật mã học chuỗi khối: [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts)
@@ -62,7 +62,11 @@ graph TD
         - $H_i$: Mã băm của bản ghi hiện tại.
         - $H_{i-1}$: Mã băm của bản ghi liền trước (khóa xích liên kết).
         - $\parallel$: Phép toán nối chuỗi (concatenation).
-    *   **Cơ chế WORM (Write Once, Read Many):** Kết hợp Trigger chặn các lệnh `UPDATE` và `DELETE` ở tầng CSDL.
+    *   **Đột phá Tối ưu hóa xác minh bằng Cây Merkle (Merkle Tree Optimization):**
+        Thay vì kiểm toán tuần tự $O(N)$ từng dòng log, hệ thống gom nhóm logs thành các khối (blocks) và dựng cây Merkle Root. Mã băm gốc (Merkle Root) đại diện cho toàn bộ tập dữ liệu logs. Để xác minh tính toàn vẹn của một dòng log bất kỳ, kiểm toán viên chỉ cần cung cấp đường dẫn xác minh (Merkle Path) với độ phức tạp thời gian cực kỳ tối ưu là **$O(\log N)$**, giảm thiểu tối đa chi phí RAM/CPU khi lượng logs phình to.
+    *   **Cơ chế bất biến cứng cấp vật lý (Hardware-level WORM / AWS S3 Object Lock):**
+        Logs sau khi ghi nhận được đẩy đồng bộ sang AWS S3 Storage kích hoạt **Object Lock ở chế độ Compliance Mode**. Ở chế độ này, AWS khóa cứng dữ liệu ở tầng vật lý đĩa từ. Không một ai, kể cả tài khoản Root AWS, có quyền xóa hoặc sửa đổi logs cho đến khi hết thời hạn lưu giữ (retention period) quy định, bảo vệ tuyệt đối logs khỏi bị phá hoại vật lý.
+    *   **Cơ chế WORM ở Database:** Kết hợp Trigger chặn các lệnh `UPDATE` và `DELETE` ở tầng CSDL.
 *   **Kế hoạch thực nghiệm:**
     *   Chạy thực nghiệm giả lập sửa đổi trực tiếp dữ liệu log trong PostgreSQL.
     *   Kiểm chứng khả năng phát hiện lỗi toàn vẹn của Forensic Chain Auditor, hiển thị chính xác vị trí dòng (Block Index) bị can thiệp và cô lập tức thời.
@@ -92,7 +96,7 @@ graph TD
 ---
 
 ### 🛡️ NCKH 4: An ninh mạng biên và Tự động hóa ứng phó sự cố (SOAR)
-*   **Tên đề tài:** *"Kiến trúc phòng thủ chủ động phân tầng (Tiered Active Defense) và chống Reverse DDoS tại mạng biên sử dụng Next.js Edge Runtime và Dynamic Cache"*
+*   **Tên đề tài:** *"Kiến trúc phòng thủ chủ động phân tầng (Tiered Active Defense) và chống Reverse DDoS tại mạng biên sử dụng Next.js Edge Runtime, Dynamic Cache và Mô hình hóa mối đe dọa STRIDE"*
 *   **Mục tiêu nghiên cứu:** Thiết kế hệ thống mạng biên cực nhẹ có khả năng chặn đứng các cuộc tấn công DDoS ở tầng ứng dụng và tự động cô lập thực thể bị tấn công (User/Tenant) dưới 4ms.
 *   **Ánh xạ mã nguồn:**
     *   Edge Router & IP Whitelisting: [middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts)
@@ -100,6 +104,14 @@ graph TD
     *   Bẫy an ninh: [route.ts (Honeypot Decoy)](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts)
 *   **Cơ sở lý thuyết & Công thức toán học:**
     *   **Mô hình Zero Trust Network Access (ZTNA) & PEP/PDP:** Chuyển dịch điểm thực thi chính sách (PEP) lên sát thiết bị người dùng nhất (Edge Runtime).
+    *   **Mô hình hóa mối đe dọa STRIDE (Microsoft STRIDE Threat Modeling):**
+        Đồ án áp dụng khung STRIDE để mô phỏng và kiểm chứng mức độ bao phủ bảo mật của hệ thống:
+        *   *Spoofing (Giả mạo):* Giải quyết bằng JWT Signature Authentication.
+        *   *Tampering (Can thiệp):* Giải quyết bằng RLS Policies và WORM Ledger.
+        *   *Repudiation (Chối bỏ):* Giải quyết bằng Immutable Audit Logs.
+        *   *Information Disclosure (Tiết lộ thông tin):* Giải quyết bằng RLS Tenant Isolation.
+        *   *Denial of Service (Từ chối dịch vụ):* Giải quyết bằng Edge Middleware Rate Limiter và Connection Pooler.
+        *   *Elevation of Privilege (Leo thang đặc quyền):* Giải quyết bằng ABAC/RBAC Access Rules.
     *   **Nguyên lý Phản ứng Phân tầng (Tiered SOC Response):**
         $$\text{Action} = \begin{cases} 
         \text{Block IP tại Edge} & \text{nếu } \text{CRS} \ge 90 \text{ hoặc kích hoạt Honeypot} \\

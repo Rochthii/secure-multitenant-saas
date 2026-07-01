@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { InlineSpinner } from '@/components/ui/buddhist-spinner';
 import { searchContent } from '@/app/actions/search';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import debounce from 'lodash/debounce';
+
 
 interface SearchResult {
     news: Array<{
@@ -39,9 +39,12 @@ export function SearchDialog({
     const [results, setResults] = useState<SearchResult>({ news: [], events: [] });
     const [isLoading, setIsLoading] = useState(false);
 
+    const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
     // Debounced search
-    const debouncedSearch = useCallback(
-        debounce(async (searchQuery: string) => {
+    const debouncedSearch = useCallback((searchQuery: string) => {
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(async () => {
             if (searchQuery.trim().length < 2) {
                 setResults({ news: [], events: [] });
                 setIsLoading(false);
@@ -57,9 +60,8 @@ export function SearchDialog({
             } finally {
                 setIsLoading(false);
             }
-        }, 300),
-        []
-    );
+        }, 300);
+    }, []);
 
     useEffect(() => {
         debouncedSearch(query);

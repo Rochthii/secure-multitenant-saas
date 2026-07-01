@@ -1,4 +1,4 @@
-# BÁO CÁO PHÂN TÍCH KHOẢNG CÁCH & KẾ HOẠCH KHẮC PHỤC ĐÃ GIẢI QUYẾT (GAP & REMEDIATION RESOLUTION REPORT)
+﻿# BÁO CÁO PHÂN TÍCH KHOẢNG CÁCH & KẾ HOẠCH KHẮC PHỤC ĐÃ GIẢI QUYẾT (GAP & REMEDIATION RESOLUTION REPORT)
 
 > **Dự án:** Secure Multi-tenant SaaS Platform (Row-Level Security & Audit Log)  
 > **Đơn vị đào tạo:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)  
@@ -20,23 +20,23 @@ Báo cáo này đóng vai trò là **Minh chứng quy trình kiểm thử an nin
 ### ✅ VẤN ĐỀ 1: Sập (Crash) Benchmark Hiệu năng RLS — [ĐÃ GIẢI QUYẾT 100%]
 *   **Khoảng cách ban đầu:** Trang benchmark `/admin/performance` bị crash do thiếu các RPC `benchmark_rls_join` và `benchmark_rls_claims` trong PostgreSQL database.
 *   **Giải pháp khắc phục:** 
-    *   Tạo thành công migration [20260522000000_create_benchmark_rpcs.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000000_create_benchmark_rpcs.sql) khởi tạo đầy đủ các hàm RPC phục vụ đo lường trực tiếp trên database server.
+    *   Tạo thành công migration [20260522000000_create_benchmark_rpcs.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260522000000_create_benchmark_rpcs.sql) khởi tạo đầy đủ các hàm RPC phục vụ đo lường trực tiếp trên database server.
     *   Seed **111,000 dòng dữ liệu thực tế** lên Supabase Cloud để vẽ đường cong phân kỳ hiệu năng chính xác của Custom Claims $O(1)$ so với RLS JOIN $O(N)$.
-    *   Khắc phục hoàn toàn lỗi biên dịch TypeScript liên quan đến Recharts Tooltip trong [page.tsx](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/page.tsx).
+    *   Khắc phục hoàn toàn lỗi biên dịch TypeScript liên quan đến Recharts Tooltip trong [page.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/performance/page.tsx).
 
 ---
 
 ### ✅ VẤN ĐỀ 2: App-side Benchmark đo lường sai bản chất — [ĐÃ GIẢI QUYẾT 100%]
 *   **Khoảng cách ban đầu:** Code benchmark hard-code lọc dữ liệu bằng string `'some-id'` tĩnh dẫn đến kết quả trả về rỗng, sai lệch bản chất.
 *   **Giải pháp khắc phục:** 
-    *   Cập nhật hoàn chỉnh [scaling-engine.ts](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/scaling-engine.ts) để App-side filtering trích xuất và lọc chính xác `currentTenantId` của user đang đăng nhập thực tế, mang lại số liệu đo lường trung thực và thuyết phục 100%.
+    *   Cập nhật hoàn chỉnh [scaling-engine.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/performance/scaling-engine.ts) để App-side filtering trích xuất và lọc chính xác `currentTenantId` của user đang đăng nhập thực tế, mang lại số liệu đo lường trung thực và thuyết phục 100%.
 
 ---
 
 ### ✅ VẤN ĐỀ 3: Webhook Active SOC Alert sử dụng Placeholder — [ĐÃ GIẢI QUYẾT 100%]
 *   **Khoảng cách ban đầu:** URL Webhook và Bearer Token gửi cảnh báo an ninh bị hardcode placeholder, gây nguy cơ tê liệt cảnh báo khi bị tấn công.
 *   **Giải pháp khắc phục:** 
-    *   Triển khai tệp migration [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql).
+    *   Triển khai tệp migration [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql).
     *   Tối ưu hóa PL/pgSQL thay thế toàn bộ ký tự `%0A` thô bằng phép ghép chuỗi `CHR(10)`, giúp Telegram Bot API nhận diện chuẩn ký tự ngắt dòng `\n` trong JSON payload và gửi cảnh báo đỏ SOS Cyber SOC sắc nét, chuyên nghiệp về điện thoại Admin tức thời.
 
 ---
@@ -45,7 +45,7 @@ Báo cáo này đóng vai trò là **Minh chứng quy trình kiểm thử an nin
 *   **Khoảng cách ban đầu:** Bảng `audit_logs` chưa được bảo vệ chặn UPDATE/DELETE trên chính nó, khiến kẻ tấn công có quyền Super Admin có thể xóa dấu vết.
 *   **Giải pháp khắc phục:** 
     *   Kích hoạt trigger PostgreSQL chặn đứng 100% mọi thao tác `UPDATE` hoặc `DELETE` trên bảng `audit_logs` từ mọi tài khoản, trả về mã lỗi bảo mật `SECURITY VIOLATION [CLD.12.4.1]`.
-    *   **Nâng cấp vượt chuẩn (v1.4.0):** Xây dựng module mật mã học [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) tự động hashing liên kết chuỗi khối (SHA-256 Hash-chaining) cho toàn bộ dòng log, cho phép tự động kiểm toán tính toàn vẹn và chống giả mạo vật lý.
+    *   **Nâng cấp vượt chuẩn (v1.4.0):** Xây dựng module mật mã học [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) tự động hashing liên kết chuỗi khối (SHA-256 Hash-chaining) cho toàn bộ dòng log, cho phép tự động kiểm toán tính toàn vẹn và chống giả mạo vật lý.
 
 ---
 

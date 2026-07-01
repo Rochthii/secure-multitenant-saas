@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
 
@@ -35,31 +35,31 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 ## [1.8.0] - 2026-06-02
 
 ### Bộ đệm Edge Cache thông minh & Tối ưu mạng biên (Upstash Redis Edge Cache)
-- **Tích hợp máy khách Redis Edge ([redis-client.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/redis-client.ts)):** Cài đặt và tích hợp thư viện máy khách Edge `@upstash/redis` hỗ trợ cơ chế tự động dự phòng sang **Local Memory Cache** (trong bộ nhớ RAM của Next.js server) khi các biến môi trường trống. Cho phép chạy offline/local mượt mà không cần tài khoản Upstash thực tế để trình diễn và phát triển cục bộ.
-- **Đồng bộ cơ sở dữ liệu thời gian thực ([sync-webhook/route.ts](file:///e:/PTIT_THESIS_SAAS/app/api/security/sync-webhook/route.ts)):** Triển khai API Route nhận Supabase Database Webhooks (bảo mật bằng token) để tự động cập nhật, thêm mới hoặc xóa key trên cache Redis mỗi khi bảng `blocked_ips` hoặc `tenants` có biến động.
-- **Tối ưu mạng biên Edge Middleware ([middleware.ts](file:///e:/PTIT_THESIS_SAAS/middleware.ts)):** Tái cấu trúc Edge Middleware đọc trực tiếp cấu hình Tenant và trạng thái IP Block từ cache Redis với độ trễ phản hồi < 3ms. Áp dụng cơ chế **Negative Caching** (lưu lại trạng thái IP an toàn hoặc Tenant lỗi trong 15-30s) nhằm chặn đứng các cuộc tấn công DDoS brute force liên tiếp vắt kiệt tài nguyên PostgreSQL.
+- **Tích hợp máy khách Redis Edge ([redis-client.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/redis-client.ts)):** Cài đặt và tích hợp thư viện máy khách Edge `@upstash/redis` hỗ trợ cơ chế tự động dự phòng sang **Local Memory Cache** (trong bộ nhớ RAM của Next.js server) khi các biến môi trường trống. Cho phép chạy offline/local mượt mà không cần tài khoản Upstash thực tế để trình diễn và phát triển cục bộ.
+- **Đồng bộ cơ sở dữ liệu thời gian thực ([sync-webhook/route.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/api/security/sync-webhook/route.ts)):** Triển khai API Route nhận Supabase Database Webhooks (bảo mật bằng token) để tự động cập nhật, thêm mới hoặc xóa key trên cache Redis mỗi khi bảng `blocked_ips` hoặc `tenants` có biến động.
+- **Tối ưu mạng biên Edge Middleware ([middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts)):** Tái cấu trúc Edge Middleware đọc trực tiếp cấu hình Tenant và trạng thái IP Block từ cache Redis với độ trễ phản hồi < 3ms. Áp dụng cơ chế **Negative Caching** (lưu lại trạng thái IP an toàn hoặc Tenant lỗi trong 15-30s) nhằm chặn đứng các cuộc tấn công DDoS brute force liên tiếp vắt kiệt tài nguyên PostgreSQL.
 
 ### Bản đồ trực quan hóa luồng an ninh Zero Trust (Dynamic Attack Flow Map)
-- **Thiết kế sơ đồ SVG Cyberpunk ([attack-flow-map.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/attack-flow-map.tsx)):** Xây dựng component React mới sử dụng đồ họa SVG động trực quan hóa 5 chốt chặn Zero Trust (Client IP, Edge Security Middleware, Identity JWT, Database RLS, và Context ABAC).
-- **Tích hợp Threat Simulator v5 ([threat-simulator.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx)):** Nhúng trực tiếp bản đồ SVG tương tác và đồng bộ các trạng thái phản ứng SOAR (`running`, `phase`, `result`). Khi chạy giả lập, chấm sáng hoạt ảnh di chuyển dọc theo các lớp kết nối và nhấp nháy viền đỏ neon tại lớp chịu trách nhiệm chặn đứng cuộc tấn công thực tế từ kết quả API.
+- **Thiết kế sơ đồ SVG Cyberpunk ([attack-flow-map.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/attack-flow-map.tsx)):** Xây dựng component React mới sử dụng đồ họa SVG động trực quan hóa 5 chốt chặn Zero Trust (Client IP, Edge Security Middleware, Identity JWT, Database RLS, và Context ABAC).
+- **Tích hợp Threat Simulator v5 ([threat-simulator.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx)):** Nhúng trực tiếp bản đồ SVG tương tác và đồng bộ các trạng thái phản ứng SOAR (`running`, `phase`, `result`). Khi chạy giả lập, chấm sáng hoạt ảnh di chuyển dọc theo các lớp kết nối và nhấp nháy viền đỏ neon tại lớp chịu trách nhiệm chặn đứng cuộc tấn công thực tế từ kết quả API.
 
 ### Bản đồ Ma trận Tương tác Học thuật & Động cơ QR Động (SOC Live Fire Presentation)
-- **Bản đồ ma trận học thuật tương tác ([matrix-blueprint.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/matrix-blueprint.tsx)):** Xây dựng bảng ma trận 4x4 cyberpunk tương tác, trình bày chi tiết phân tích học thuật độ phức tạp thuật toán ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và điều khoản tuân thủ **ISO/IEC 27017 CLD** cho 4 tầng bảo vệ Zero Trust.
-- **Tích hợp Premium SOC Tabs ([security-tabs-container.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/security-tabs-container.tsx)):** Thiết kế và bố trí layout menu responsive Grid 4 tab mượt mà để chuyển đổi nhanh giữa Giám sát SOC, Sổ cái WORM, Giả lập Sandbox và Ma trận học thuật.
-- **Động cơ mã QR động thích ứng ([page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx)):** Đọc động HTTP Host của request để sinh mã QR trỏ chính xác về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud). Khắc phục triệt để việc hardcode domain tĩnh giúp hội đồng PTIT dễ dàng quét QR và trải nghiệm chặn IP tức thời trên máy local.
+- **Bản đồ ma trận học thuật tương tác ([matrix-blueprint.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/matrix-blueprint.tsx)):** Xây dựng bảng ma trận 4x4 cyberpunk tương tác, trình bày chi tiết phân tích học thuật độ phức tạp thuật toán ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và điều khoản tuân thủ **ISO/IEC 27017 CLD** cho 4 tầng bảo vệ Zero Trust.
+- **Tích hợp Premium SOC Tabs ([security-tabs-container.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/security-tabs-container.tsx)):** Thiết kế và bố trí layout menu responsive Grid 4 tab mượt mà để chuyển đổi nhanh giữa Giám sát SOC, Sổ cái WORM, Giả lập Sandbox và Ma trận học thuật.
+- **Động cơ mã QR động thích ứng ([page.tsx (security-center)](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx)):** Đọc động HTTP Host của request để sinh mã QR trỏ chính xác về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud). Khắc phục triệt để việc hardcode domain tĩnh giúp hội đồng PTIT dễ dàng quét QR và trải nghiệm chặn IP tức thời trên máy local.
 
 ## [1.7.0] - 2026-05-31
 
 ### Phòng thủ chủ động — Bẫy Honeypot Chủ động (Active Honeypot Decoy)
-- **Triển khai API bẫy mật ngọt thực tế [`/api/security/honeypot-decoy`](file:///e:/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts):** Endpoint hoạt động hoàn toàn trong môi trường production — không phải demo. Khi attacker gọi vào endpoint này, hệ thống tự động:
+- **Triển khai API bẫy mật ngọt thực tế [`/api/security/honeypot-decoy`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/api/security/honeypot-decoy/route.ts):** Endpoint hoạt động hoàn toàn trong môi trường production — không phải demo. Khi attacker gọi vào endpoint này, hệ thống tự động:
   1. Trích xuất IP thực tế từ `x-forwarded-for` / `x-real-ip` / địa chỉ kết nối socket.
   2. Ghi ngay một bản ghi kiểm toán vào PostgreSQL với `risk_score = 100` và `action = 'honeypot_decoy_triggered'`, gắn đầy đủ metadata (`user_agent`, `referer`, `request_id`).
   3. Gọi RPC `block_ip(ip, reason, blocked_by)` chặn lập tức IP đó khỏi tất cả các request tiếp theo tại tầng Edge Middleware (độ trễ phản hồi Edge < 4ms).
-- **Tích hợp Threat Simulator — Kịch bản 5 "Honeypot Decoy Trap"** vào [`/app/council/page.tsx`](file:///e:/PTIT_THESIS_SAAS/app/council/page.tsx): Nút bấm màu emerald gọi thẳng endpoint honeypot (không đi qua route attack chung), cho phép hội đồng kiểm tra hành trình tấn công → log → block theo thời gian thực ngay trên giao diện.
-- **Cảnh báo giọng nói AI đặc thù cho sự kiện Honeypot** trong [`soc-realtime-listener.tsx`](file:///e:/PTIT_THESIS_SAAS/components/admin/security/soc-realtime-listener.tsx): Nhận sự kiện Supabase Realtime `honeypot_decoy_triggered`, phát cảnh báo giọng nói tiếng Việt khẩn cấp riêng biệt: *"Báo động cấp đỏ! Tác nhân đã sập bẫy Honeypot. Hệ thống đang truy vết và chặn IP tấn công."*
+- **Tích hợp Threat Simulator — Kịch bản 5 "Honeypot Decoy Trap"** vào [`/app/council/page.tsx`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/council/page.tsx): Nút bấm màu emerald gọi thẳng endpoint honeypot (không đi qua route attack chung), cho phép hội đồng kiểm tra hành trình tấn công → log → block theo thời gian thực ngay trên giao diện.
+- **Cảnh báo giọng nói AI đặc thù cho sự kiện Honeypot** trong [`soc-realtime-listener.tsx`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/soc-realtime-listener.tsx): Nhận sự kiện Supabase Realtime `honeypot_decoy_triggered`, phát cảnh báo giọng nói tiếng Việt khẩn cấp riêng biệt: *"Báo động cấp đỏ! Tác nhân đã sập bẫy Honeypot. Hệ thống đang truy vết và chặn IP tấn công."*
 
 ### Thẩm định Mật mã học — Forensic WORM Chain Auditor
-- **Nâng cấp [`worm-vault-widget.tsx`](file:///e:/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx) — Bộ thẩm định sổ cái mật mã học pháp lý:** Triển khai nút "Thẩm định Sổ cái" kích hoạt bộ quét SHA-256 chain forensic thực sự chạy client-side theo từng block, xác minh:
+- **Nâng cấp [`worm-vault-widget.tsx`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx) — Bộ thẩm định sổ cái mật mã học pháp lý:** Triển khai nút "Thẩm định Sổ cái" kích hoạt bộ quét SHA-256 chain forensic thực sự chạy client-side theo từng block, xác minh:
   1. **Hash toàn vẹn block hiện tại:** Tính lại `SHA-256(content)` và đối chiếu với `hash` đã lưu trong WORM Vault.
   2. **Liên kết chuỗi (`prev_hash` continuity):** Đảm bảo `block[n].prev_hash === block[n-1].hash` — nếu bị cắt đứt → phát hiện tamper.
   3. **Đối chiếu cơ sở dữ liệu chéo:** Kiểm tra xem log entry tương ứng trong PostgreSQL có tồn tại không, bảo đảm không bị xóa ngoài WORM.
@@ -82,16 +82,16 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 - **Triệt tiêu lỗ hổng Reverse DDoS**: Nâng cấp trigger SOAR `soc_active_alert_trigger()` sang mô hình **Phản ứng Phân tầng (Tiered Mitigation)**. Khi phát hiện IP lạ vi phạm $\ge 3$ lần/phút, SOAR tự động chèn IP đó vào danh sách cấm `blocked_ips` để Edge Middleware chặn đứng tại biên thay vì khóa cả Tenant (Reverse DDoS).
 - **Bảo vệ Whitelist Admin**: Cơ chế đối chiếu IP Whitelist động để tuyệt đối **không tự khóa nhầm** IP của Admin hợp pháp.
 - **Edge Middleware IP Lock**: Cập nhật `middleware.ts` check động blocked_ips với cache Edge `15s` giữ nguyên thời gian phản hồi siêu tốc $< 4\text{ms}$ và hiển thị trang HTML 403 Cyber SOC chi tiết lý do.
-- **Premium IP Blocklist Widget**: Tạo component [ip-blocklist-widget.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/security/ip-blocklist-widget.tsx) hỗ trợ hiển thị danh sách IP bị chặn thời gian thực và cung cấp nút gỡ chặn (Unblock) kiểm toán đầy đủ.
+- **Premium IP Blocklist Widget**: Tạo component [ip-blocklist-widget.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/ip-blocklist-widget.tsx) hỗ trợ hiển thị danh sách IP bị chặn thời gian thực và cung cấp nút gỡ chặn (Unblock) kiểm toán đầy đủ.
 
 ### Công cụ Hỗ trợ Phát triển AI (CodeGraph Development Tools)
 - **Tích hợp CodeGraph MCP Server**: Cài đặt global package `@colbymchenry/codegraph` và khởi tạo lập chỉ mục đồ thị tri thức mã nguồn thành công cho **729 file**, tạo ra **7.071 node** và **14.499 edge** quan hệ cục bộ. Đã tự động đăng ký cổng kết nối MCP Server với các AI coding assistants lớn (Cursor, Claude Code, Gemini CLI, Antigravity IDE) nhằm tối ưu hóa chi phí token và tăng tốc độ phân tích mã nguồn.
 
 ### Kiểm thử Tự động An ninh Database (pgTAP Database Testing)
-- **Triển khai bộ Unit Test pgTAP chuyên sâu**: Thiết lập thư mục kiểm thử `/supabase/tests/database/` và hoàn thiện tệp kiểm thử tự động [security_features.test.sql](file:///e:/PTIT_THESIS_SAAS/supabase/tests/database/security_features.test.sql) tích hợp **6 test case** chính, bảo chứng khoa học cho hai trụ cột an ninh:
+- **Triển khai bộ Unit Test pgTAP chuyên sâu**: Thiết lập thư mục kiểm thử `/supabase/tests/database/` và hoàn thiện tệp kiểm thử tự động [security_features.test.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/tests/database/security_features.test.sql) tích hợp **6 test case** chính, bảo chứng khoa học cho hai trụ cột an ninh:
   - Lọc cô lập tenant RLS chéo (Cross-tenant RLS Isolation).
   - Tính bất biến chống sửa đổi/xóa dấu vết của WORM Audit Log (tamper-proofing audit logs via triggers).
-- **Loại bỏ phụ thuộc dbdev**: Sửa đổi tệp migration [20260531080000_install_pgsodium_and_test_helpers.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260531080000_install_pgsodium_and_test_helpers.sql) để chỉ kích hoạt cứng extension `pgsodium` (mặc định có sẵn trên Supabase), tinh giản loại bỏ sự phụ thuộc vào các thư viện bên thứ ba giúp dự án biên dịch thành công 100% trên cả Supabase Local và Supabase Cloud (Production).
+- **Loại bỏ phụ thuộc dbdev**: Sửa đổi tệp migration [20260531080000_install_pgsodium_and_test_helpers.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260531080000_install_pgsodium_and_test_helpers.sql) để chỉ kích hoạt cứng extension `pgsodium` (mặc định có sẵn trên Supabase), tinh giản loại bỏ sự phụ thuộc vào các thư viện bên thứ ba giúp dự án biên dịch thành công 100% trên cả Supabase Local và Supabase Cloud (Production).
 
 ### Kiểm thử Động cơ đo lường Scaling & Giao diện Percentiles (Vitest & UI Testing)
 - **Tích hợp các chỉ số phân vị Percentiles (P50, P95, P99)**: Nâng cấp `scaling-engine.ts` lên phiên bản v2.0 chạy lặp 50 lần mỗi mốc dữ liệu để đảm bảo tính hội tụ thống kê, tích hợp đo lường trực tiếp Execution Time phía database nhằm loại bỏ nhiễu mạng HTTP.
@@ -100,8 +100,8 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 
 ### Triển khai Sổ cái Bất biến Cục bộ (immudb Ledger Server)
 - **Tích hợp Máy chủ immudb cục bộ (v1.9.6)**: 
-  - Phát triển script PowerShell [install-immudb.ps1](file:///e:/PTIT_THESIS_SAAS/scripts/install-immudb.ps1) tự động kích hoạt TLS 1.2 và tải binary Windows của `immudb` và `immuclient` về thư mục `/bin/`.
-  - Thiết kế tệp script chạy nhanh [START_IMMUDB.bat](file:///e:/PTIT_THESIS_SAAS/START_IMMUDB.bat) tại thư mục gốc giúp khởi động máy chủ sổ cái bất biến Merkle Tree local trên cổng `3322` và Web Console quản trị tại cổng `8080`.
+  - Phát triển script PowerShell [install-immudb.ps1](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/scripts/install-immudb.ps1) tự động kích hoạt TLS 1.2 và tải binary Windows của `immudb` và `immuclient` về thư mục `/bin/`.
+  - Thiết kế tệp script chạy nhanh [START_IMMUDB.bat](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/START_IMMUDB.bat) tại thư mục gốc giúp khởi động máy chủ sổ cái bất biến Merkle Tree local trên cổng `3322` và Web Console quản trị tại cổng `8080`.
   - Chạy thử nghiệm thành công kiểm chứng chứng thực mã hóa cục bộ qua các lệnh client `safeset` và `safeget` với kết quả xác thực tuyệt đối `verified: true`.
 
 ## [1.5.0] - 2026-05-23
@@ -124,13 +124,13 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 ## [1.4.0] - 2026-05-23
 
 ### Bảo mật cấp Doanh nghiệp (Enterprise-grade Security Hardening)
-- **Lưu trữ Audit Log bất biến WORM (Write Once, Read Many)**: Thiết lập module sổ cái mật mã học [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) tự động đồng bộ audit logs từ Postgres thành các khối liên kết chuỗi mã hóa (Hash-chained immutable blocks) sử dụng SHA-256. Hệ thống thực hiện kiểm toán tính toàn vẹn (cryptographic integrity check) và đối chiếu chéo cơ sở dữ liệu để cảnh báo tức thì mọi hành vi can thiệp hay xóa dấu vết.
-- **Bảo vệ tài nguyên chống Noisy Neighbor**: Triển khai module điều tiết tài nguyên kết nối [tenant-pooler.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) mô phỏng chính sách giới hạn kết nối đồng thời cô lập (Isolated Connection Slots) của Supavisor. Tự động kiểm soát lưu lượng concurrent queries theo kế hoạch Tenant Plan (Free: 3 slots, Pro: 10 slots, Enterprise: 40 slots), chặn đứng và trả về mã lỗi 429 Too Many Requests khi có hiện tượng query flood để bảo toàn tài nguyên cho các chi nhánh lành mạnh.
+- **Lưu trữ Audit Log bất biến WORM (Write Once, Read Many)**: Thiết lập module sổ cái mật mã học [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) tự động đồng bộ audit logs từ Postgres thành các khối liên kết chuỗi mã hóa (Hash-chained immutable blocks) sử dụng SHA-256. Hệ thống thực hiện kiểm toán tính toàn vẹn (cryptographic integrity check) và đối chiếu chéo cơ sở dữ liệu để cảnh báo tức thì mọi hành vi can thiệp hay xóa dấu vết.
+- **Bảo vệ tài nguyên chống Noisy Neighbor**: Triển khai module điều tiết tài nguyên kết nối [tenant-pooler.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) mô phỏng chính sách giới hạn kết nối đồng thời cô lập (Isolated Connection Slots) của Supavisor. Tự động kiểm soát lưu lượng concurrent queries theo kế hoạch Tenant Plan (Free: 3 slots, Pro: 10 slots, Enterprise: 40 slots), chặn đứng và trả về mã lỗi 429 Too Many Requests khi có hiện tượng query flood để bảo toàn tài nguyên cho các chi nhánh lành mạnh.
 - **Giao diện Giám sát SOC Mới**:
   - Bổ sung **WORM Cryptographic Vault widget** hiển thị trực quan trạng thái liên kết chuỗi mã hóa, lịch sử block, và cung cấp nút giả lập can thiệp phá vỡ chuỗi để chứng minh tính tự kiểm toán.
   - Bổ sung **Tenant Connection Pooler widget** hiển thị thời gian thực mức độ chiếm dụng slot kết nối của từng Tenant, đi kèm bảng điều khiển giả lập tấn công dồn dập (Noisy Neighbor flood query) trả về mã lỗi 429 từ server.
-  - Tích hợp 2 widget mới này vào trang quản trị an ninh [page.tsx (security-center)](file:///e:/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx).
-- **Mở rộng kịch bản Threat Simulator**: Tích hợp kịch bản giả lập thứ 4 **Noisy Neighbor connection limits** vào API `/api/admin/security/simulate-attack` và component [threat-simulator.tsx](file:///e:/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx), chứng minh hoàn hảo nguyên lý giới hạn tài nguyên và điều phối tải (Rate Limiting & Connection Limit) cho đồ án tốt nghiệp.
+  - Tích hợp 2 widget mới này vào trang quản trị an ninh [page.tsx (security-center)](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx).
+- **Mở rộng kịch bản Threat Simulator**: Tích hợp kịch bản giả lập thứ 4 **Noisy Neighbor connection limits** vào API `/api/admin/security/simulate-attack` và component [threat-simulator.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/threat-simulator.tsx), chứng minh hoàn hảo nguyên lý giới hạn tài nguyên và điều phối tải (Rate Limiting & Connection Limit) cho đồ án tốt nghiệp.
 
 ## [1.3.0] - 2026-05-23
 
@@ -148,7 +148,7 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 - **Kiểm định chất lượng Next.js**: Chạy biên dịch Next.js build hoàn thành 100% không có lỗi compile.
 
 ### Đồng bộ tài liệu luận văn (Docs Sync)
-- **Cập nhật báo cáo kỹ thuật**: Sửa đổi toàn bộ các tài liệu học thuật [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md), [18_PROPOSAL_MAPPING_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/18_PROPOSAL_MAPPING_ANALYSIS.md), và [17_GRADUATION_THESIS_PROPOSAL.md](file:///e:/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md) để đồng nhất định nghĩa độ phức tạp phân quyền tiệm cận $O(1)$ và lọc bản ghi CSDL đạt $O(\log N)$ nhờ chỉ mục B-Tree.
+- **Cập nhật báo cáo kỹ thuật**: Sửa đổi toàn bộ các tài liệu học thuật [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md), [18_PROPOSAL_MAPPING_ANALYSIS.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/18_PROPOSAL_MAPPING_ANALYSIS.md), và [17_GRADUATION_THESIS_PROPOSAL.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/17_GRADUATION_THESIS_PROPOSAL.md) để đồng nhất định nghĩa độ phức tạp phân quyền tiệm cận $O(1)$ và lọc bản ghi CSDL đạt $O(\log N)$ nhờ chỉ mục B-Tree.
 
 ## [1.2.0] - 2026-05-22
 
@@ -164,8 +164,8 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 - **Tối ưu hóa giao diện đồ thị**: Khắc phục triệt để các lỗi TypeScript liên quan đến Recharts Tooltip trong giao diện Premium Dark Mode tại `/admin/performance` giúp vẽ biểu đồ trực quan, đẹp mắt và trơn tru.
 
 ### Tài liệu & Tuân thủ (Documentation & Compliance)
-- **Báo cáo Phân tích Kỹ thuật & Chứng minh Học thuật chuyên sâu**: Biên soạn tài liệu [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md) chi tiết hóa 4 chủ đề bảo mật nặng ký phục vụ viết luận án và phản biện trước hội đồng.
-- **Ma trận tuân thủ đám mây**: Xây dựng tài liệu [ISO_27017_COMPLIANCE_MATRIX.md](file:///e:/PTIT_THESIS_SAAS/docs/ISO_27017_COMPLIANCE_MATRIX.md) ánh xạ trực tiếp các tính năng bảo mật vật lý sang khung tiêu chuẩn quốc tế.
+- **Báo cáo Phân tích Kỹ thuật & Chứng minh Học thuật chuyên sâu**: Biên soạn tài liệu [21_TECHNICAL_SECURITY_ANALYSIS.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/21_TECHNICAL_SECURITY_ANALYSIS.md) chi tiết hóa 4 chủ đề bảo mật nặng ký phục vụ viết luận án và phản biện trước hội đồng.
+- **Ma trận tuân thủ đám mây**: Xây dựng tài liệu [ISO_27017_COMPLIANCE_MATRIX.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/ISO_27017_COMPLIANCE_MATRIX.md) ánh xạ trực tiếp các tính năng bảo mật vật lý sang khung tiêu chuẩn quốc tế.
 - **Ý tưởng bảo vệ đồ án đột phá**: Biên soạn Phụ lục [y_tuong_trinh_bay_do_an.md](file:///C:/Users/Admin/.gemini/antigravity-ide/brain/d2a388ae-f564-429f-b223-2272cdd4d9ac/y_tuong_trinh_bay_do_an.md) định hướng khung slide thuyết trình và sơ đồ Mermaid trực quan để ghi điểm tối đa trước Hội đồng.
 
 ## [1.1.0] - 2026-05-21

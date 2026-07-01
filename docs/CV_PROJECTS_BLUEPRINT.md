@@ -1,4 +1,4 @@
-# HỒ SƠ ĐỊNH VỊ NĂNG LỰC & BẢN BẢN ĐỒ CHIA TÁCH DỰ ÁN CHO CV
+﻿# HỒ SƠ ĐỊNH VỊ NĂNG LỰC & BẢN BẢN ĐỒ CHIA TÁCH DỰ ÁN CHO CV
 > **Định hướng ứng tuyển:** Intern Software / System / Cloud Security Engineer (Dành riêng cho Sinh viên cuối năm 2)  
 > **Chuyên ngành chính quy:** Kỹ thuật Phần mềm (Software Engineering - PTIT)  
 > **Chiến lược cốt lõi:** Tận dụng thế mạnh Kỹ thuật Phần mềm để đi sâu vào Kiến trúc Hệ thống, Hệ thống Thông tin và An toàn Thông tin từ trong mã nguồn (Application Security / Security-by-Design).  
@@ -41,7 +41,7 @@ graph TD
 
 *   **Role:** System & Database Infrastructure Designer
 *   **Core Technologies:** PostgreSQL, Next.js Middleware, Edge Runtime, Supabase Auth, JWT Custom Claims, B-Tree Indexing.
-*   **Mã nguồn ánh xạ:** [middleware.ts](file:///e:/PTIT_THESIS_SAAS/middleware.ts) | [init_temple.sql](file:///e:/PTIT_THESIS_SAAS/init_temple.sql) | [schema.sql](file:///e:/PTIT_THESIS_SAAS/schema.sql)
+*   **Mã nguồn ánh xạ:** [middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts) | [init_temple.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/init_temple.sql) | [schema.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/schema.sql)
 *   **ATS-Optimized Bullet Points (Google XYZ Formula):**
     *   **Designed and engineered** a funnel-based **Defense-in-Depth** security model protecting a shared-database multi-tenant platform against cross-tenant data leakage and unauthorized access.
     *   **Enforced strict data isolation** at the database layer using **PostgreSQL Row-Level Security (RLS)**, achieving **$O(1)$ context resolution** by extracting tenant metadata directly from in-memory, cryptographically signed JWT Custom Claims.
@@ -55,7 +55,7 @@ graph TD
 
 *   **Role:** Database Security Engineer
 *   **Core Technologies:** PostgreSQL Triggers, SHA-256 Hashing, Cryptographic Hash-chaining, ISO/IEC 27017 Compliance.
-*   **Mã nguồn ánh xạ:** [worm-vault.ts](file:///e:/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) | Triggers in `init_temple.sql`
+*   **Mã nguồn ánh xạ:** [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) | Triggers in `init_temple.sql`
 *   **ATS-Optimized Bullet Points (Google XYZ Formula):**
     *   **Architected and implemented** a tamper-proof audit trail adhering to **ISO/IEC 27017 CLD.12.4.1** cloud security standards, guaranteeing non-repudiation of administrative actions.
     *   **Prevented insider threats and unauthorized modifications** by writing strict PostgreSQL triggers that block $100\%$ of `UPDATE` and `DELETE` queries on the audit ledger, rendering the database physically immutable even to Super Administrators.
@@ -69,7 +69,7 @@ graph TD
 
 *   **Role:** SecOps / Security Automation Engineer
 *   **Core Technologies:** Database Triggers, Dynamic Threat Containment, pg_net, Asynchronous Webhooks, Telegram API.
-*   **Mã nguồn ánh xạ:** [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql)
+*   **Mã nguồn ánh xạ:** [20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260522000002_dynamic_telegram_alerts_and_auto_suspend.sql)
 *   **ATS-Optimized Bullet Points (Google XYZ Formula):**
     *   **Designed and programmed** a lightweight, event-driven **SOAR (Security Orchestration, Automation, and Response)** framework embedded directly in the PostgreSQL engine.
     *   **Mitigated active threat propagation** by implementing an automated **Anomaly Containment trigger** that immediately suspends tenant accounts upon detecting $\ge 3$ RLS authorization violations within 60 seconds.
@@ -83,7 +83,7 @@ graph TD
 
 *   **Role:** Database Performance & Optimization Analyst
 *   **Core Technologies:** EXPLAIN (ANALYZE, BUFFERS), Performance Profiling, Scale Testing, Synthetic Data Generation.
-*   **Mã nguồn ánh xạ:** [scaling-engine.ts](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/scaling-engine.ts) | [performance/page.tsx](file:///e:/PTIT_THESIS_SAAS/app/admin/performance/page.tsx)
+*   **Mã nguồn ánh xạ:** [scaling-engine.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/performance/scaling-engine.ts) | [performance/page.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/performance/page.tsx)
 *   **ATS-Optimized Bullet Points (Google XYZ Formula):**
     *   **Designed a scale testing harness** managing a synthetic enterprise database of **111,000 operational records** to evaluate security-performance trade-offs on cloud infrastructures.
     *   **Conducted controlled experiments** comparing three isolation baselines (App-side filtering, RLS JOINs, and Optimized JWT Claims) under both Cold Read (SSD) and Hot Read (Shared Buffers) cache states.

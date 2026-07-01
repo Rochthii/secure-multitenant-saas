@@ -1,4 +1,4 @@
-# CẨM NANG PHÒNG THỦ HỌC THUẬT: 3 CHỐT CHẶN TỐI ƯU CSDL VÀ KỊCH BẢN PHẢN BIỆN "BẤT BẠI"
+﻿# CẨM NANG PHÒNG THỦ HỌC THUẬT: 3 CHỐT CHẶN TỐI ƯU CSDL VÀ KỊCH BẢN PHẢN BIỆN "BẤT BẠI"
 > **Đề tài Đồ án Tốt nghiệp:** Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tảng đa khách hàng (Secure Multi-tenant SaaS)  
 > **Tác giả thực hiện:** Chăm Rốch Thi (PTIT)  
 > **Phân hệ hỗ trợ:** Database-side Security & Performance Optimization  
@@ -14,7 +14,7 @@
 *   **Vấn đề thực tế (Nếu thiếu chỉ mục):** 
     Khi quy mô dữ liệu của nền tảng phình to lên hàng trăm nghìn hoặc hàng triệu dòng, nếu cột lọc khóa ngoại `tenant_id` không có chỉ mục, các chính sách Row Level Security (RLS) khi thực thi bắt buộc PostgreSQL phải chạy **Sequential Scan (Seq Scan - Quét tuần tự)** quét qua toàn bộ các dòng vật lý của bảng trên ổ đĩa để tìm dữ liệu tương thích. Điều này sẽ lập tức làm CPU của Database vọt lên 100%, gây nghẽn kết nối và sập toàn bộ hệ thống (connection lock timeout).
 *   **Giải pháp thiết kế trong dự án:** 
-    Toàn bộ 9 bảng nghiệp vụ cốt lõi (`media`, `categories`, `pages`, `about_sections`, `hero_slides`, `dharma_talks`, `event_registrations`, `contact_messages`, `transaction_projects`) đều đã được đánh chỉ mục **B-Tree Index** chuyên biệt dạng `idx_[tên_bảng]_tenant` trên trường `tenant_id` (Chi tiết tại tệp [20260228095500_phase45_global_tenant_isolation.sql](file:///e:/PTIT_THESIS_SAAS/supabase/migrations/20260228095500_phase45_global_tenant_isolation.sql#L38-L54)).
+    Toàn bộ 9 bảng nghiệp vụ cốt lõi (`media`, `categories`, `pages`, `about_sections`, `hero_slides`, `dharma_talks`, `event_registrations`, `contact_messages`, `transaction_projects`) đều đã được đánh chỉ mục **B-Tree Index** chuyên biệt dạng `idx_[tên_bảng]_tenant` trên trường `tenant_id` (Chi tiết tại tệp [20260228095500_phase45_global_tenant_isolation.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260228095500_phase45_global_tenant_isolation.sql#L38-L54)).
 *   **Hiệu quả vượt trội:** 
     Rút ngắn thời gian truy vấn từ tuyến tính $O(N)$ sang độ phức tạp cực tiểu **$O(\log N_{\text{tenant}})$** (B-Tree Index Scan). Database chỉ cần thực hiện 3 đến 4 phép toán so sánh trên cây nhị phân chỉ mục để trỏ thẳng tới phân vùng dữ liệu của Tenant đó, giúp hệ thống chịu tải gấp **hàng nghìn lần** mà không tiêu tốn tài nguyên.
 
