@@ -204,7 +204,7 @@ export default async function AuditLogsPage({
                                             </td>
                                             <td className="px-5 py-4 text-sm text-slate-600 dark:text-slate-400 max-w-md">
                                                 <div className="text-xs font-mono bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-200 dark:border-slate-800 break-words whitespace-pre-wrap max-h-32 overflow-y-auto w-full shadow-inner text-slate-700 dark:text-slate-400">
-                                                    {formatAuditChanges(log.changes)}
+                                                    {formatAuditChanges(log.changes, log.details)}
                                                 </div>
                                             </td>
                                         </tr>

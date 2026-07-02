@@ -29,6 +29,8 @@ export interface SecurityStats {
     hourlyTimeline: { hour: string; count: number }[];
     /** Cảnh báo Noisy Neighbors (Top Rate Limit Hits) */
     rateLimitHits: { ip_address: string; action_type: string; hit_count: number; last_hit: string }[];
+    /** Danh sách các email active hoạt động trong 24h */
+    activeEmails: string[];
 }
 
 export interface AnomalyAlert {
@@ -193,5 +195,6 @@ export async function getSecurityStats(): Promise<SecurityStats> {
         rlsCoverage,
         hourlyTimeline,
         rateLimitHits: rateLimitsData || [],
+        activeEmails: Array.from(uniqueEmails) as string[],
     };
 }

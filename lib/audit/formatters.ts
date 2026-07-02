@@ -96,7 +96,36 @@ function cleanAndFormatValue(key: string, val: any): string | null {
  * Xử lý hiển thị các thay đổi dữ liệu trong Audit Log.
  * Trả về chuỗi mô tả các thay đổi hoặc '-' nếu không có.
  */
-export function formatAuditChanges(changes: any): string {
+export function formatAuditChanges(changes: any, details?: any): string {
+    const hasNoChanges = !changes || (changes.before === undefined && changes.after === undefined) || (changes.before === null && changes.after === null);
+    
+    if (hasNoChanges && details) {
+        let parsedDetails = details;
+        if (typeof details === 'string') {
+            try {
+                parsedDetails = JSON.parse(details);
+            } catch {
+                return details;
+            }
+        }
+        if (parsedDetails && typeof parsedDetails === 'object') {
+            const parts: string[] = [];
+            if (parsedDetails.reason) parts.push(`• Lý do: ${parsedDetails.reason}`);
+            if (parsedDetails.attack_vector) parts.push(`• Vector: ${parsedDetails.attack_vector}`);
+            if (parsedDetails.message) parts.push(`• Nội dung: ${parsedDetails.message}`);
+            if (parsedDetails.payload) parts.push(`• Payload: ${parsedDetails.payload}`);
+            if (parsedDetails.threat_level) parts.push(`• Mức đe dọa: ${parsedDetails.threat_level}`);
+            
+            for (const key in parsedDetails) {
+                if (['reason', 'attack_vector', 'message', 'payload', 'threat_level'].includes(key)) continue;
+                const val = parsedDetails[key];
+                const displayVal = typeof val === 'object' ? JSON.stringify(val) : String(val);
+                parts.push(`• ${key}: ${displayVal}`);
+            }
+            if (parts.length > 0) return parts.join('\n');
+        }
+    }
+
     if (!changes) return '-';
     
     // Xử lý nếu changes là chuỗi JSON

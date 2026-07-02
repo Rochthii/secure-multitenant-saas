@@ -42,6 +42,7 @@ export interface AuditLogEntry {
     created_at: string;
     ip_address?: string;
     user_agent?: string;
+    details?: any;
 }
 
 // ============================================================================
@@ -180,7 +181,8 @@ export async function getAuditLogs(filters?: {
             } : null,
             created_at: log.created_at,
             ip_address: log.ip_address,
-            user_agent: log.user_agent
+            user_agent: log.user_agent,
+            details: log.details
         };
     });
 
@@ -252,7 +254,8 @@ export async function getAllAuditLogsForExport(filters?: {
             } : null,
             created_at: log.created_at,
             ip_address: log.ip_address,
-            user_agent: log.user_agent
+            user_agent: log.user_agent,
+            details: log.details
         };
     });
 }
