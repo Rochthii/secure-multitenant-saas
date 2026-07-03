@@ -1,4 +1,4 @@
-﻿# Đề Cương Đồ Án Tốt Nghiệp
+# Đề Cương Đồ Án Tốt Nghiệp
 
 > **Học viện:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)  
 > **Khoa:** Công nghệ Thông tin  
@@ -125,7 +125,9 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Đóng góp khoa học và thực tiễn của đề tài.
 
 ### Chương 2: Cơ sở lý thuyết & Công nghệ nền tảng
-- **Mô hình Multi-tenant Architecture:** So sánh các kiến trúc cô lập dữ liệu.
+- **Mô hình Multi-tenant Architecture:** So sánh các kiến trúc cô lập dữ liệu (Single-Tenant vs Multi-Tenant, Multi-schema vs Shared DB + RLS).
+- **Kiến trúc phần mềm Clean Architecture & Domain-Driven Design (DDD):** Nguyên lý thiết kế hệ thống tách biệt nghiệp vụ cốt lõi khỏi các chi tiết hạ tầng.
+- **Xác thực an toàn & JWT Rotation:** Cơ chế quản lý phiên ngắn hạn kết hợp quay vòng Refresh Token và thu hồi phiên bất thường để bảo vệ danh tính cloud.
 - **PostgreSQL Row-Level Security (RLS) & JWT Custom Claims:** Cơ chế trích xuất context bảo mật trong bộ nhớ và thuật toán quét chỉ mục B-Tree Index.
 - **Mô hình phân quyền lai RBAC + ABAC:** Phân kiểm soát truy cập dựa trên vai trò doanh nghiệp và ngữ cảnh thuộc tính động (giờ làm việc, IP Whitelist).
 - **Tính bất biến của Audit Trail (ISO 27017 CLD.12.4.1):** Cơ chế trigger CSDL kết hợp thuật toán băm liên kết chuỗi khối SHA-256 (WORM Vault Ledger) chống chối bỏ.
@@ -157,11 +159,17 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - Triển khai **Bộ thẩm định pháp lý Forensic WORM Chain Auditor** tích hợp trong [`worm-vault-widget.tsx`](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx): quét SHA-256 từng block, kiểm tra `prev_hash` continuity và đối chiếu chéo PostgreSQL để phát hiện bất kỳ hành vi can thiệp sổ cái nào.
 
 ### Chương 5: Đánh giá & Thực nghiệm đo lường
+- **So sánh các phương án kiến trúc đa khách hàng:** Đánh giá ưu nhược điểm lý thuyết và thực tiễn của Single-Tenant vs Multi-Tenant, Multi-schema vs Shared DB + RLS.
+- **Xây dựng kịch bản kiểm thử an toàn thông tin (Security Test Suite):**
+  - Thực nghiệm cô lập Tenant (Test Tenant Isolation): chứng minh các tenant hoàn toàn không thể truy cập dữ liệu chéo của nhau.
+  - Thực nghiệm kiểm thử vượt qua chính sách RLS (Test RLS Bypass): giả lập các truy vấn không mang identity claim hợp lệ.
+  - Thực nghiệm kiểm soát truy cập ngữ cảnh (Test RBAC/ABAC): xác thực cơ chế chặn truy cập ngoài giờ hoặc ngoài IP whitelist.
 - **Xây dựng mô hình Threat Modeling (STRIDE):** Phân tích 6 attack vectors chính đối với hệ thống đa khách hàng và cách kiến trúc đề xuất ngăn chặn từng nguy cơ.
 - **Đo lường hiệu năng thực tế (Performance Benchmarking):**
   - So sánh trực tiếp P50, P95, P99 Latency của 3 baseline: App-side filtering vs RLS JOIN vs Optimized JWT Claims.
   - Phân tích biểu đồ Scaling: Chứng minh giải pháp đề xuất triệt tiêu hoàn toàn chi phí JOIN phân quyền, duy trì độ trễ overhead an ninh ở mức hằng số (Constant-time) độc lập với quy mô tại mốc 100,000 bản ghi.
 - **Thực nghiệm giả lập tấn công (Threat Simulation):** Ghi nhận tỷ lệ chặn đứng thành công 100% của RLS và kích hoạt SOAR bảo vệ chủ động.
+- **Ma trận phòng thủ an ninh ánh xạ OWASP Top 10:** Đối chiếu chi tiết các cơ chế bảo mật (Edge Middleware, JWT Rotation, RLS, ABAC, WORM Vault) chống lại 10 nguy cơ bảo mật hàng đầu.
 - **Ánh xạ Ma trận tuân thủ tiêu chuẩn an toàn đám mây ISO/IEC 27017:** Đối chiếu các điều khoản CLD.6.3.1, CLD.9.5.1, CLD.12.4.1 và CLD.13.1.2.
 
 ### Chương 6: Kết luận & Hướng phát triển
@@ -212,6 +220,14 @@ Hệ thống đã được hiện thực hóa xuất sắc với các kết qu�
 - **Threat Simulator v5 & Sơ đồ luồng SVG Zero Trust (v1.8.0):** Mở rộng lên **5 kịch bản tấn công** giả lập thực tế. Kịch bản 5 là **Honeypot Decoy Trap**: khi kịch bản được kích hoạt, hệ thống ghi nhận ngay IP thực, ghi audit log `risk_score=100`, gọi RPC `block_ip`, phát cảnh báo giọng nói AI trên SOC Dashboard. Toàn bộ kịch bản được trực quan hóa động trên **Bản Đồ Luồng Tấn Công SVG** tương tác thời gian thực, cho phép quan sát chấm sáng di chuyển và nhấp nháy viền đỏ báo động tại đúng Node bị chặn đứng.
 - **Bản Đồ Ma Trận Học Thuật Tương Tác & SOC Live Fire QR (v1.8.0):** Xây dựng component ma trận học thuật tương tác 4x4, trình bày chi tiết độ phức tạp thuật toán lý thuyết ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và đối chiếu chính sách an toàn **ISO/IEC 27017 CLD**. Tích hợp động cơ sinh mã QR động dựa trên HTTP Host headers của yêu cầu Next.js, tự động trỏ mã QR về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud), giúp hội đồng quét mã QR để trực tiếp tấn công và trải nghiệm Middleware chặn IP tức thời ngay tại môi trường local.
 - **Forensic Cryptographic Ledger Auditor (Mới — v1.7.0):** Bộ thẩm định pháp lý mật mã học — quét SHA-256 từng block theo chuỗi, xác minh `prev_hash` continuity và đối chiếu PostgreSQL chéo. Giao diện terminal log màu sắc hiển thị trực quan trạng thái từng block. Nếu bất kỳ block nào bị tamper, hệ thống cô lập và báo cáo ngay.
+
+### 7.3 Danh mục tài liệu đặc tả & chuyên đề bổ sung (v1.9.0)
+
+Để tăng độ thuyết phục và bao phủ toàn diện cấu trúc của hội đồng PTIT, các chuyên đề phân tích sâu dưới đây đã được xây dựng và đính kèm trực tiếp trong tài liệu kỹ thuật của dự án:
+1. **Kiến trúc Clean Architecture & Domain-Driven Design (DDD):** [28_ARCHITECTURAL_DESIGN_PATTERN.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/28_ARCHITECTURAL_DESIGN_PATTERN.md) - Đặc tả cách phân tách logic nghiệp vụ an toàn khỏi hạ tầng cloud.
+2. **So sánh Kiến trúc đa khách hàng & Kịch bản thực nghiệm:** [29_TENANT_ARCHITECTURE_COMPARISON.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/29_TENANT_ARCHITECTURE_COMPARISON.md) - So sánh Single-Tenant vs Multi-Tenant, Multi-schema vs Shared DB + RLS, đồng thời chỉ ra quy trình test suite cho Tenant Isolation, RLS Bypass và RBAC/ABAC.
+3. **Ma trận kiểm soát an toàn OWASP Top 10:** [30_OWASP_TOP_10_SECURITY_MAPPING.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/30_OWASP_TOP_10_SECURITY_MAPPING.md) - Bản đồ đối chiếu các lỗ hổng OWASP Top 10 với các lớp phòng thủ chiều sâu thực tế của hệ thống.
+4. **Cơ chế Quay vòng JWT & Quản lý phiên:** [31_JWT_ROTATION_AND_SESSION_MANAGEMENT.md](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/docs/31_JWT_ROTATION_AND_SESSION_MANAGEMENT.md) - Đặc tả vòng đời session, an toàn cookies, và cơ chế quay vòng khóa bất đồng bộ.
 
 ---
 
