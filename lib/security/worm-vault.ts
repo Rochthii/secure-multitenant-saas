@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
+import { uploadToIPFS } from '@/lib/security/ipfs-worm';
 
 export interface WormBlock {
     index: number;
@@ -15,7 +16,9 @@ export interface WormBlock {
     timestamp: string;
     prev_hash: string;
     hash: string;
+    decentralized_cid?: string | null;
 }
+
 
 export interface VerificationResult {
     isValid: boolean;
@@ -204,6 +207,37 @@ export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; tota
                 const index = ledger.length + 1;
                 const prev_hash = ledger.length > 0 ? ledger[ledger.length - 1].hash : GENESIS_HASH;
                 
+                // 1. Gửi log lên IPFS phi tập trung
+                let decentralized_cid: string | null = null;
+                try {
+                    decentralized_cid = await uploadToIPFS({
+                        logId: log.id,
+                        tenantId: log.tenant_id || 'null',
+                        userEmail: log.user_email || 'guest@anonymous',
+                        action: log.action,
+                        tableName: log.table_name || 'null',
+                        recordId: log.record_id || 'null',
+                        severity: log.severity || 'info',
+                        details: log.old_data || log.new_data || {},
+                        ipAddress: log.ip_address || '127.0.0.1',
+                        userAgent: log.user_agent || 'unknown',
+                        riskScore: log.risk_score || 0,
+                        timestamp: new Date(log.created_at).toISOString(),
+                        prevBlockHash: prev_hash
+                    });
+
+                    // 2. Cập nhật lại decentralized_cid và prev_block_hash vào PostgreSQL
+                    await supabase
+                        .from('audit_logs')
+                        .update({ 
+                            decentralized_cid,
+                            prev_block_hash: prev_hash
+                        })
+                        .eq('id', log.id);
+                } catch (ipfsErr: any) {
+                    console.error(`[WORM IPFS] Failed to upload block #${index} to IPFS:`, ipfsErr.message);
+                }
+                
                 const newBlock: Omit<WormBlock, 'hash'> = {
                     index,
                     id: log.id,
@@ -214,7 +248,8 @@ export async function syncAuditLogsToWorm(): Promise<{ syncedCount: number; tota
                     record_id: log.record_id,
                     severity: log.severity || 'info',
                     timestamp: new Date(log.created_at).toISOString(),
-                    prev_hash
+                    prev_hash,
+                    decentralized_cid
                 };
                 
                 const hash = calculateBlockHash(newBlock);

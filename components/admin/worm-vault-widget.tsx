@@ -15,6 +15,7 @@ interface WormBlock {
     prev_hash: string;
     hash: string;
     severity: string;
+    decentralized_cid?: string | null;
 }
 
 interface VerificationResult {
@@ -395,6 +396,17 @@ export function WormVaultWidget() {
                                                 BLOCK #{block.index}
                                             </span>
                                             <span className="text-xs font-bold text-slate-300">{block.action}</span>
+                                            {block.decentralized_cid && (
+                                                <a 
+                                                    href={`https://gateway.pinata.cloud/ipfs/${block.decentralized_cid}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20 transition-all cursor-pointer shadow-[0_0_8px_rgba(16,185,129,0.05)]"
+                                                >
+                                                    <Lock className="w-2.5 h-2.5 shrink-0" />
+                                                    IPFS WORM
+                                                </a>
+                                            )}
                                             <span className="text-slate-500 text-[10px]">•</span>
                                             <span className="text-slate-400 text-[10px] font-mono">{block.table_name || 'system'}</span>
                                             <span className="text-slate-500 text-[10px]">•</span>
