@@ -64,12 +64,15 @@ graph TD
 
 ## 3. Các Trụ cột Kỹ thuật Cốt lõi (Core Technical Pillars)
 
-### 3.1 Sổ cái kiểm toán bất biến Cryptographic WORM Vault (Write Once, Read Many)
-*   *Mã nguồn:* [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) & Trigger DB
-*   **Bất biến vật lý cấp DB:** Kích hoạt trigger PostgreSQL chặn hoàn toàn lệnh UPDATE/DELETE trên bảng audit_logs từ mọi tài khoản, kể cả Super Admin (tuân thủ tiêu chuẩn ISO/IEC 27017 CLD.12.4.1).
-*   **Bảo vệ mật mã học (SHA-256 Hash-chaining):** Xây dựng module tự động tính toán băm mật mã học liên kết chuỗi khối cho toàn bộ dòng log:
-    Hash_current = SHA256(Record_Content + Hash_previous)
-    Ledger này được đồng bộ bất biến vào private bucket security-vault trên cloud storage (hoặc local fallback với thuộc tính file read-only 0o444). Nếu dữ liệu thô trong database bị can thiệp trái phép, chuỗi liên kết sẽ bị gãy và kích hoạt báo động giả mạo vật lý lập tức.
+### 3.1 Sổ cái kiểm toán phi tập trung Web3 IPFS WORM Vault
+*   *Mã nguồn:* [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts), [ipfs-worm.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/ipfs-worm.ts) & Trigger DB
+*   **Bất biến vật lý cấp DB (WORM V1):** Kích hoạt trigger PostgreSQL chặn hoàn toàn lệnh UPDATE/DELETE trên bảng `audit_logs` từ mọi tài khoản, kể cả Super Admin (tuân thủ tiêu chuẩn ISO/IEC 27017 CLD.12.4.1).
+*   **Mã hóa liên kết chuỗi (SHA-256 Hash-chaining):** Xây dựng module tự động tính toán băm mật mã học liên kết chuỗi khối cho toàn bộ dòng log:
+    $$Hash_{\text{current}} = \text{SHA256}(\text{Record\_Content} + Hash_{\text{previous}})$$
+*   **Lưu trữ phi tập trung Web3 (IPFS WORM V2):**
+    *   Tự động đóng gói và "pin" tệp JSON log kiểm toán nhạy cảm lên **IPFS** thông qua Pinata API Gateway thời gian thực ngầm ngay sau khi ghi nhận sự kiện thành công mà không gây nghẽn luồng xử lý chính.
+    *   Lưu trữ địa chỉ **CID** (Content Identifier) bất biến và `prev_block_hash` trực tiếp vào database PostgreSQL để phục vụ đối chiếu, thẩm định pháp lý (Forensic validation) trực tiếp từ SOC Dashboard.
+
 
 ### 3.2 Động cơ SOAR & Phòng vệ chủ động Phân tầng (Tiered Active Defense)
 *   *Mã nguồn:* [20260531110000_soar_tiered_response_active_defense.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260531110000_soar_tiered_response_active_defense.sql) & [middleware.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/middleware.ts)
@@ -107,6 +110,7 @@ graph TD
 | **ABAC Authorization Model** | Time-based and IP Whitelist constraints | [20260516100000_abac_time_ip_policies.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260516100000_abac_time_ip_policies.sql) |
 | **Immutable Audit Log System** | PostgreSQL trigger block UPDATE/DELETE | [20260522000001_immutable_audit_logs.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260522000001_immutable_audit_logs_and_abac_extension.sql) |
 | **Cryptographic Ledger WORM Vault** | SHA-256 Hash-chaining and sync engine | [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) |
+| **Web3 IPFS WORM Ledger** | Blockchain-grade audit log pinning & verification | [ipfs-worm.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/ipfs-worm.ts) & [20260706124500_add_ipfs_decentralized_worm_columns.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260706124500_add_ipfs_decentralized_worm_columns.sql) |
 | **Cyber SOC Dashboard** | Security Score, RLS %, Dynamic IP Blocklist | [page.tsx (security-center)](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/admin/security-center/page.tsx) |
 | **HBCAD Anomaly Engine** | Z-Score & ABAC Real-time Risk (CRS) | [20260531100000_hybrid_anomaly_detection.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260531100000_hybrid_anomaly_detection.sql) |
 | **Active SOAR Engine (Tiered)** | Edge IP Blocking, Whitelist checking & Telegram | [20260531110000_soar_tiered_response_active_defense.sql](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/supabase/migrations/20260531110000_soar_tiered_response_active_defense.sql) |
