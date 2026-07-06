@@ -13,11 +13,11 @@ export async function GET(req: NextRequest) {
         const supabase = (await createAdminClient()) as any;
         const { data: tenants } = await supabase.from('tenants').select('id, name, tenant_type');
         
-        const stats = (tenants || []).map((t: any) => {
+        const stats = await Promise.all((tenants || []).map(async (t: any) => {
             // Map tenant_type to plan: 'free' | 'pro' | 'enterprise'
             const plan = (t.tenant_type === 'enterprise' ? 'enterprise' : t.tenant_type === 'pro' ? 'pro' : 'free') as 'free' | 'pro' | 'enterprise';
-            return tenantConnectionPooler.getTenantStats(t.id, t.name, plan);
-        });
+            return await tenantConnectionPooler.getTenantStats(t.id, t.name, plan);
+        }));
         
         return NextResponse.json({
             stats,

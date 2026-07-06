@@ -1,9 +1,11 @@
 // ============================================================================
-// TENANT CONNECTION POOL LIMITER (NOISY NEIGHBOR MITIGATION)
+// TENANT CONNECTION POOL LIMITER (NOISY NEIGHBOR MITIGATION) - DISTRIBUTED EDITION
 // ============================================================================
-// Triển khai cô lập tài nguyên và điều tiết kết nối đồng thời ở tầng ứng dụng
-// mô phỏng cấu hình giới hạn connection pool của Supavisor cho từng Tenant.
+// Triển khai cô lập tài nguyên và điều tiết kết nối đồng thời ở tầng ứng dụng.
+// Sử dụng Redis Edge Cache để hoạt động chính xác trong môi trường Serverless (Vercel Edge)
 // ============================================================================
+
+import { redisClient } from './redis-client';
 
 export interface TenantPoolStats {
     tenantId: string;
@@ -15,13 +17,12 @@ export interface TenantPoolStats {
     state: 'NORMAL' | 'HIGH_LOAD' | 'EXHAUSTED';
 }
 
-// Global database connection slot manager
 class TenantConnectionPooler {
     private static instance: TenantConnectionPooler;
-    // Map tracking active request slots per tenant
-    private activeConnections: Map<string, number> = new Map();
-    // Track rate limit violations (noisy neighbor flags)
-    private rateLimitViolations: Map<string, number> = new Map();
+
+    // Fallback local memory for local development without Upstash Redis
+    private localActive = new Map<string, number>();
+    private localViolations = new Map<string, number>();
 
     public TIER_LIMITS = {
         free: { maxConcurrent: 3, maxRequestsPerMin: 15 },
@@ -40,21 +41,39 @@ class TenantConnectionPooler {
 
     /**
      * Cố gắng chiếm dụng 1 kết nối (connection slot) vào Database cho Tenant.
-     * Trả về kết quả cho phép hay bị chặn nhằm bảo vệ Noisy Neighbor.
      */
-    public acquireSlot(tenantId: string, plan: 'free' | 'pro' | 'enterprise'): {
+    public async acquireSlot(tenantId: string, plan: 'free' | 'pro' | 'enterprise'): Promise<{
         allowed: boolean;
         active: number;
         limit: number;
         error?: string;
-    } {
+    }> {
         const limit = this.TIER_LIMITS[plan]?.maxConcurrent || 3;
-        const currentActive = this.activeConnections.get(tenantId) || 0;
+        const redisKey = `active_pool:${tenantId}`;
+        const violationKey = `violations:${tenantId}`;
+
+        let currentActive = 0;
+
+        try {
+            // Lấy số kết nối hiện tại từ Redis
+            const cachedVal = await redisClient.get<number>(redisKey);
+            currentActive = cachedVal !== null ? Number(cachedVal) : 0;
+        } catch {
+            // Fallback sang local RAM nếu Redis gặp sự cố
+            currentActive = this.localActive.get(tenantId) || 0;
+        }
 
         if (currentActive >= limit) {
-            // Đánh dấu vi phạm (Noisy Neighbor Indicator)
-            const violations = this.rateLimitViolations.get(tenantId) || 0;
-            this.rateLimitViolations.set(tenantId, violations + 1);
+            // Ghi nhận vi phạm
+            let violations = 0;
+            try {
+                const cachedViolations = await redisClient.get<number>(violationKey);
+                violations = cachedViolations !== null ? Number(cachedViolations) : 0;
+                await redisClient.set(violationKey, violations + 1, { ex: 60 });
+            } catch {
+                violations = this.localViolations.get(tenantId) || 0;
+                this.localViolations.set(tenantId, violations + 1);
+            }
 
             return {
                 allowed: false,
@@ -64,10 +83,17 @@ class TenantConnectionPooler {
             };
         }
 
-        this.activeConnections.set(tenantId, currentActive + 1);
+        // Tăng active connections (đặt TTL 15s để tự giải phóng nếu server bị sập bất ngờ)
+        const nextActive = currentActive + 1;
+        try {
+            await redisClient.set(redisKey, nextActive, { ex: 15 });
+        } catch {
+            this.localActive.set(tenantId, nextActive);
+        }
+
         return {
             allowed: true,
-            active: currentActive + 1,
+            active: nextActive,
             limit
         };
     }
@@ -75,19 +101,46 @@ class TenantConnectionPooler {
     /**
      * Giải phóng 1 kết nối sau khi query hoàn thành.
      */
-    public releaseSlot(tenantId: string): void {
-        const currentActive = this.activeConnections.get(tenantId) || 0;
+    public async releaseSlot(tenantId: string): Promise<void> {
+        const redisKey = `active_pool:${tenantId}`;
+        let currentActive = 0;
+
+        try {
+            const cachedVal = await redisClient.get<number>(redisKey);
+            currentActive = cachedVal !== null ? Number(cachedVal) : 0;
+        } catch {
+            currentActive = this.localActive.get(tenantId) || 0;
+        }
+
         if (currentActive > 0) {
-            this.activeConnections.set(tenantId, currentActive - 1);
+            const nextActive = currentActive - 1;
+            try {
+                if (nextActive === 0) {
+                    await redisClient.del(redisKey);
+                } else {
+                    await redisClient.set(redisKey, nextActive, { ex: 15 });
+                }
+            } catch {
+                this.localActive.set(tenantId, nextActive);
+            }
         }
     }
 
     /**
      * Lấy thống kê pool của một Tenant cụ thể.
      */
-    public getTenantStats(tenantId: string, tenantName: string, plan: 'free' | 'pro' | 'enterprise'): TenantPoolStats {
-        const active = this.activeConnections.get(tenantId) || 0;
+    public async getTenantStats(tenantId: string, tenantName: string, plan: 'free' | 'pro' | 'enterprise'): Promise<TenantPoolStats> {
         const limit = this.TIER_LIMITS[plan]?.maxConcurrent || 3;
+        const redisKey = `active_pool:${tenantId}`;
+        
+        let active = 0;
+        try {
+            const cachedVal = await redisClient.get<number>(redisKey);
+            active = cachedVal !== null ? Number(cachedVal) : 0;
+        } catch {
+            active = this.localActive.get(tenantId) || 0;
+        }
+
         const usage = limit > 0 ? (active / limit) * 100 : 0;
         
         let state: TenantPoolStats['state'] = 'NORMAL';
@@ -109,7 +162,7 @@ class TenantConnectionPooler {
     }
 
     /**
-     * Simulate a high-load query flood to test active block mechanism.
+     * Mô phỏng lũ lụt truy vấn tải cao.
      */
     public async simulateFlood(tenantId: string, plan: 'free' | 'pro' | 'enterprise', count: number): Promise<{
         totalRequests: number;
@@ -119,9 +172,8 @@ class TenantConnectionPooler {
         let successfulAcquires = 0;
         let blockedRequests = 0;
 
-        // Try to acquire slots in parallel
         for (let i = 0; i < count; i++) {
-            const res = this.acquireSlot(tenantId, plan);
+            const res = await this.acquireSlot(tenantId, plan);
             if (res.allowed) {
                 successfulAcquires++;
             } else {
@@ -129,10 +181,10 @@ class TenantConnectionPooler {
             }
         }
 
-        // Release the successfully acquired slots after 3 seconds asynchronously
-        setTimeout(() => {
+        // Tự động giải phóng sau 3 giây bất đồng bộ
+        setTimeout(async () => {
             for (let i = 0; i < successfulAcquires; i++) {
-                this.releaseSlot(tenantId);
+                await this.releaseSlot(tenantId);
             }
         }, 3000);
 
@@ -143,12 +195,23 @@ class TenantConnectionPooler {
         };
     }
 
-    public getViolations(tenantId: string): number {
-        return this.rateLimitViolations.get(tenantId) || 0;
+    public async getViolations(tenantId: string): Promise<number> {
+        const violationKey = `violations:${tenantId}`;
+        try {
+            const cachedViolations = await redisClient.get<number>(violationKey);
+            return cachedViolations !== null ? Number(cachedViolations) : 0;
+        } catch {
+            return this.localViolations.get(tenantId) || 0;
+        }
     }
 
-    public clearViolations(tenantId: string): void {
-        this.rateLimitViolations.set(tenantId, 0);
+    public async clearViolations(tenantId: string): Promise<void> {
+        const violationKey = `violations:${tenantId}`;
+        try {
+            await redisClient.del(violationKey);
+        } catch {
+            this.localViolations.set(tenantId, 0);
+        }
     }
 }
 

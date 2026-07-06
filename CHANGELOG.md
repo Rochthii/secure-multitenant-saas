@@ -1,6 +1,26 @@
-﻿# Changelog
+# Changelog
 
 Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Multi-tenant SaaS sẽ được ghi lại trong tệp này.
+
+## [1.11.0] - 2026-07-06
+
+### Gia Cố Bảo Mật Tầng Database (Security Hardening)
+- **search_path Isolation:** Áp dụng `SET search_path = public, pg_temp` cho toàn bộ các hàm `SECURITY DEFINER` để triệt tiêu hoàn toàn lỗ hổng leo thang đặc quyền (Privilege Escalation).
+- **JWT Claims Identity:** Cập nhật hàm định danh đa chi nhánh `get_current_tenant_id()` và `get_current_user_role()` ưu tiên phân giải từ JWT Claims (`auth.jwt()`), giải quyết triệt để rủi ro Identity Drift và rò rỉ dữ liệu chéo chi nhánh (Tenant Escape).
+- **Audit Logs Protection:** Thu hồi hoàn toàn quyền `INSERT` trực tiếp của client vào bảng `audit_logs`, ngăn chặn lỗ hổng Reverse DoS (kẻ xấu giả mạo log để hệ thống tự khóa admin).
+- **RPC Access Control:** Gia cố phân quyền thực thi trên các RPC `block_ip` và `unblock_ip` trong SQL, chỉ cho phép `service_role` (Honeypot Decoy) hoặc Admin của đúng chi nhánh gọi.
+- **Performance Index:** Tạo index composite `idx_audit_logs_user_anomaly_lookup` trên `(user_email, created_at, action, severity)` để tối ưu hóa hiệu năng trigger CRS.
+- **Broken Migration Fix:** Sửa lỗi cú pháp DROP TABLE nhầm bảng `transaction_projects` mới tạo trong file migration cũ `20260325083620_merge_projects_purposes_to_campaigns.sql`.
+
+### Backend Refactoring & Edge Cache Sync
+- **Multi-tenant Login Context:** Cập nhật `getCachedUserContext` trong [permissions.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/permissions.ts) lọc user_roles theo `x-tenant-id` từ headers để tránh crash `maybeSingle()` khi người dùng có nhiều vai trò ở các chi nhánh khác nhau.
+- **Dynamic Security Actions:** Triển khai Server Actions mới trong [security.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/actions/admin/security.ts) xử lý việc chặn/gỡ chặn IP an toàn và xóa cache Redis tương ứng.
+- **Edge Cache Syncing:** Sửa đổi component [ip-blocklist-widget.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/security/ip-blocklist-widget.tsx) gọi Server Action thay vì gọi trực tiếp RPC, và tích hợp xóa cache Redis trong [tenants.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/app/actions/admin/tenants.ts) khi cập nhật Workspace.
+- **Distributed Resource Limiter:** Nâng cấp [tenant-pooler.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/tenant-pooler.ts) sang sử dụng Upstash Redis làm bộ đếm kết nối đồng thời phân tán trên môi trường Serverless (Vercel Edge), ngăn ngừa Noisy Neighbor.
+
+### Testing & Deployment
+- **Middleware Unit Testing:** Đồng bộ hóa toàn bộ [middleware.test.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/__tests__/middleware.test.ts) khớp với logic Edge Defense thực tế (IP block, Suspended, Intranet Whitelist) và chạy Vitest pass 100%.
+- **Remote DB Deployment:** Tạo script [apply_security_fix.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/scripts/apply_security_fix.ts) và nạp thành công toàn bộ migration SQL trực tiếp lên remote database Supabase Cloud.
 
 ## [1.10.0] - 2026-06-26
 

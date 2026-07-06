@@ -40,7 +40,7 @@ export async function createClient() {
 
                     if (tenantId && tenantPlan) {
                         const pooler = (await import('@/lib/security/tenant-pooler')).tenantConnectionPooler;
-                        const acquireRes = pooler.acquireSlot(tenantId, tenantPlan);
+                        const acquireRes = await pooler.acquireSlot(tenantId, tenantPlan);
 
                         if (!acquireRes.allowed) {
                             // Ghi audit log bằng admin client để tránh đệ quy
@@ -92,7 +92,7 @@ export async function createClient() {
                             }
                             return await fetch(url, options);
                         } finally {
-                            pooler.releaseSlot(tenantId);
+                            await pooler.releaseSlot(tenantId);
                         }
                     }
 

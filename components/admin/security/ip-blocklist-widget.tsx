@@ -31,20 +31,12 @@ export function IpBlocklistWidget({ blockedIps: initialBlockedIps }: IpBlocklist
         setErrorMsg(null);
 
         try {
-            // Lấy email admin hiện tại để ghi nhận log kiểm toán
-            const { data: { user } } = await supabase.auth.getUser();
-            const adminEmail = user?.email || 'admin@cyber.soc';
+            const { unblockIpAction } = await import('@/app/actions/admin/security');
+            const result = await unblockIpAction(ip, tenantId);
 
-            // Gọi RPC unblock_ip trong database
-            const { error } = await (supabase as any).rpc('unblock_ip', {
-                p_ip: ip,
-                p_tenant_id: tenantId,
-                p_admin_email: adminEmail
-            });
-
-            if (error) {
-                console.error('[SOC] Lỗi khi unblock IP:', error);
-                throw error;
+            if (!result.success) {
+                console.error('[SOC] Lỗi khi unblock IP:', result.error);
+                throw new Error(result.error || 'Có lỗi xảy ra khi gỡ lệnh chặn IP.');
             }
 
             // Cập nhật state cục bộ để biến mất ngay lập tức trên UI

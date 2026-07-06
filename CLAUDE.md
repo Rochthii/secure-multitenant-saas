@@ -17,12 +17,12 @@ Kiến trúc ECC (Everything Claude Code) được cài đặt để hỗ trợ 
 - `/compact` - Lệnh dọn dẹp ngữ cảnh (Workflow ECC Custom)
 
 ## 🛡️ Security Mission (Hardening)
-Dự án đang trong giai đoạn "Hardening" bảo mật:
-1. **Patching RLS:** Đã vá lỗ hổng leo thang đặc quyền trong `init_tenant.sql`.
-2. **Postgres RPC:** Cần chuyển đổi các thao tác Update nhạy cảm (như view_count) sang RPC `SECURITY DEFINER`.
-3. **Audit Monitoring:** Theo dõi Audit Logs cho mọi hành động Admin.
+Dự án đã hoàn thành "Hardening" bảo mật toàn diện:
+1. **RLS & JWT Claims:** Đã áp dụng JWT Claims trong DB cho RLS và sửa lỗi đăng nhập đa chi nhánh (getCachedUserContext).
+2. **Access Control:** Thu hồi quyền INSERT audit_logs từ client, phân quyền RPC block_ip/unblock_ip và khóa chặt `search_path` cho các hàm SECURITY DEFINER.
+3. **Edge Cache Sync:** Đồng bộ hóa cache Redis (tenant config và IP blocklist) tức thời khi Admin thay đổi trạng thái qua Next.js Server Actions.
 
 ## 🧠 Context Memory
-- **Last Milestone:** Tích hợp bộ đệm an ninh mạng biên Edge Cache (Upstash Redis kết hợp Local Memory Cache dự phòng) giúp Middleware xử lý dưới < 3ms và chặn đứng DDoS spam DB. Xây dựng Sơ đồ luồng tấn công tương tác SVG động (Zero Trust Map) mô phỏng hoạt họa các chốt chặn an toàn cho Threat Simulator v5. Toàn bộ dự án biên dịch thành công 100% không phát sinh lỗi kiểu TypeScript.
-- **Current Focus:** Chuẩn bị tối ưu và hoàn tất slide thuyết trình tốt nghiệp PTIT.
-- **Next Step:** Soạn slide thuyết trình 10 phút, chuẩn bị kịch bản demo an ninh thực chiến (SOC Dashboard, Threat Simulator, Auto-suspend SOAR, Zero Trust SVG Map).
+- **Last Milestone:** Vá thành công 14 điểm lỗi và lỗ hổng bảo mật nghiêm trọng (F#01 -> F#14), chuyển đổi Connection Pooler sang phân tán dùng Upstash Redis trên môi trường Serverless, đồng bộ hóa kiểm thử Middleware pass 100% bằng Vitest, và nạp thành công database migration lên Supabase Cloud (`cvqmmrpupyvbrtsisudd`).
+- **Current Focus:** Hoàn tất tài liệu và chuẩn bị kịch bản thuyết trình bảo vệ đồ án tốt nghiệp PTIT.
+- **Next Step:** Soạn slide thuyết trình 10 phút, chuẩn bị kịch bản demo an ninh thực chiến (SOC Dashboard, Sổ cái WORM Vault, Threat Simulator, Edge IP Block SOAR, Zero Trust SVG Map).

@@ -50,11 +50,20 @@ const getCachedUserContext = cache(async (): Promise<UserContext | null> => {
 
     // 1. Try to get role from the new user_roles table (multi-tenant aware)
     // Cast as any because database.types.ts doesn't include user_roles yet
-    const { data: userRole } = await (supabase as any)
+    const { headers } = await import('next/headers');
+    const headerList = await headers();
+    const currentTenantId = headerList.get('x-tenant-id');
+
+    let query = (supabase as any)
         .from('user_roles')
         .select('role, tenant_id, custom_permissions, tenants(name)')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('user_id', user.id);
+
+    if (currentTenantId) {
+        query = query.eq('tenant_id', currentTenantId);
+    }
+
+    const { data: userRole } = await query.maybeSingle();
 
     if (userRole) {
         return {

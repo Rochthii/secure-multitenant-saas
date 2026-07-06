@@ -114,7 +114,6 @@ ON DELETE SET NULL;
 -- ALTER TABLE "public"."transactions" DROP COLUMN IF EXISTS "purpose";
 
 -- 7. Drop legacy tables
-DROP TABLE IF EXISTS "public"."transaction_projects" CASCADE;
 DROP TABLE IF EXISTS "public"."transaction_purposes" CASCADE;
 
 -- 8. Enable Row Level Security (RLS) on new projects table

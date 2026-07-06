@@ -306,6 +306,21 @@ export async function updateTenant(id: string, formData: FormData): Promise<{ su
             revalidateTag(CACHE_TAGS.system.tenantConfigGlobal);
         }
 
+        // ĐỒNG BỘ CACHE REDIS EDGE: Xóa cache cấu hình tenant trên Redis để Edge cập nhật tức thì
+        try {
+            const { redisClient } = await import('@/lib/security/redis-client');
+            if (oldData?.domain) {
+                await redisClient.del(`tenant:${oldData.domain}`);
+            }
+            if (tenantData?.domain) {
+                await redisClient.del(`tenant:${tenantData.domain}`);
+            }
+            await redisClient.del(`tenant:${id}`);
+            console.log(`[SOC Action] Đã xóa cache Redis cho Workspace ID: ${id}`);
+        } catch (redisErr) {
+            console.error('[SOC Action] Lỗi khi xóa cache Redis cho tenant:', redisErr);
+        }
+
         revalidatePath('/admin/tenants');
         revalidatePath(`/admin/tenants/${id}`);
         revalidatePath('/admin/users');
