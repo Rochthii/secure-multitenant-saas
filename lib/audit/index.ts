@@ -1,4 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { syncAuditLogsToWorm } from '@/lib/security/worm-vault';
 import type { User } from '@supabase/supabase-js';
 
 // ============================================================================
@@ -84,6 +85,11 @@ export async function createAuditLog({
 
         if (error) {
             console.error('[AuditLog] Failed to write audit log:', error.message);
+        } else {
+            // Tự động kích hoạt đồng bộ hóa sổ cái phi tập trung IPFS chạy ngầm thời gian thực
+            syncAuditLogsToWorm().catch((syncErr) => {
+                console.error('[WORM Auto Sync] Real-time background sync failed:', syncErr.message);
+            });
         }
     } catch (err) {
         console.error('[AuditLog] Unexpected error:', err);

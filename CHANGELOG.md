@@ -16,6 +16,7 @@ Tất cả các thay đổi đáng chú ý đối với nền tảng Secure Mult
 - **Decentralized Cryptographic Chain:** Tích hợp Pinata IPFS API vào tiến trình đồng bộ sổ cái [worm-vault.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/security/worm-vault.ts) để băm SHA-256 (kèm `prev_block_hash`) và đẩy log kiểm toán nhạy cảm lên mạng IPFS phi tập trung dưới dạng JSON bất biến.
 - **Forensic Reverse Mapping:** Thêm cột `decentralized_cid` và `prev_block_hash` trong bảng `audit_logs` (thông qua migration mới `20260706124500_add_ipfs_decentralized_worm_columns.sql`) để lưu vết chứng chỉ Web3 IPFS ngược lại database PostgreSQL.
 - **SOC Forensic Visualizer:** Cập nhật Widget [worm-vault-widget.tsx](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/components/admin/worm-vault-widget.tsx) hiển thị Badge `IPFS WORM` màu xanh lục, tự động liên kết tới Pinata IPFS Gateway để Hội đồng kiểm tra dữ liệu JSON bất biến trực tiếp.
+- **Real-time Auto Sync:** Tích hợp trigger chạy ngầm bất đồng bộ trong [index.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/audit/index.ts) để tự động đẩy log lên IPFS tức thời ngay khi ghi nhận sự kiện nhạy cảm thành công mà không cản trở luồng phản hồi chính của client.
 
 ### Backend Refactoring & Edge Cache Sync
 - **Multi-tenant Login Context:** Cập nhật `getCachedUserContext` trong [permissions.ts](file:///e:/Projects/Project_TN/PTIT_THESIS_SAAS/lib/permissions.ts) lọc user_roles theo `x-tenant-id` từ headers để tránh crash `maybeSingle()` khi người dùng có nhiều vai trò ở các chi nhánh khác nhau.
