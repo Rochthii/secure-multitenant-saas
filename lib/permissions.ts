@@ -59,20 +59,27 @@ const getCachedUserContext = cache(async (): Promise<UserContext | null> => {
         .select('role, tenant_id, custom_permissions, tenants(name)')
         .eq('user_id', user.id);
 
-    if (currentTenantId) {
-        query = query.eq('tenant_id', currentTenantId);
-    }
+    const { data: userRoles } = await query;
 
-    const { data: userRole } = await query.maybeSingle();
+    if (userRoles && userRoles.length > 0) {
+        // A. Ưu tiên 1: Tìm dòng super_admin hoặc global role (tenant_id = null)
+        const globalRole = userRoles.find((r: any) => r.role === 'super_admin' || !r.tenant_id);
+        
+        // B. Ưu tiên 2: Tìm dòng khớp với tenant hiện tại (currentTenantId)
+        const matchedRole = currentTenantId 
+            ? userRoles.find((r: any) => r.tenant_id === currentTenantId)
+            : null;
 
-    if (userRole) {
+        // Chọn vai trò phù hợp nhất
+        const activeUserRole = globalRole || matchedRole || userRoles[0];
+
         return {
             userId: user.id,
             email: user.email,
-            role: userRole.role as Role,
-            tenantId: userRole.tenant_id ?? null,
-            tenantName: (userRole.tenants as any)?.name ?? null,
-            customPermissions: userRole.custom_permissions as Record<string, Partial<Permission>> | undefined,
+            role: activeUserRole.role as Role,
+            tenantId: activeUserRole.tenant_id ?? null,
+            tenantName: (activeUserRole.tenants as any)?.name ?? null,
+            customPermissions: activeUserRole.custom_permissions as Record<string, Partial<Permission>> | undefined,
         };
     }
 
