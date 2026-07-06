@@ -210,21 +210,22 @@ Hệ thống được đối chiếu trực tiếp và đáp ứng các điều 
 
 ---
 
-## 7. Lộ trình nâng cấp Kiến trúc 2 năm (Enterprise Tier Roadmap)
+## 7. Các Giai Đoạn Phát Triển & Nghiệm Thu Hệ Thống (Development & Verification Stages)
 
-Đồ án vạch rõ 3 hướng nâng cấp và tối ưu hóa hệ thống phục vụ môi trường doanh nghiệp lớn:
+Hệ thống đã hiện thực hóa thành công và nghiệm thu thực tế toàn bộ cả 3 giai đoạn phát triển:
 
 ```mermaid
 timeline
-    title Lộ trình 2 năm (Enterprise Tier Roadmap)
-    Giai đoạn 1 : Khôi phục cô lập UPSERT : Chạy Benchmark scaling 111k dòng : Viết 5 test case Threat Simulation
-    Giai đoạn 2 : AWS S3 WORM Storage (Object Lock) : Supavisor connection limits per tenant
-    Giai đoạn 3 : Phân tán đa vùng (Multi-region Read Replicas) : Dự phòng nóng (Hot Standby)
+    title Trạng thái Nghiệm thu Hệ thống (100% Completed)
+    Giai đoạn 1 (Hoàn thành) : Khôi phục cô lập UPSERT : Chạy Benchmark scaling 111k dòng : Viết 5 kịch bản Threat Simulation
+    Giai đoạn 2 (Hoàn thành) : Sổ cái WORM phi tập trung IPFS (Pinata) : Connection Limits per Tenant (Redis)
+    Giai đoạn 3 (Hoàn thành) : Phân tán đa vùng mạng biên (Upstash Redis) : Bộ đệm Edge Cache dự phòng (Local memory)
 ```
 
-1.  **Giai đoạn 1: Củng cố & Thực nghiệm (Hiện tại - v1.5.0):** Hoàn tất benchmark scaling 111.000 dòng, hoàn thiện các API UPSERT khôi phục cô lập tránh rollback chéo, hoàn chỉnh 5 kịch bản Threat Simulation an ninh và xây dựng mô hình hóa mối đe dọa **STRIDE Threat Modeling** làm khung lý thuyết kiểm thử.
-2.  **Giai đoạn 2: Gia cố Hạ tầng Enterprise (Năm 2 - H1):** Tách biệt vật lý Audit Logs ra ngoài DB bằng cách đồng bộ sang **AWS S3 WORM Storage** bật chế độ **Compliance Mode Object Lock** để chống phá hoại vật lý từ gốc. Nghiên cứu tối ưu hóa xác minh bằng thuật toán **Cây Merkle (Merkle Tree)** để giảm độ trễ kiểm toán chuỗi logs từ O(N) xuống **O(log N)**.
-3.  **Giai đoạn 3: Phân tán đa vùng và High Availability (Năm 2 - H2):** Thiết lập cấu hình connection pooling giới hạn slot kết nối tối đa cho mỗi tenant trên Supavisor để chống nghẽn chéo hoàn toàn (Noisy Neighbor). Thiết lập phân tán cơ sở dữ liệu đa phân vùng (Multi-region Read Replicas) để giảm thiểu độ trễ mạng biên toàn cầu và triển khai cơ chế dự phòng nóng (Hot Standby) bảo đảm tính sẵn sàng cao và liên tục của doanh nghiệp.
+1.  **Giai đoạn 1: Củng cố & Thực nghiệm (Hoàn thành):** Hoàn tất benchmark scaling 111.000 dòng, hoàn thiện các API UPSERT khôi phục cô lập tránh rollback chéo, hoàn chỉnh 5 kịch bản Threat Simulation an ninh và xây dựng mô hình hóa mối đe dọa **STRIDE Threat Modeling** làm khung lý thuyết kiểm thử.
+2.  **Giai đoạn 2: Gia cố Hạ tầng Web3 & Resource Limit (Hoàn thành):** Đóng gói băm liên kết chuỗi và đẩy log kiểm toán nhạy cảm ngầm lên mạng IPFS phi tập trung bất biến qua Pinata API. Tích hợp module kiểm soát hạn mức connection pooler của từng tenant dựa trên Redis để chặn đứng Noisy Neighbor.
+3.  **Giai đoạn 3: Phân tán biên & Dự phòng (Hoàn thành):** Chuyển đổi toàn bộ cơ chế đếm connection pooler và IP blocklist sang Upstash Redis phân tán đa vùng (Multi-region Active-Active) chạy trên Edge Middleware, kết hợp cơ chế Local Memory Cache dự phòng nóng tự động kích hoạt khi mất kết nối Cloud Redis.
+
 
 ---
 

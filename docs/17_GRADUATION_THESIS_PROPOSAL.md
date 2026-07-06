@@ -177,10 +177,10 @@ Nghiên cứu và thiết kế kiến trúc phần mềm an toàn cho nền tả
 - **Hạn chế:**
   - Rủi ro dừng hệ thống (RTO) khi khôi phục dữ liệu (UPSERT) ở quy mô cực lớn có các ràng buộc FK phức tạp.
   - Audit log vẫn nằm trên cùng một CSDL vật lý với dữ liệu ứng dụng.
-- **Hướng phát triển chiến lược:**
-  - Tích hợp Audit Log Forwarding ra AWS S3 WORM Storage (Object Lock) bên ngoài độc lập.
-  - Thiết lập Tenant-scoped Connection Limits trực tiếp trên Supavisor.
-  - Nghiên cứu và thiết lập phân tán cơ sở dữ liệu đa phân vùng (Multi-region Read Replicas) nhằm tối ưu hóa độ trễ mạng biên và triển khai cơ chế dự phòng nóng (Hot Standby) bảo đảm tính sẵn sàng cao (High Availability) cho nền tảng.
+- **Hướng phát triển chiến lược (Lộ trình hướng tới 2029):**
+  - Nghiên cứu áp dụng phương pháp kiểm chứng hình thức toán học (**Formal Verification** bằng TLA+ hoặc Coq) để chứng minh tính đúng đắn tuyệt đối của chính sách RLS và luật SOAR.
+  - Tích hợp công nghệ mã hóa hoàn toàn đồng hình (**Fully Homomorphic Encryption - FHE**) cho phép truy vấn an toàn trực tiếp trên cơ sở dữ liệu đa khách hàng đã được mã hóa.
+  - Phân tích và ngăn chặn các cuộc tấn công kênh kề (**Timing / Side-channel attacks**) dò quét thông tin IP Whitelist tại Edge Runtime.
 
 ---
 
@@ -220,6 +220,7 @@ Hệ thống đã được hiện thực hóa xuất sắc với các kết qu�
 - **Threat Simulator v5 & Sơ đồ luồng SVG Zero Trust (v1.8.0):** Mở rộng lên **5 kịch bản tấn công** giả lập thực tế. Kịch bản 5 là **Honeypot Decoy Trap**: khi kịch bản được kích hoạt, hệ thống ghi nhận ngay IP thực, ghi audit log `risk_score=100`, gọi RPC `block_ip`, phát cảnh báo giọng nói AI trên SOC Dashboard. Toàn bộ kịch bản được trực quan hóa động trên **Bản Đồ Luồng Tấn Công SVG** tương tác thời gian thực, cho phép quan sát chấm sáng di chuyển và nhấp nháy viền đỏ báo động tại đúng Node bị chặn đứng.
 - **Bản Đồ Ma Trận Học Thuật Tương Tác & SOC Live Fire QR (v1.8.0):** Xây dựng component ma trận học thuật tương tác 4x4, trình bày chi tiết độ phức tạp thuật toán lý thuyết ($O(1)$ RAM Session claims, $O(\log N_{\text{tenant}})$ B-Tree Index Scan), mã nguồn thực tế và đối chiếu chính sách an toàn **ISO/IEC 27017 CLD**. Tích hợp động cơ sinh mã QR động dựa trên HTTP Host headers của yêu cầu Next.js, tự động trỏ mã QR về trang `/council` của môi trường chạy thực tế (hỗ trợ localhost và staging cloud), giúp hội đồng quét mã QR để trực tiếp tấn công và trải nghiệm Middleware chặn IP tức thời ngay tại môi trường local.
 - **Forensic Cryptographic Ledger Auditor (Mới — v1.7.0):** Bộ thẩm định pháp lý mật mã học — quét SHA-256 từng block theo chuỗi, xác minh `prev_hash` continuity và đối chiếu PostgreSQL chéo. Giao diện terminal log màu sắc hiển thị trực quan trạng thái từng block. Nếu bất kỳ block nào bị tamper, hệ thống cô lập và báo cáo ngay.
+- **Web3 IPFS WORM Ledger (Mới — v1.11.0):** Tự động hóa băm liên kết chuỗi mật mã học và đẩy log kiểm toán nhạy cảm lên mạng IPFS phi tập trung thời gian thực (qua Pinata API Gateway), lưu vết CID trực tiếp về database làm chứng chỉ Web3 và tích hợp hiển thị Badge liên kết IPFS Gateway trên SOC Dashboard Widget để đối chiếu pháp lý trực quan.
 
 ### 7.3 Danh mục tài liệu đặc tả & chuyên đề bổ sung (v1.9.0)
 
